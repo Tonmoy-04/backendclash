@@ -1,12 +1,10 @@
-const { contextBridge, ipcRenderer, app } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
-// Get user data path for logging (app is not available in preload, use remote path)
-const { remote } = process;
+// Get user data path for logging
 let preloadLogPath;
 try {
-  // Try to get userData path - this might fail in strict contexts
   const userDataPath = process.env.APPDATA || process.env.HOME || '.';
   const logsDir = path.join(userDataPath, 'inventory-desktop-app', 'logs');
   

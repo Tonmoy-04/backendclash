@@ -193,33 +193,57 @@ async function initializeApp() {
     logToFile(`[PRELOAD ERROR] Path: ${preloadPath}, Error: ${error.message}`);
   });
   
+  // Add comprehensive white screen debugging
+  mainWindow.webContents.on('did-finish-load', () => {
+    logToFile('[RENDERER] did-finish-load event fired');
+  });
+  
+  mainWindow.webContents.on('dom-ready', () => {
+    logToFile('[RENDERER] DOM ready');
+  });
+  
+  mainWindow.webContents.on('did-start-loading', () => {
+    logToFile('[RENDERER] Started loading');
+  });
+  
+  mainWindow.webContents.on('did-stop-loading', () => {
+    logToFile('[RENDERER] Stopped loading');
+  });
+  
   if (isDev) {
     // Development: Load from React dev server
     const devUrl = 'http://localhost:3000';
     logToFile(`[DEV] Loading from React dev server: ${devUrl}`);
     try {
       await mainWindow.loadURL(devUrl);
+      // Open DevTools ONLY in development
       mainWindow.webContents.openDevTools();
       logToFile('[DEV] Successfully loaded from dev server');
     } catch (e) {
       logToFile(`[DEV ERROR] Failed to load: ${e.stack || e.message}`);
     }
   } else {
-    // Production: Load from backend server (Express serves React build)
-    // This is better than file:// protocol as it handles static assets correctly
-    const prodUrl = 'http://localhost:5000';
-    logToFile(`[PROD] Loading from backend server: ${prodUrl}`);
+    // Production: Load React build files directly using file:// protocol
+    const indexPath = path.join(__dirname, '..', 'client', 'build', 'index.html');
+    const fileUrl = `file://${indexPath.replace(/\\/g, '/')}`;
+    logToFile(`[PROD] Loading from file: ${fileUrl}`);
+    logToFile(`[PROD] Index path exists: ${fs.existsSync(indexPath)}`);
     
     try {
-      await mainWindow.loadURL(prodUrl);
-      logToFile('[PROD] Successfully loaded from backend server');
-      
-      // TEMPORARILY ENABLE DEVTOOLS IN PRODUCTION FOR DEBUGGING
-      mainWindow.webContents.openDevTools();
-      logToFile('[PROD] DevTools opened for debugging');
+      await mainWindow.loadFile(indexPath);
+      logToFile('[PROD] Successfully loaded React build');
+      // DevTools are NOT opened in production mode
       
     } catch (e) {
       logToFile(`[PROD ERROR] Failed to load: ${e.stack || e.message}`);
+      // Fallback: Try to load from backend server if file load fails
+      logToFile('[PROD] Attempting fallback to backend server...');
+      try {
+        await mainWindow.loadURL('http://localhost:5000');
+        logToFile('[PROD] Fallback successful - loaded from backend');
+      } catch (fallbackErr) {
+        logToFile(`[PROD ERROR] Fallback also failed: ${fallbackErr.message}`);
+      }
     }
   }
 

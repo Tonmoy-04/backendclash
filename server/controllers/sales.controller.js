@@ -144,8 +144,8 @@ exports.createSale = async (req, res, next) => {
       
       // Persist sale item (in inventory.db)
       await db.run(
-        'INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price, subtotal) VALUES (?, ?, ?, ?, ?, ?)',
-        [saleId, item.product_id || null, item.product_name || null, quantity, unitPrice, subtotalItem]
+        'INSERT INTO sale_items (sale_id, product_id, product_name, quantity, unit_price, total_price, subtotal, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [saleId, item.product_id || null, item.product_name || null, quantity, unitPrice, subtotalItem, subtotalItem, unitPrice]
       );
 
       // Stock updates disabled - transactions and inventory are completely separated

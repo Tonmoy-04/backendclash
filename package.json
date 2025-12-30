@@ -14,11 +14,11 @@
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build",
     "build:all": "npm run build:client && npm run build:server",
-    "build": "npm run build:all",
-    "prebuild:win": "npm run build:all",
-    "build:win": "electron-builder --win --x64",
-    "build:win32": "electron-builder --win --ia32",
-    "dist": "npm run build:all && electron-builder --win",
+    "prebuild:installer": "npm run build:all",
+    "build:installer": "electron-builder --win --x64",
+    "build:win": "npm run build:all && electron-builder --win --x64",
+    "build": "npm run build:win",
+    "dist": "npm run build:win",
     "postinstall": "cd server && npm install && cd ../client && npm install",
     "pack": "electron-builder --dir",
     "release": "npm run build:all && electron-builder --win --publish never"
@@ -31,8 +31,12 @@
     "nodejs",
     "sqlite"
   ],
-  "author": "Your Name",
+  "author": {
+    "name": "Tonmoy & Rifat",
+    "email": "contact@example.com"
+  },
   "license": "MIT",
+  "copyright": "Copyright © 2025 Tonmoy & Rifat",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "electron": "^28.0.0",
@@ -42,13 +46,15 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.inventory.manager",
+    "appId": "com.tonmoyrifat.inventorymanager",
     "productName": "Inventory Manager",
-    "asar": false,
+    "copyright": "Copyright © 2025 Tonmoy & Rifat",
+    "asar": true,
     "directories": {
-      "output": "dist2",
+      "output": "dist",
       "buildResources": "build"
     },
+    "compression": "normal",
     "files": [
       "electron/**/*",
       "!electron/**/*.ts",
@@ -58,7 +64,11 @@
       "!client/build/**/*.map",
       "package.json"
     ],
-    "asarUnpack": [],
+    "asarUnpack": [
+      "server/config/**",
+      "server/database/**",
+      "server/dist/database/**"
+    ],
     "extraResources": [
       {
         "from": "server/dist",
@@ -88,7 +98,7 @@
     "win": {
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
@@ -96,16 +106,32 @@
       ],
       "icon": "build/icon.ico",
       "publisherName": "Tonmoy & Rifat",
-      "verifyUpdateCodeSignature": false
+      "verifyUpdateCodeSignature": false,
+      "legalTrademarks": "Tonmoy & Rifat",
+      "requestedExecutionLevel": "asInvoker",
+      "sign": null,
+      "signingHashAlgorithms": ["sha256"]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "perMachine": true,
+      "allowElevation": true,
+      "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "menuCategory": true,
+      "runAfterFinish": true,
       "shortcutName": "Inventory Manager",
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "artifactName": "Setup.${ext}",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeader": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "include": null,
+      "script": null,
+      "language": "1033",
+      "warningsAsErrors": false
     },
     "mac": {
       "target": "dmg",

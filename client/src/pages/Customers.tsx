@@ -876,7 +876,7 @@ const Customers: React.FC = () => {
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {t('customers.taken')}
+                      জমা
                     </button>
                     <button
                       type="button"
@@ -887,7 +887,7 @@ const Customers: React.FC = () => {
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {t('customers.given')}
+                      খরচ
                     </button>
                   </div>
                 </div>

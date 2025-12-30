@@ -2,6 +2,9 @@ const { BrowserWindow } = require('electron');
 const path = require('path');
 
 function createWindow() {
+  const { app } = require('electron');
+  const isDev = !app.isPackaged;
+  
   const mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -15,7 +18,9 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       sandbox: false,
-      webSecurity: true
+      webSecurity: true,
+      // Disable DevTools in production
+      devTools: isDev
     },
     frame: true,
     titleBarStyle: 'default',
@@ -28,6 +33,19 @@ function createWindow() {
     mainWindow.show();
     mainWindow.focus();
   });
+
+  // Block DevTools keyboard shortcuts in production
+  if (!isDev) {
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      // Block Ctrl+Shift+I, Ctrl+Shift+J, F12
+      if (
+        (input.control && input.shift && (input.key === 'I' || input.key === 'i' || input.key === 'J' || input.key === 'j')) ||
+        input.key === 'F12'
+      ) {
+        event.preventDefault();
+      }
+    });
+  }
 
   // Prevent navigation to external URLs
   mainWindow.webContents.on('will-navigate', (event, url) => {
