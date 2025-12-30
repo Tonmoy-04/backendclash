@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Production build
+dist/
+dist-electron/
+client/build/
+dist2/
+
+# Don't ignore build/ folder for icons
+!build/.gitkeep
+build/*.ico
+build/*.icns
+build/*.png
+
+# Database
+server/database/*.db
+server/database/*.db-journal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+server/logs/
+
+# Backups
+server/backups/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Electron
+out/
+release/
+app-update.yml
+latest.yml
+
+# Prevent committing packaged binaries
+*.blockmap
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.cache/
+.temp/
+tmp/

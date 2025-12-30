@@ -1,0 +1,123 @@
+{
+  "name": "inventory-desktop-app",
+  "version": "1.0.1",
+  "description": "Inventory Management Desktop Application with Electron, React, and Node.js",
+  "main": "electron/main.js",
+  "scripts": {
+    "icons": "node scripts/generate-icons.js \"client/src/assets/edited-photo.png\"",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm start",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"wait-on http://localhost:5000/api/health && npm run client\"",
+    "electron": "electron .",
+    "electron:dev": "set NODE_ENV=development && concurrently \"npm run server\" \"wait-on http://localhost:5000/api/health && npm run client\" \"wait-on http://localhost:3000 && electron .\"",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "build:all": "npm run build:client && npm run build:server",
+    "build": "npm run build:all",
+    "prebuild:win": "npm run build:all",
+    "build:win": "electron-builder --win --x64",
+    "build:win32": "electron-builder --win --ia32",
+    "dist": "npm run build:all && electron-builder --win",
+    "postinstall": "cd server && npm install && cd ../client && npm install",
+    "pack": "electron-builder --dir",
+    "release": "npm run build:all && electron-builder --win --publish never"
+  },
+  "keywords": [
+    "inventory",
+    "desktop-app",
+    "electron",
+    "react",
+    "nodejs",
+    "sqlite"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "png-to-ico": "^2.1.8",
+    "sharp": "^0.34.5",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.inventory.manager",
+    "productName": "Inventory Manager",
+    "asar": false,
+    "directories": {
+      "output": "dist2",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "!electron/**/*.ts",
+      "server/dist/**/*",
+      "server/package.json",
+      "client/build/**/*",
+      "!client/build/**/*.map",
+      "package.json"
+    ],
+    "asarUnpack": [],
+    "extraResources": [
+      {
+        "from": "server/dist",
+        "to": "server/dist",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "server/node_modules",
+        "to": "server/node_modules",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "server/package.json",
+        "to": "server/package.json"
+      },
+      {
+        "from": "client/build",
+        "to": "client/build",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "server/config",
+        "to": "server/config",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "publisherName": "Tonmoy & Rifat",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Inventory Manager",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build/icon.png",
+      "category": "Office"
+    }
+  }
+}

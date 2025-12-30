@@ -1,0 +1,6 @@
+# Place icon.ico, icon.icns, and icon.png files here for the desktop app
+# 
+# Required files:
+# - icon.ico (Windows) - 256x256 pixels
+# - icon.icns (macOS) - multiple sizes
+# - icon.png (Linux) - 512x512 pixels

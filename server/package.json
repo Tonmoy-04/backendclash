@@ -1,0 +1,39 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "app.ts",
+  "scripts": {
+    "start": "ts-node app.ts",
+    "dev": "nodemon --exec ts-node app.ts",
+    "build": "tsc && if not exist dist\\database mkdir dist\\database && xcopy /Y /I database\\*.sql dist\\database\\ && if not exist dist\\controllers mkdir dist\\controllers && xcopy /Y /E /I controllers dist\\controllers && if not exist dist\\routes mkdir dist\\routes && xcopy /Y /E /I routes dist\\routes && if not exist dist\\middlewares mkdir dist\\middlewares && xcopy /Y /E /I middlewares dist\\middlewares && if not exist dist\\utils mkdir dist\\utils && xcopy /Y /E /I utils dist\\utils && if not exist dist\\database mkdir dist\\database && xcopy /Y /E /I database dist\\database && xcopy /Y backup.config.json dist\\backup.config.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "inventory",
+    "api",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "description": "Backend API for Inventory Management System",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "pdfkit": "^0.13.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.10.6",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

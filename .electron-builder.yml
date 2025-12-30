@@ -1,0 +1,46 @@
+appId: com.inventory.manager
+productName: Inventory Manager
+copyright: Copyright © 2025
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - electron/**/*
+  - server/dist/**/*
+  - client/build/**/*
+  - package.json
+
+extraResources: []
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  publisherName: Inventory Manager
+  verifyUpdateCodeSignature: false
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Inventory Manager
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  license: LICENSE.txt
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+mac:
+  target: dmg
+  icon: build/icon.icns
+  category: public.app-category.business
+
+linux:
+  target:
+    - AppImage
+  icon: build/icon.png
+  category: Office

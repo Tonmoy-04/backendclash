@@ -1,0 +1,225 @@
+/* Disable scroll behavior on number inputs */
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gradient-primary: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    --gradient-primary-dark: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+    --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.3);
+    --shadow-glow-dark: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Warm Dark Theme Variables */
+  :root.warm-dark {
+    --color-dark-bg-1: #222831;
+    --color-dark-bg-2: #393E46;
+    --color-light-text: #DFD0B8;
+    --color-accent: #948979;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(to bottom right, #f0fdf4, #ecfeff);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Dark mode styles */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background: linear-gradient(to bottom right, #000000, #000000, #000000);
+  color: #f0fdf4;
+}
+
+/* Warm Dark Theme */
+.dark.warm-dark body {
+  background: linear-gradient(to bottom right, #222831, #393E46, #222831);
+  color: #DFD0B8;
+}
+
+.dark.warm-dark {
+  color-scheme: dark;
+}
+
+/* Smooth transitions for interactive elements */
+* {
+  transition-property: background-color, border-color, color, transform, box-shadow;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive Table Styling */
+table {
+  min-width: 600px;
+}
+
+@media (max-width: 768px) {
+  table th, table td {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+  
+  table th {
+    font-size: 11px !important;
+  }
+  
+  .text-base {
+    font-size: 14px !important;
+  }
+  
+  .px-6 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  table th, table td {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+  
+  .text-xl, .text-2xl {
+    font-size: 18px !important;
+  }
+}
+
+/* Enhanced scrollbar styling - Light Theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, #f0fdf4, #ecfeff);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 10px;
+  border: 2px solid #f0fdf4;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  border: 2px solid #f0fdf4;
+}
+
+/* Dark Theme - Dark Green Scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, #0a0a0a, #111111);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #059669, #047857);
+  border-radius: 10px;
+  border: 2px solid #1a1a1a;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #047857, #065f46);
+  border: 2px solid #1a1a1a;
+}
+
+/* Warm Dark Theme Scrollbar - Dark Green */
+.dark.warm-dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.dark.warm-dark ::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, #222831, #393E46);
+}
+
+.dark.warm-dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #059669, #047857);
+  border-radius: 10px;
+  border: 2px solid #2a2a2a;
+}
+
+.dark.warm-dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #047857, #065f46);
+  border: 2px solid #2a2a2a;
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent;
+  }
+  
+  .card-gradient {
+    @apply bg-gradient-to-br from-white to-emerald-50/30 dark:from-neutral-900 dark:to-neutral-800/30;
+  }
+  
+  .glow-effect {
+    @apply shadow-lg dark:shadow-neutral-700/30;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-neutral-800 dark:to-neutral-700 text-white font-semibold px-6 py-2.5 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300;
+  }
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite linear;
+  background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  background-size: 1000px 100%;
+}
+
+/* Hide number input spinners and prevent scroll wheel changes */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+input[type=number].no-spin::-webkit-inner-spin-button,
+input[type=number].no-spin::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number].no-spin {
+  -moz-appearance: textfield;
+}
