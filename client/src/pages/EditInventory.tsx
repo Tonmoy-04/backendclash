@@ -4,6 +4,7 @@ import { useTranslation } from '../context/TranslationContext';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import { parseNumericInput } from '../utils/numberConverter';
+import { useNotification } from '../context/NotificationContext';
 
 interface Product {
   id: number;
@@ -20,6 +21,7 @@ const EditInventory: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { showSuccess, showError, showWarning, showInfo, showConfirm } = useNotification();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -58,7 +60,9 @@ const EditInventory: React.FC = () => {
           });
         }
       } catch (err: any) {
-        setError(err.response?.data?.error || 'Failed to load product');
+          const message = err.response?.data?.error || 'Failed to load product';
+          setError(message);
+          showError({ title: t('common.error') || 'Error', message });
       } finally {
         setLoading(false);
       }
@@ -104,10 +108,12 @@ const EditInventory: React.FC = () => {
       };
 
       await api.put(`/products/${product.id}`, updatePayload);
-      alert('Product details updated successfully!');
+      showSuccess({ title: t('inventory.updated') || 'Updated', message: 'Product details updated successfully!' });
       navigate('/inventory');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update product');
+      const message = err.response?.data?.error || 'Failed to update product';
+      setError(message);
+      showError({ title: t('common.error') || 'Error', message });
     }
   };
 
@@ -120,7 +126,9 @@ const EditInventory: React.FC = () => {
     const unitPrice = quantity > 0 && totalPrice > 0 ? totalPrice / quantity : null;
 
     if (!quantity || quantity <= 0) {
-      setError('Please enter a valid quantity');
+      const message = 'Please enter a valid quantity';
+      setError(message);
+      showWarning({ title: t('common.warning') || 'Warning', message });
       return;
     }
 
@@ -140,7 +148,7 @@ const EditInventory: React.FC = () => {
           reference_id: null,
           transaction_date: transactionDate,
         });
-        alert('Stock purchased successfully!');
+        showSuccess({ title: t('inventory.stockPurchased') || 'Stock purchased', message: 'Stock purchased successfully!' });
       } else if (activeTab === 'sale') {
         await api.post(`/products/${product.id}/movements`, {
           type: 'SELL',
@@ -149,13 +157,15 @@ const EditInventory: React.FC = () => {
           reference_id: null,
           transaction_date: transactionDate,
         });
-        alert('Stock sold successfully!');
+        showSuccess({ title: t('inventory.stockSold') || 'Stock sold', message: 'Stock sold successfully!' });
       }
 
       setStockFormData({ quantity: '', totalPrice: '', date: new Date().toISOString().slice(0, 10) });
       navigate('/inventory');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update stock');
+      const message = err.response?.data?.error || 'Failed to update stock';
+      setError(message);
+      showError({ title: t('common.error') || 'Error', message });
     }
   };
 

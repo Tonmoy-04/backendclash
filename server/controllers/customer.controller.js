@@ -2,9 +2,28 @@ const db = require('../database/db');
 
 exports.getAllCustomers = async (req, res, next) => {
   try {
-    const customers = await db.all(
-      'SELECT * FROM customers ORDER BY created_at DESC'
-    );
+    const { filter } = req.query;
+    
+    let query = 'SELECT * FROM customers';
+    const conditions = [];
+    
+    // Apply balance filter
+    if (filter === 'debt') {
+      conditions.push('balance > 0');
+    } else if (filter === 'owe') {
+      conditions.push('balance < 0');
+    } else if (filter === 'clear') {
+      conditions.push('balance = 0');
+    }
+    // filter === 'all' or undefined shows all customers
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const customers = await db.all(query);
     res.json(customers);
   } catch (error) {
     next(error);

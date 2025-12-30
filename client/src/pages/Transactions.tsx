@@ -4,6 +4,7 @@ import { useTranslation } from '../context/TranslationContext';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import { parseNumericInput } from '../utils/numberConverter';
+import { useNotification } from '../context/NotificationContext';
 import '../styles/Transactions.css';
 
 interface Transaction {
@@ -21,6 +22,7 @@ interface Transaction {
 const Transactions: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { showConfirm, showSuccess, showError, showWarning, showInfo } = useNotification();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,7 +182,7 @@ const Transactions: React.FC = () => {
 
   const handleAddTransaction = async () => {
     if (!formData.customer.trim()) {
-      alert(t('transactions.customerName') + ' is required');
+      showWarning({ title: t('common.warning') || 'Warning', message: (t('transactions.customerName') || 'Customer') + ' is required' });
       return;
     }
 
@@ -193,7 +195,7 @@ const Transactions: React.FC = () => {
       .filter(item => item.product_name || item.price > 0);
 
     if (sanitizedItems.length === 0) {
-      alert('Please add at least one item');
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please add at least one item' });
       return;
     }
 
@@ -266,11 +268,13 @@ const Transactions: React.FC = () => {
       setShowAddModal(false);
       setEditingTransaction(null);
       resetForm();
+      showSuccess({ title: t('transactions.saved') || 'Saved', message: t('transactions.saveSuccess') || 'Transaction saved successfully.' });
     } catch (error: any) {
       console.error('Error saving transaction:', error);
       console.error('Error response:', error.response?.data);
       console.error('Full error:', JSON.stringify(error, null, 2));
-      alert(error.response?.data?.error || error.message || 'Failed to save transaction');
+      const message = error.response?.data?.error || error.message || 'Failed to save transaction';
+      showError({ title: t('common.error') || 'Error', message });
     }
   };
 
@@ -322,17 +326,23 @@ const Transactions: React.FC = () => {
     }
   };
 
-  const handleDeleteTransaction = async (transaction: Transaction) => {
-    if (window.confirm(t('transactions.deleteConfirm'))) {
-      try {
-        const endpoint = transaction.type === 'sale' ? '/sales' : '/purchases';
-        await api.delete(`${endpoint}/${transaction.id}`);
-        await fetchTransactions();
-      } catch (error: any) {
-        console.error('Error deleting transaction:', error);
-        alert(error.response?.data?.error || 'Failed to delete transaction');
+  const handleDeleteTransaction = (transaction: Transaction) => {
+    showConfirm({
+      title: t('transactions.deleteConfirmTitle') || 'Delete Transaction',
+      message: t('transactions.deleteConfirm') || 'Delete this transaction?',
+      onConfirm: async () => {
+        try {
+          const endpoint = transaction.type === 'sale' ? '/sales' : '/purchases';
+          await api.delete(`${endpoint}/${transaction.id}`);
+          await fetchTransactions();
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Transaction deleted.' });
+        } catch (error: any) {
+          console.error('Error deleting transaction:', error);
+          const message = error.response?.data?.error || 'Failed to delete transaction';
+          showError({ title: t('common.error') || 'Error', message });
+        }
       }
-    }
+    });
   };
 
   const handleSelectAll = () => {
@@ -352,24 +362,31 @@ const Transactions: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedTransactions.length === 0) {
-      alert('Please select transactions to delete');
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select transactions to delete' });
       return;
     }
-    if (!window.confirm(`Delete ${selectedTransactions.length} transaction(s)?`)) return;
-    try {
-      const deletePromises = selectedTransactions.map(id => {
-        const transaction = transactions.find(t => t.id === id);
-        if (!transaction) return Promise.resolve();
-        const endpoint = transaction.type === 'sale' ? '/sales' : '/purchases';
-        return api.delete(`${endpoint}/${id}`);
-      });
-      await Promise.all(deletePromises);
-      await fetchTransactions();
-      setSelectedTransactions([]);
-    } catch (error: any) {
-      console.error('Error deleting transactions:', error);
-      alert(error.response?.data?.error || 'Failed to delete transactions');
-    }
+    showConfirm({
+      title: t('common.delete') || 'Delete',
+      message: `Delete ${selectedTransactions.length} transaction(s)? This cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          const deletePromises = selectedTransactions.map(id => {
+            const transaction = transactions.find(t => t.id === id);
+            if (!transaction) return Promise.resolve();
+            const endpoint = transaction.type === 'sale' ? '/sales' : '/purchases';
+            return api.delete(`${endpoint}/${id}`);
+          });
+          await Promise.all(deletePromises);
+          await fetchTransactions();
+          setSelectedTransactions([]);
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Transactions deleted.' });
+        } catch (error: any) {
+          console.error('Error deleting transactions:', error);
+          const message = error.response?.data?.error || 'Failed to delete transactions';
+          showError({ title: t('common.error') || 'Error', message });
+        }
+      }
+    });
   };
 
   const handleCancel = () => {

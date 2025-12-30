@@ -3,6 +3,7 @@ import { useTranslation } from '../context/TranslationContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 import {
   Cog6ToothIcon,
   ShieldCheckIcon,
@@ -31,6 +32,7 @@ const Settings: React.FC = () => {
   const { t, language, setLanguage } = useTranslation();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { showConfirm, showSuccess, showError, showWarning, showInfo } = useNotification();
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState<SettingsData>({
     companyName: 'My Business',
@@ -86,37 +88,46 @@ const Settings: React.FC = () => {
   const handleCreateBackup = async () => {
     try {
       await api.post('/backup/create');
-      alert('Backup created');
-      loadBackups();
+      await loadBackups();
+      showSuccess({ title: t('settings.backupCreated') || 'Backup created', message: t('settings.backupCreatedMsg') || 'Backup created successfully.' });
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to create backup');
+      const message = error.response?.data?.error || 'Failed to create backup';
+      showError({ title: t('common.error') || 'Error', message });
     }
   };
 
-  const handleRestoreBackup = async (fileName: string) => {
-    if (!window.confirm(`Restore from backup ${fileName}? This will replace all current data.`)) {
-      return;
-    }
-    try {
-      await api.post('/backup/restore', { fileName });
-      alert('Database restored successfully! Please refresh the page.');
-      window.location.reload();
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to restore backup');
-    }
+  const handleRestoreBackup = (fileName: string) => {
+    showConfirm({
+      title: t('settings.restoreBackup') || 'Restore Backup',
+      message: `Restore from backup ${fileName}? This will replace all current data.`,
+      onConfirm: async () => {
+        try {
+          await api.post('/backup/restore', { fileName });
+          showSuccess({ title: t('settings.restored') || 'Restored', message: 'Database restored successfully! Please refresh the page.' });
+          window.location.reload();
+        } catch (error: any) {
+          const message = error.response?.data?.error || 'Failed to restore backup';
+          showError({ title: t('common.error') || 'Error', message });
+        }
+      }
+    });
   };
 
-  const handleDeleteBackup = async (fileName: string) => {
-    if (!window.confirm(`Delete backup ${fileName}? This cannot be undone.`)) {
-      return;
-    }
-    try {
-      await api.post('/backup/delete', { fileName });
-      alert('Backup deleted');
-      loadBackups();
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to delete backup');
-    }
+  const handleDeleteBackup = (fileName: string) => {
+    showConfirm({
+      title: t('settings.deleteBackup') || 'Delete Backup',
+      message: `Delete backup ${fileName}? This cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await api.post('/backup/delete', { fileName });
+          await loadBackups();
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Backup deleted.' });
+        } catch (error: any) {
+          const message = error.response?.data?.error || 'Failed to delete backup';
+          showError({ title: t('common.error') || 'Error', message });
+        }
+      }
+    });
   };
 
   const handleDownloadBackup = (fileName: string) => {
@@ -131,17 +142,18 @@ const Settings: React.FC = () => {
 
   const handleUpdateBackupLocation = async () => {
     if (!backupLocation.trim()) {
-      alert('Please enter a backup location');
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please enter a backup location' });
       return;
     }
 
     setSavingLocation(true);
     try {
       await api.post('/backup/location', { backupDir: backupLocation.trim() });
-      alert('Backup location updated');
-      loadBackups();
+      await loadBackups();
+      showSuccess({ title: t('settings.updated') || 'Updated', message: 'Backup location updated.' });
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to update backup location');
+      const message = error.response?.data?.error || 'Failed to update backup location';
+      showError({ title: t('common.error') || 'Error', message });
     } finally {
       setSavingLocation(false);
     }
@@ -152,10 +164,11 @@ const Settings: React.FC = () => {
     try {
       const res = await api.post('/backup/location/reset');
       setBackupLocation(res.data.backupDir || '');
-      alert('Backup location reset to default');
-      loadBackups();
+      await loadBackups();
+      showSuccess({ title: t('settings.reset') || 'Reset', message: 'Backup location reset to default.' });
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to reset backup location');
+      const message = error.response?.data?.error || 'Failed to reset backup location';
+      showError({ title: t('common.error') || 'Error', message });
     } finally {
       setSavingLocation(false);
     }
@@ -166,36 +179,41 @@ const Settings: React.FC = () => {
     if (!file) return;
 
     if (!file.name.endsWith('.db')) {
-      alert('Please select a valid .db backup file');
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select a valid .db backup file' });
       return;
     }
 
-    if (!window.confirm(`Import and restore from ${file.name}? This will replace all current data.`)) {
-      event.target.value = '';
-      return;
-    }
+    showConfirm({
+      title: t('settings.importBackup') || 'Import Backup',
+      message: `Import and restore from ${file.name}? This will replace all current data.`,
+      onConfirm: async () => {
+        try {
+          const formData = new FormData();
+          formData.append('backup', file);
+          formData.append('autoRestore', 'true');
+          const base = (api.defaults?.baseURL as string) || 'http://localhost:5000/api';
+          const response = await fetch(`${base}/backup/upload`, {
+            method: 'POST',
+            body: formData
+          });
 
-    try {
-      const formData = new FormData();
-      formData.append('backup', file);
-      formData.append('autoRestore', 'true');
-      const base = (api.defaults?.baseURL as string) || 'http://localhost:5000/api';
-      const response = await fetch(`${base}/backup/upload`, {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Upload failed');
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Upload failed');
+          }
+          showSuccess({ title: t('settings.imported') || 'Imported', message: 'Backup imported and restored successfully! Please refresh the page.' });
+          window.location.reload();
+        } catch (error: any) {
+          const message = error.message || 'Failed to import backup';
+          showError({ title: t('common.error') || 'Error', message });
+        } finally {
+          event.target.value = '';
+        }
+      },
+      onCancel: () => {
+        event.target.value = '';
       }
-      alert('Backup imported and restored successfully! Please refresh the page.');
-      window.location.reload();
-    } catch (error: any) {
-      alert(error.message || 'Failed to import backup');
-    } finally {
-      event.target.value = '';
-    }
+    });
   };
 
   const handleChange = (field: keyof SettingsData, value: any) => {
@@ -212,15 +230,20 @@ const Settings: React.FC = () => {
     setTimeout(() => {
       setIsSaving(false);
       setSaveMessage(t('settings.savedSuccess'));
+      showSuccess({ title: t('settings.saved') || 'Settings saved', message: t('settings.savedSuccess') || 'Settings have been saved.' });
       setTimeout(() => setSaveMessage(''), 3000);
     }, 500);
   };
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to log out?')) {
-      logout();
-      navigate('/login');
-    }
+    showConfirm({
+      title: t('auth.logout') || 'Log out',
+      message: t('common.logoutConfirm') || 'Are you sure you want to log out?',
+      onConfirm: () => {
+        logout();
+        navigate('/login');
+      }
+    });
   };
 
   useEffect(() => {

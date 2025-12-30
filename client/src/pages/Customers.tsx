@@ -4,6 +4,7 @@ import { useTranslation } from '../context/TranslationContext';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import { parseNumericInput } from '../utils/numberConverter';
+import { useNotification } from '../context/NotificationContext';
 import '../styles/Customers.css';
 
 interface Customer {
@@ -29,6 +30,7 @@ interface Transaction {
 const Customers: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { showConfirm, showSuccess, showError, showWarning, showInfo } = useNotification();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -46,12 +48,15 @@ const Customers: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
+  const [balanceFilter, setBalanceFilter] = useState<'all' | 'debt' | 'owe' | 'clear'>('all');
 
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
+        setLoading(true);
         setError('');
-        const response = await api.get('/customers');
+        const params = balanceFilter !== 'all' ? { filter: balanceFilter } : {};
+        const response = await api.get('/customers', { params });
         setCustomers(response.data || []);
       } catch (err: any) {
         setError(err.response?.data?.error || 'Failed to load customers');
@@ -65,23 +70,30 @@ const Customers: React.FC = () => {
     // Refetch when page becomes visible again
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        setLoading(true);
         fetchCustomers();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  }, [balanceFilter]);
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Delete this customer?')) return;
-    try {
-      await api.delete(`/customers/${id}`);
-      setCustomers(prev => prev.filter(customer => customer.id !== id));
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete customer');
-    }
+  const handleDelete = (id: number) => {
+    showConfirm({
+      title: t('customers.deleteCustomer') || 'Delete Customer',
+      message: t('common.deleteConfirm') || 'This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/customers/${id}`);
+          setCustomers(prev => prev.filter(customer => customer.id !== id));
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('customers.deleteCustomer') || 'Customer deleted' });
+        } catch (err: any) {
+          const message = err.response?.data?.error || 'Failed to delete customer';
+          setError(message);
+          showError({ title: t('common.error') || 'Error', message });
+        }
+      },
+    });
   };
 
   const handleEdit = (customer: Customer) => {
@@ -104,22 +116,30 @@ const Customers: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedCustomers.length === 0) {
-      alert('Please select customers to delete');
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select customers to delete' });
       return;
     }
-    if (!window.confirm(`Delete ${selectedCustomers.length} customer(s)?`)) return;
-    try {
-      await Promise.all(selectedCustomers.map(id => api.delete(`/customers/${id}`)));
-      setCustomers(prev => prev.filter(c => !selectedCustomers.includes(c.id)));
-      setSelectedCustomers([]);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete customers');
-    }
+    showConfirm({
+      title: t('common.delete') || 'Delete',
+      message: `Delete ${selectedCustomers.length} customer(s)? This cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await Promise.all(selectedCustomers.map(id => api.delete(`/customers/${id}`)));
+          setCustomers(prev => prev.filter(c => !selectedCustomers.includes(c.id)));
+          setSelectedCustomers([]);
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Customers deleted successfully.' });
+        } catch (err: any) {
+          const message = err.response?.data?.error || 'Failed to delete customers';
+          setError(message);
+          showError({ title: t('common.error') || 'Error', message });
+        }
+      },
+    });
   };
 
   const handlePaymentSubmit = async () => {
     if (!selectedCustomer || !paymentAmount || parseFloat(paymentAmount) <= 0) {
-      alert('Please enter a valid amount');
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please enter a valid amount' });
       return;
     }
 
@@ -575,6 +595,100 @@ const Customers: React.FC = () => {
               <PlusIcon className="h-5 w-5" />
               {t('customers.addCustomer')}
             </button>
+          </div>
+        </div>
+
+        {/* Balance Filter */}
+        <div className="mb-6 animate-fadeInUp" style={{ animationDelay: '0.25s' }}>
+          <div className="relative bg-gradient-to-br from-white/90 via-emerald-50/80 to-teal-50/90 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-emerald-800/40 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-emerald-300/30 dark:border-emerald-600/30 overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/5 via-teal-400/5 to-cyan-400/5 pointer-events-none"></div>
+            
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-emerald-900 dark:text-emerald-100 block">
+                    {t('customers.filterByBalance') || 'Filter by Balance'}
+                  </label>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">Select status to filter</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-3 sm:ml-auto">
+                <button
+                  onClick={() => setBalanceFilter('all')}
+                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                    balanceFilter === 'all'
+                      ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
+                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">📊</span>
+                    {t('customers.all') || 'All'}
+                  </span>
+                  {balanceFilter === 'all' && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setBalanceFilter('debt')}
+                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                    balanceFilter === 'debt'
+                      ? 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white shadow-xl shadow-red-500/50 scale-105'
+                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">💰</span>
+                    {t('customers.receivable') || 'Receivable'}
+                  </span>
+                  {balanceFilter === 'debt' && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setBalanceFilter('owe')}
+                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                    balanceFilter === 'owe'
+                      ? 'bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white shadow-xl shadow-green-500/50 scale-105'
+                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">✅</span>
+                    {t('customers.credit') || 'Credit'}
+                  </span>
+                  {balanceFilter === 'owe' && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setBalanceFilter('clear')}
+                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                    balanceFilter === 'clear'
+                      ? 'bg-gradient-to-r from-gray-700 via-slate-700 to-gray-700 text-white shadow-xl shadow-gray-500/50 scale-105'
+                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">🎯</span>
+                    {t('customers.clear') || 'Clear'}
+                  </span>
+                  {balanceFilter === 'clear' && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

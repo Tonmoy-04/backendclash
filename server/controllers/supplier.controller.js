@@ -2,9 +2,28 @@ const db = require('../database/db');
 
 exports.getAllSuppliers = async (req, res, next) => {
   try {
-    const suppliers = await db.all(
-      'SELECT * FROM suppliers ORDER BY created_at DESC'
-    );
+    const { filter } = req.query;
+    
+    let query = 'SELECT * FROM suppliers';
+    const conditions = [];
+    
+    // Apply balance filter
+    if (filter === 'debt') {
+      conditions.push('balance > 0');
+    } else if (filter === 'owe') {
+      conditions.push('balance < 0');
+    } else if (filter === 'clear') {
+      conditions.push('balance = 0');
+    }
+    // filter === 'all' or undefined shows all suppliers
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const suppliers = await db.all(query);
     res.json(suppliers);
   } catch (error) {
     next(error);

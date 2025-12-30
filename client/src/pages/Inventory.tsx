@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from '../context/TranslationContext';
 import { PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 import '../styles/Inventory.css';
 
 interface Product {
@@ -31,6 +32,7 @@ const Inventory: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { showConfirm, showSuccess, showError, showWarning, showInfo } = useNotification();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,15 +79,22 @@ const Inventory: React.FC = () => {
     }
   );
 
-  const handleDelete = async (product: Product) => {
-    if (!window.confirm(t('common.deleteConfirm') || 'Delete this product?')) return;
-    try {
-      await api.delete(`/products/${product.id}`);
-      await fetchProducts();
-    } catch (error: any) {
-      console.error('Error deleting product:', error);
-      alert(error.response?.data?.error || 'Failed to delete product');
-    }
+  const handleDelete = (product: Product) => {
+    showConfirm({
+      title: t('common.delete') || 'Delete',
+      message: t('common.deleteConfirm') || 'Delete this product? This cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/products/${product.id}`);
+          await fetchProducts();
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('inventory.productDeleted') || 'Product deleted successfully.' });
+        } catch (error: any) {
+          const message = error.response?.data?.error || 'Failed to delete product';
+          console.error('Error deleting product:', error);
+          showError({ title: t('common.error') || 'Error', message });
+        }
+      },
+    });
   };
 
   const handleSelectAll = () => {
@@ -104,18 +113,25 @@ const Inventory: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedProducts.length === 0) {
-      alert('Please select products to delete');
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select products to delete' });
       return;
     }
-    if (!window.confirm(`Delete ${selectedProducts.length} product(s)?`)) return;
-    try {
-      await Promise.all(selectedProducts.map(id => api.delete(`/products/${id}`)));
-      setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
-      setSelectedProducts([]);
-    } catch (error: any) {
-      console.error('Error deleting products:', error);
-      alert(error.response?.data?.error || 'Failed to delete products');
-    }
+    showConfirm({
+      title: t('common.delete') || 'Delete',
+      message: `Delete ${selectedProducts.length} product(s)? This cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await Promise.all(selectedProducts.map(id => api.delete(`/products/${id}`)));
+          setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
+          setSelectedProducts([]);
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Products deleted successfully.' });
+        } catch (error: any) {
+          const message = error.response?.data?.error || 'Failed to delete products';
+          console.error('Error deleting products:', error);
+          showError({ title: t('common.error') || 'Error', message });
+        }
+      },
+    });
   };
 
   const handleViewHistory = async (product: Product) => {
