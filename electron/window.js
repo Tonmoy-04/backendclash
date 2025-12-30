@@ -4,6 +4,10 @@ const path = require('path');
 function createWindow() {
   const { app } = require('electron');
   const isDev = !app.isPackaged;
+
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'build', 'icon.ico')
+    : path.join(__dirname, '..', 'build', 'icon.ico');
   
   const mainWindow = new BrowserWindow({
     width: 1400,
@@ -12,6 +16,7 @@ function createWindow() {
     minHeight: 768,
     backgroundColor: '#ffffff',
     title: 'Inventory Manager',
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -49,7 +54,7 @@ function createWindow() {
 
   // Prevent navigation to external URLs
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    const allowedHosts = ['localhost:3000', 'localhost:5000'];
+    const allowedHosts = ['localhost:3000', 'localhost:5000', '127.0.0.1:3000', '127.0.0.1:5000'];
     const urlObj = new URL(url);
     
     // Allow localhost in development

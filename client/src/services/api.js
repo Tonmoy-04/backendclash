@@ -1,13 +1,32 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const FALLBACK_API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000/api';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: FALLBACK_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+let apiInitialized = false;
+
+export async function initApiBaseUrl() {
+  if (apiInitialized) return api;
+  apiInitialized = true;
+
+  try {
+    // Only available in Electron context (preload exposes window.electronAPI).
+    const info = await window?.electronAPI?.backend?.getInfo?.();
+    if (info && typeof info.apiBaseUrl === 'string' && info.apiBaseUrl) {
+      api.defaults.baseURL = info.apiBaseUrl;
+    }
+  } catch {
+    // Keep fallback baseURL.
+  }
+
+  return api;
+}
 
 const MUTATING_METHODS = ['post', 'put', 'patch', 'delete'];
 

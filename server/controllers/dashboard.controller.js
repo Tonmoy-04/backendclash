@@ -161,6 +161,11 @@ exports.getSuppliersDebt = async (req, res, next) => {
     );
     res.json({ totalSuppliersDebt: result.total_debt || 0 });
   } catch (error) {
+    // Backward compatibility for older DBs that don't have suppliers.balance.
+    const msg = String(error?.message || error);
+    if (msg.includes('no such column: balance')) {
+      return res.json({ totalSuppliersDebt: 0 });
+    }
     next(error);
   }
 };

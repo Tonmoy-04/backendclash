@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { fork, spawn } = require('child_process');
@@ -7,9 +7,19 @@ const https = require('https');
 const url = require('url');
 const { createWindow } = require('./window');
 
+const net = require('net');
+
 let mainWindow;
 let serverProcess;
 let logStream;
+
+let backendInfo = {
+  port: null,
+  baseUrl: null,
+  apiBaseUrl: null,
+  startedByElectron: false,
+  pid: null
+};
 
 // Initialize error logging to file
 function initializeLogging() {
@@ -38,6 +48,61 @@ function logToFile(message) {
   console.log(message);
   if (logStream) {
     logStream.write(logMessage);
+  }
+}
+
+async function isPortListening(port, host = '127.0.0.1', timeoutMs = 250) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    let done = false;
+
+    const finish = (value) => {
+      if (done) return;
+      done = true;
+      try { socket.destroy(); } catch {}
+      resolve(value);
+    };
+
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+    socket.connect(port, host);
+  });
+}
+
+async function findAvailablePort({ preferredPort = 5000, host = '127.0.0.1', maxTries = 25 } = {}) {
+  for (let i = 0; i < maxTries; i++) {
+    const port = preferredPort + i;
+    // If something is already listening, skip.
+    // (This is a best-effort check; the real bind happens in the backend.)
+    // eslint-disable-next-line no-await-in-loop
+    const listening = await isPortListening(port, host);
+    if (!listening) return port;
+  }
+  // Last resort: let backend pick its own (PORT=0) in production if implemented.
+  return preferredPort;
+}
+
+function computeDbDir() {
+  // Requirement: use Electron userData in production.
+  // We keep DBs in a subfolder so userData stays tidy.
+  const userData = app.getPath('userData');
+  return path.join(userData, 'database');
+}
+
+async function killProcessTree(proc) {
+  if (!proc || !proc.pid) return;
+  const pid = proc.pid;
+  try {
+    if (process.platform === 'win32') {
+      // Force-kill the process tree (handles `npm.cmd` -> node -> ts-node cases).
+      spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore' });
+      return;
+    }
+    proc.kill('SIGTERM');
+  } catch (err) {
+    logToFile(`[APP ERROR] Failed to kill server process tree: ${err.message}`);
   }
 }
 
@@ -70,20 +135,46 @@ async function startBackendServer() {
   const isDev = !app.isPackaged;
   logToFile(`[SERVER] Starting in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode`);
 
+  const host = '127.0.0.1';
+  const dbDir = computeDbDir();
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch {}
+
+  // Choose a port with conflict handling.
+  const preferredPort = Number(process.env.BACKEND_PORT || process.env.PORT || 5000) || 5000;
+  const port = await findAvailablePort({ preferredPort, host, maxTries: 50 });
+  const healthUrl = `http://${host}:${port}/api/health`;
+
   if (isDev) {
-    // In dev, try to detect running server; if not, start it
-    const ready = await waitForServerReady('http://localhost:5000/api/health', 8000, 500);
-    if (ready) {
-      logToFile('[DEV] Backend already running on http://localhost:5000');
+    // In dev, prefer an already-running backend (usually started by npm scripts).
+    const legacyHealth = await waitForServerReady('http://127.0.0.1:5000/api/health', 1200, 250);
+    if (legacyHealth) {
+      backendInfo = {
+        port: 5000,
+        baseUrl: 'http://127.0.0.1:5000',
+        apiBaseUrl: 'http://127.0.0.1:5000/api',
+        startedByElectron: false,
+        pid: null
+      };
+      logToFile('[DEV] Backend already running on http://127.0.0.1:5000');
       return;
     }
 
     try {
       const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-      logToFile('[DEV] Starting backend: npm run start in /server');
+      logToFile(`[DEV] Starting backend on ${host}:${port} (dbDir=${dbDir})`);
       serverProcess = spawn(npmCmd, ['run', 'start'], {
         cwd: path.join(__dirname, '../server'),
-        env: { ...process.env, NODE_ENV: 'development', PORT: '5000', APP_ENV: 'electron' },
+        env: {
+          ...process.env,
+          NODE_ENV: 'development',
+          HOST: host,
+          PORT: String(port),
+          APP_ENV: 'electron',
+          ELECTRON_USER_DATA: app.getPath('userData'),
+          DB_DIR: dbDir
+        },
         stdio: 'pipe'
       });
       serverProcess.stdout.on('data', (d) => {
@@ -94,6 +185,19 @@ async function startBackendServer() {
       });
       serverProcess.on('exit', (code) => logToFile(`[DEV] Server exited with code ${code}`));
       serverProcess.on('error', (err) => logToFile(`[DEV] Server error: ${err.message}`));
+
+      const ready = await waitForServerReady(healthUrl, 30000, 500);
+      if (!ready) {
+        logToFile(`[DEV ERROR] Backend failed to become healthy at ${healthUrl}`);
+      }
+
+      backendInfo = {
+        port,
+        baseUrl: `http://${host}:${port}`,
+        apiBaseUrl: `http://${host}:${port}/api`,
+        startedByElectron: true,
+        pid: serverProcess?.pid || null
+      };
       return;
     } catch (err) {
       logToFile(`[DEV] Failed to start backend: ${err.message}`);
@@ -103,7 +207,10 @@ async function startBackendServer() {
 
   try {
     // Production: Use compiled server from resources (NOT asar)
-    const serverEntry = path.join(process.resourcesPath, 'server', 'dist', 'app.js');
+    // Prefer a dedicated Electron entrypoint if present; fall back to app.js.
+    const electronEntry = path.join(process.resourcesPath, 'server', 'dist', 'electron-backend.js');
+    const legacyEntry = path.join(process.resourcesPath, 'server', 'dist', 'app.js');
+    const serverEntry = fs.existsSync(electronEntry) ? electronEntry : legacyEntry;
     logToFile(`[PRODUCTION] Server entry: ${serverEntry}`);
     logToFile(`[PRODUCTION] Entry exists: ${fs.existsSync(serverEntry)}`);
 
@@ -116,14 +223,18 @@ async function startBackendServer() {
     logToFile(`[PRODUCTION] Node modules: ${serverNodeModules}`);
     
     serverProcess = fork(serverEntry, [], {
+      cwd: path.join(process.resourcesPath, 'server'),
       env: { 
         ...process.env, 
         NODE_ENV: 'production', 
-        PORT: '5000', 
+        HOST: host,
+        PORT: String(port),
         APP_ENV: 'electron',
+        ELECTRON_USER_DATA: app.getPath('userData'),
+        DB_DIR: dbDir,
         NODE_PATH: serverNodeModules
       },
-      stdio: 'pipe'
+      stdio: ['pipe', 'pipe', 'pipe', 'ipc']
     });
 
     serverProcess.stdout.on('data', (d) => logToFile(`[PROD SERVER] ${d.toString().trim()}`));
@@ -131,6 +242,27 @@ async function startBackendServer() {
     serverProcess.on('message', (m) => logToFile(`[SERVER MESSAGE] ${JSON.stringify(m)}`));
     serverProcess.on('exit', (code) => logToFile(`[PRODUCTION] Server exited with code ${code}`));
     serverProcess.on('error', (err) => logToFile(`[PRODUCTION] Server error: ${err.message}`));
+
+    const ready = await waitForServerReady(healthUrl, 30000, 500);
+    if (!ready) {
+      logToFile(`[PROD ERROR] Backend failed to become healthy at ${healthUrl}`);
+      try {
+        dialog.showMessageBox({
+          type: 'error',
+          title: 'Backend Failed to Start',
+          message: 'The backend service did not start correctly. Please check logs.',
+          detail: `Tried: ${healthUrl}\nDB Dir: ${dbDir}`
+        });
+      } catch {}
+    }
+
+    backendInfo = {
+      port,
+      baseUrl: `http://${host}:${port}`,
+      apiBaseUrl: `http://${host}:${port}/api`,
+      startedByElectron: true,
+      pid: serverProcess?.pid || null
+    };
   } catch (err) {
     logToFile(`[PRODUCTION] Failed to start server: ${err.stack || err.message}`);
   }
@@ -146,22 +278,12 @@ async function initializeApp() {
   const isDev = !app.isPackaged;
   logToFile(`[INIT] Initializing app in ${isDev ? 'DEV' : 'PROD'} mode`);
 
-  // Only wait for server in dev mode or if using remote API
+  // Wait for the UI layer in dev; backend readiness is handled in startBackendServer().
   if (isDev) {
-    const targetUrl = 'http://localhost:3000';
+    const targetUrl = 'http://127.0.0.1:3000';
     logToFile(`[DEV] Waiting for React dev server: ${targetUrl}`);
     const ready = await waitForServerReady(targetUrl, 30000, 500);
-    if (!ready) {
-      logToFile('[DEV WARNING] React dev server timed out');
-    }
-  } else {
-    // In production, wait for backend API to be ready
-    const targetUrl = 'http://localhost:5000/api/health';
-    logToFile(`[PROD] Waiting for backend API: ${targetUrl}`);
-    const ready = await waitForServerReady(targetUrl, 30000, 500);
-    if (!ready) {
-      logToFile('[PROD WARNING] Backend API timed out');
-    }
+    if (!ready) logToFile('[DEV WARNING] React dev server timed out');
   }
 
   // Create window and load
@@ -212,7 +334,7 @@ async function initializeApp() {
   
   if (isDev) {
     // Development: Load from React dev server
-    const devUrl = 'http://localhost:3000';
+    const devUrl = 'http://127.0.0.1:3000';
     logToFile(`[DEV] Loading from React dev server: ${devUrl}`);
     try {
       await mainWindow.loadURL(devUrl);
@@ -288,6 +410,11 @@ function waitForServerReady(url, timeoutMs = 20000, intervalMs = 500) {
 // App event handlers
 app.whenReady().then(initializeApp);
 
+// Backend IPC: renderer asks main which backend URL/port to use.
+ipcMain.handle('backend:getInfo', async () => {
+  return { ...backendInfo };
+});
+
 // IPC Handlers
 ipcMain.handle('shell:openExternal', async (event, url) => {
   try {
@@ -302,12 +429,8 @@ ipcMain.handle('shell:openExternal', async (event, url) => {
 app.on('window-all-closed', () => {
   logToFile('[APP] All windows closed');
   if (serverProcess) {
-    try { 
-      serverProcess.kill(); 
-      logToFile('[APP] Server process killed');
-    } catch (err) {
-      logToFile(`[APP ERROR] Failed to kill server: ${err.message}`);
-    }
+    killProcessTree(serverProcess);
+    logToFile('[APP] Server process termination requested');
   }
   if (process.platform !== 'darwin') app.quit();
 });
@@ -320,12 +443,8 @@ app.on('activate', () => {
 app.on('before-quit', () => {
   logToFile('[APP] Before quit');
   if (serverProcess) {
-    try { 
-      serverProcess.kill(); 
-      logToFile('[APP] Server killed on quit');
-    } catch (err) {
-      logToFile(`[APP ERROR] Failed to kill server on quit: ${err.message}`);
-    }
+    killProcessTree(serverProcess);
+    logToFile('[APP] Server termination requested on quit');
   }
   if (logStream) {
     logStream.end();

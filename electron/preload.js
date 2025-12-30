@@ -42,6 +42,15 @@ try {
   logPreload('Attempting to expose electronAPI via contextBridge...');
   
   contextBridge.exposeInMainWorld('electronAPI', {
+    backend: {
+      getInfo: () => {
+        logPreload('backend.getInfo called');
+        return ipcRenderer.invoke('backend:getInfo').catch(err => {
+          logPreload(`backend.getInfo error: ${err.message}`);
+          throw err;
+        });
+      }
+    },
     // Database operations
     db: {
       query: (sql, params) => {

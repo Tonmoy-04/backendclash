@@ -16,6 +16,14 @@ dist-electron/
 client/build/
 dist2/
 
+# Electron builder outputs (keep these out of git)
+dist*/
+**/win-unpacked/
+**/win-ia32-unpacked/
+**/win-arm64-unpacked/
+**/linux-unpacked/
+**/mac/
+
 # Don't ignore build/ folder for icons
 !build/.gitkeep
 build/*.ico

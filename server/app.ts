@@ -20,6 +20,7 @@ const billRoutes = require('./routes/bill.routes');
 const cashboxRoutes = require('./routes/cashbox.routes');
 
 const app = express();
+const HOST = process.env.HOST || '127.0.0.1';
 const PORT = process.env.PORT || 5000;
 
 // Middleware
@@ -133,8 +134,51 @@ process.on('uncaughtException', (error) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  const address = server.address();
+  const actualPort = typeof address === 'object' && address ? address.port : PORT;
+  logger.info(`Server running on ${HOST}:${actualPort}`);
+  console.log(`🚀 Server running on http://${HOST}:${actualPort}`);
+  if (typeof process.send === 'function') {
+    try {
+      process.send({ type: 'listening', port: actualPort });
+    } catch {}
+  }
+});
+
+async function gracefulShutdown(signal: string) {
+  try {
+    logger.info(`Shutdown requested (${signal})`);
+  } catch {}
+
+  await new Promise<void>((resolve) => {
+    try {
+      server.close(() => resolve());
+    } catch {
+      resolve();
+    }
+  });
+
+  // Close sqlite connections if available
+  try {
+    const inv = require('./database/db');
+    inv?.db?.close?.();
+  } catch {}
+  try {
+    const stock = require('./database/stockDb');
+    stock?.db?.close?.();
+  } catch {}
+
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+process.on('message', (msg: unknown) => {
+  const maybe = msg as { type?: unknown } | null;
+  if (maybe && typeof maybe === 'object' && maybe.type === 'shutdown') {
+    gracefulShutdown('message:shutdown');
+  }
 });
 

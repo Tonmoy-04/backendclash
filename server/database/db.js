@@ -3,22 +3,31 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-// Always prefer a writable AppData directory when running under Electron/packaged
+// Always prefer a writable directory when running under Electron/packaged.
+// Electron main sets DB_DIR to `app.getPath('userData')/database`.
 let DB_DIR;
+const explicitDbDir = process.env.DB_DIR;
 const appDataDir = process.env.APPDATA || os.homedir();
 const electronDbDir = path.join(appDataDir, 'InventoryManager', 'database');
 
 try {
-  // If APP_ENV explicitly says electron OR we are running from a packaged resources path,
-  // direct the DB to AppData (avoids read-only Program Files/resources).
-  const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
-  if (isElectronEnv) {
-    if (!fs.existsSync(electronDbDir)) {
-      fs.mkdirSync(electronDbDir, { recursive: true });
+  if (explicitDbDir && typeof explicitDbDir === 'string') {
+    if (!fs.existsSync(explicitDbDir)) {
+      fs.mkdirSync(explicitDbDir, { recursive: true });
     }
-    DB_DIR = electronDbDir;
+    DB_DIR = explicitDbDir;
   } else {
-    DB_DIR = __dirname;
+    // If APP_ENV explicitly says electron OR we are running from a packaged resources path,
+    // direct the DB to AppData (avoids read-only Program Files/resources).
+    const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
+    if (isElectronEnv) {
+      if (!fs.existsSync(electronDbDir)) {
+        fs.mkdirSync(electronDbDir, { recursive: true });
+      }
+      DB_DIR = electronDbDir;
+    } else {
+      DB_DIR = __dirname;
+    }
   }
 } catch (err) {
   console.warn('Could not create database directory, falling back to local folder:', err.message);
@@ -454,14 +463,21 @@ async function ensureSuppliersTable() {
         phone TEXT,
         address TEXT,
         contact_person TEXT,
+        balance DECIMAL(10, 2) DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
       
       // Restore data, handling old columns that no longer exist
       try {
-        await dbRun(`INSERT INTO suppliers (id, name, email, phone, address, contact_person, created_at, updated_at)
-          SELECT id, name, email, phone, address, contact_person, created_at, updated_at FROM suppliers_old`);
+        const hadBalance = !!colMap.balance;
+        if (hadBalance) {
+          await dbRun(`INSERT INTO suppliers (id, name, email, phone, address, contact_person, balance, created_at, updated_at)
+            SELECT id, name, email, phone, address, contact_person, COALESCE(balance, 0), created_at, updated_at FROM suppliers_old`);
+        } else {
+          await dbRun(`INSERT INTO suppliers (id, name, email, phone, address, contact_person, balance, created_at, updated_at)
+            SELECT id, name, email, phone, address, contact_person, 0, created_at, updated_at FROM suppliers_old`);
+        }
         console.log('Migrated: Restored supplier data to new schema');
       } catch (err) {
         console.error('Error restoring supplier data:', err);
@@ -483,13 +499,22 @@ async function ensureSuppliersTable() {
         phone TEXT,
         address TEXT,
         contact_person TEXT,
+        balance DECIMAL(10, 2) DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
       
       try {
-        await dbRun(`INSERT INTO suppliers_new (id, name, email, phone, address, contact_person, created_at, updated_at)
-          SELECT id, name, email, phone, address, contact_person, created_at, updated_at FROM suppliers`);
+        // Some older DBs may not have balance; default it to 0.
+        const colsNow = await dbAll("PRAGMA table_info('suppliers')");
+        const namesNow = new Set(colsNow.map(c => c.name));
+        if (namesNow.has('balance')) {
+          await dbRun(`INSERT INTO suppliers_new (id, name, email, phone, address, contact_person, balance, created_at, updated_at)
+            SELECT id, name, email, phone, address, contact_person, COALESCE(balance, 0), created_at, updated_at FROM suppliers`);
+        } else {
+          await dbRun(`INSERT INTO suppliers_new (id, name, email, phone, address, contact_person, balance, created_at, updated_at)
+            SELECT id, name, email, phone, address, contact_person, 0, created_at, updated_at FROM suppliers`);
+        }
         
         await dbRun(`DROP TABLE suppliers`);
         await dbRun(`ALTER TABLE suppliers_new RENAME TO suppliers`);
@@ -498,6 +523,18 @@ async function ensureSuppliersTable() {
         console.error('Error removing deprecated columns:', err);
         await dbRun(`DROP TABLE IF EXISTS suppliers_new`);
       }
+    }
+
+    // Ensure balance column exists even if no full migration ran.
+    try {
+      const finalCols = await dbAll("PRAGMA table_info('suppliers')");
+      const finalNames = new Set(finalCols.map(c => c.name));
+      if (!finalNames.has('balance')) {
+        await dbRun("ALTER TABLE suppliers ADD COLUMN balance DECIMAL(10, 2) DEFAULT 0");
+        console.log('Migrated: added suppliers.balance');
+      }
+    } catch (err) {
+      console.error('Error ensuring suppliers.balance:', err);
     }
 
     console.log('Suppliers table migrated successfully');

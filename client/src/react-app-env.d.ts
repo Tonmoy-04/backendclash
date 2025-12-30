@@ -2,6 +2,15 @@
 
 interface Window {
   electronAPI?: {
+    backend?: {
+      getInfo: () => Promise<{
+        port: number | null;
+        baseUrl: string | null;
+        apiBaseUrl: string | null;
+        startedByElectron: boolean;
+        pid: number | null;
+      }>;
+    };
     db?: {
       query: (sql: string, params?: any[]) => Promise<any>;
       execute: (sql: string, params?: any[]) => Promise<any>;

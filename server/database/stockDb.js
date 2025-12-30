@@ -3,20 +3,29 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-// Always prefer a writable AppData directory when running under Electron/packaged
+// Always prefer a writable directory when running under Electron/packaged.
+// Electron main sets DB_DIR to `app.getPath('userData')/database`.
 let STOCK_DB_DIR;
+const explicitDbDir = process.env.DB_DIR;
 const appDataDir = process.env.APPDATA || os.homedir();
 const electronDbDir = path.join(appDataDir, 'InventoryManager', 'database');
 
 try {
-  const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
-  if (isElectronEnv) {
-    if (!fs.existsSync(electronDbDir)) {
-      fs.mkdirSync(electronDbDir, { recursive: true });
+  if (explicitDbDir && typeof explicitDbDir === 'string') {
+    if (!fs.existsSync(explicitDbDir)) {
+      fs.mkdirSync(explicitDbDir, { recursive: true });
     }
-    STOCK_DB_DIR = electronDbDir;
+    STOCK_DB_DIR = explicitDbDir;
   } else {
-    STOCK_DB_DIR = __dirname;
+    const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
+    if (isElectronEnv) {
+      if (!fs.existsSync(electronDbDir)) {
+        fs.mkdirSync(electronDbDir, { recursive: true });
+      }
+      STOCK_DB_DIR = electronDbDir;
+    } else {
+      STOCK_DB_DIR = __dirname;
+    }
   }
 } catch (err) {
   console.warn('Could not create stock database directory, falling back to local folder:', err.message);
