@@ -265,7 +265,7 @@ const Suppliers: React.FC = () => {
   };
 
   const getDailySummary = () => {
-    const dailyMap = new Map<string, { timestamp: number; owed: number; paid: number; balance: number }>();
+    const dailyMap = new Map<string, { timestamp: number; taken: number; given: number; balance: number }>();
     
     // Group transactions by date
     transactions.forEach((t) => {
@@ -278,14 +278,16 @@ const Suppliers: React.FC = () => {
       });
 
       if (!dailyMap.has(dateKey)) {
-        dailyMap.set(dateKey, { timestamp: dateObj.getTime(), owed: 0, paid: 0, balance: 0 });
+        dailyMap.set(dateKey, { timestamp: dateObj.getTime(), taken: 0, given: 0, balance: 0 });
       }
 
       const day = dailyMap.get(dateKey)!;
-      if (t.type === 'charge') {
-        day.owed += t.amount;
-      } else {
-        day.paid += t.amount;
+      if (t.type === 'payment') {
+        // "Given" from the supplier form
+        day.given += t.amount;
+      } else if (t.type === 'charge') {
+        // "Taken" from the supplier form
+        day.taken += t.amount;
       }
       day.balance = t.balance_after;
     });
@@ -498,8 +500,8 @@ const Suppliers: React.FC = () => {
           <thead>
             <tr>
               <th>তারিখ</th>
-              <th>পেলাম</th>
               <th>দিলাম</th>
+              <th>পেলাম</th>
               <th>ব্যালেন্স</th>
               <th>অবস্থা</th>
             </tr>
@@ -514,7 +516,7 @@ const Suppliers: React.FC = () => {
                 }
                 if (t.type === 'payment') {
                   dailySummary[dateKey].given += t.amount;
-                } else {
+                } else if (t.type === 'charge') {
                   dailySummary[dateKey].taken += t.amount;
                 }
                 dailySummary[dateKey].balance = t.balance_after;
@@ -526,8 +528,8 @@ const Suppliers: React.FC = () => {
                 return `
                   <tr>
                     <td>${date}</td>
-                    <td style="color: #16a34a;">৳${data.given.toFixed(2)}</td>
-                    <td style="color: #dc2626;">৳${data.taken.toFixed(2)}</td>
+                    <td style="color: #dc2626;">৳${data.given.toFixed(2)}</td>
+                    <td style="color: #16a34a;">৳${data.taken.toFixed(2)}</td>
                     <td style="font-weight: bold; color: ${statusColor};">৳${Math.abs(data.balance).toFixed(2)}</td>
                     <td><span style="background-color: ${statusColor}15; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${statusText}</span></td>
                   </tr>
@@ -1060,8 +1062,8 @@ const Suppliers: React.FC = () => {
                       <thead className="bg-emerald-100 dark:bg-emerald-900/50 sticky top-0">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase">{t('suppliers.date')}</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase">{t('suppliers.takenDebit')}</th>
                           <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase">{t('suppliers.givenCredit')}</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase">{t('suppliers.takenDebit')}</th>
                           <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase">{t('suppliers.remaining')}</th>
                         </tr>
                       </thead>
@@ -1077,10 +1079,10 @@ const Suppliers: React.FC = () => {
                               })}
                             </td>
                             <td className="px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400">
-                              ৳{day.owed.toFixed(2)}
+                              ৳{day.given.toFixed(2)}
                             </td>
                             <td className="px-4 py-3 text-sm font-bold text-green-600 dark:text-green-400">
-                              ৳{day.paid.toFixed(2)}
+                              ৳{day.taken.toFixed(2)}
                             </td>
                             <td className="px-4 py-3 text-sm font-bold" style={{
                               color: day.balance > 0 ? '#16a34a' : day.balance < 0 ? '#dc2626' : '#6b7280'

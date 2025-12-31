@@ -270,12 +270,14 @@ const Customers: React.FC = () => {
       }
 
       const day = dailyMap.get(dateKey)!;
+      const amount = typeof t.amount === 'number' ? t.amount : parseFloat(t.amount) || 0;
       if (t.type === 'charge') {
-        day.owed += t.amount;
+        day.owed += amount;
       } else {
-        day.paid += t.amount;
+        day.paid += amount;
       }
-      day.balance = t.balance_after;
+      // Customer history balance rule: balance = spend - deposit
+      day.balance = day.owed - day.paid;
     });
 
     // Convert to sorted array (newest first)
@@ -486,8 +488,8 @@ const Customers: React.FC = () => {
           <thead>
             <tr>
               <th>তারিখ</th>
-              <th>দিলাম</th>
-              <th>পেলাম</th>
+              <th>জমা</th>
+              <th>খরচ</th>
               <th>ব্যালেন্স</th>
               <th>অবস্থা</th>
             </tr>
@@ -664,7 +666,7 @@ const Customers: React.FC = () => {
                 >
                   <span className="flex items-center gap-2">
                     <span className="text-lg">✅</span>
-                    {t('customers.credit') || 'Credit'}
+                    {t('customers.credit') || ''}
                   </span>
                   {balanceFilter === 'owe' && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
@@ -1048,9 +1050,9 @@ const Customers: React.FC = () => {
                               ৳{day.owed.toFixed(2)}
                             </td>
                             <td className="px-4 py-3 text-sm font-bold" style={{
-                              color: day.balance > 0 ? '#dc2626' : day.balance < 0 ? '#16a34a' : '#6b7280'
+                              color: day.balance > 0 ? '#16a34a' : day.balance < 0 ? '#dc2626' : '#6b7280'
                             }}>
-                              ৳{Math.floor(day.balance)}
+                              ৳{Math.floor(Math.abs(day.balance))}
                             </td>
                           </tr>
                         ))}

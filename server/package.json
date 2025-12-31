@@ -5,7 +5,7 @@
   "scripts": {
     "start": "ts-node app.ts",
     "dev": "nodemon --exec ts-node app.ts",
-    "build": "tsc && if not exist dist\\database mkdir dist\\database && xcopy /Y /I database\\*.sql dist\\database\\ && xcopy /Y /I database\\*.js dist\\database\\ && if not exist dist\\controllers mkdir dist\\controllers && xcopy /Y /E /I controllers dist\\controllers && if not exist dist\\routes mkdir dist\\routes && xcopy /Y /E /I routes dist\\routes && if not exist dist\\middlewares mkdir dist\\middlewares && xcopy /Y /E /I middlewares dist\\middlewares && if not exist dist\\utils mkdir dist\\utils && xcopy /Y /E /I utils dist\\utils && xcopy /Y backup.config.json dist\\backup.config.json",
+    "build": "tsc && if not exist dist\\database mkdir dist\\database && xcopy /Y /I database\\*.sql dist\\database\\ && xcopy /Y /I database\\*.js dist\\database\\ && if not exist dist\\controllers mkdir dist\\controllers && xcopy /Y /E /I controllers dist\\controllers && if not exist dist\\routes mkdir dist\\routes && xcopy /Y /E /I routes dist\\routes && if not exist dist\\middlewares mkdir dist\\middlewares && xcopy /Y /E /I middlewares dist\\middlewares && if not exist dist\\utils mkdir dist\\utils && xcopy /Y /E /I utils dist\\utils && if not exist dist\\config\\fonts mkdir dist\\config\\fonts && xcopy /Y /E /I config\\fonts dist\\config\\fonts && xcopy /Y backup.config.json dist\\backup.config.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

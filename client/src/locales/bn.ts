@@ -29,7 +29,7 @@ export const bn = {
   // Navigation
   nav: {
     dashboard: 'ড্যাশবোর্ড',
-    inventory: 'ইনভেন্টরি',
+    inventory: 'স্টক',
     transactions: 'লেনদেন',
     billGenerator: 'বিল জেনারেটর',
     customers: 'গ্রাহক',
@@ -93,7 +93,7 @@ export const bn = {
 
   // Inventory
   inventory: {
-    title: 'ইনভেন্টরি',
+    title: 'স্টক',
     addProduct: 'পণ্য যোগ করুন',
     searchPlaceholder: 'নাম দ্বারা খুঁজুন...',
     noProducts: 'কোন পণ্য পাওয়া যায়নি',

@@ -186,17 +186,21 @@ const Transactions: React.FC = () => {
       return;
     }
 
-    const sanitizedItems = formData.lineItems
+    let sanitizedItems = formData.lineItems
       .map(item => ({
         product_name: String(item.product_name ?? '').trim(),
         quantity: typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1,
         price: typeof item.price === 'number' && item.price >= 0 ? item.price : 0,
       }))
-      .filter(item => item.product_name || item.price > 0);
+      .filter(item => item.product_name || item.price > 0)
+      .map(item => ({
+        ...item,
+        product_name: item.product_name || 'N/A',
+      }));
 
+    // Items are optional: if nothing provided, use a sensible default.
     if (sanitizedItems.length === 0) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please add at least one item' });
-      return;
+      sanitizedItems = [{ product_name: 'N/A', quantity: 1, price: 0 }];
     }
 
     const subtotal = sanitizedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
@@ -491,10 +495,10 @@ const Transactions: React.FC = () => {
         </div>
 
         {/* Transactions Table */}
-        <div className="bg-gradient-to-br from-white to-emerald-50/30 dark:from-emerald-900 dark:to-teal-900/30 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/30">
+        <div className="bg-white/80 dark:bg-emerald-950/30 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm border border-slate-200/70 dark:border-emerald-800/60">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-emerald-200 dark:divide-emerald-800">
-              <thead className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50">
+            <table className="min-w-full divide-y divide-slate-200/70 dark:divide-emerald-800">
+              <thead className="bg-slate-50/90 dark:bg-emerald-900/40">
                 <tr>
                   <th className="px-6 py-4 text-left">
                     <input
@@ -504,37 +508,41 @@ const Transactions: React.FC = () => {
                         filteredTransactions.length > 0 &&
                         selectedTransactions.length === filteredTransactions.length
                       }
-                      className="w-4 h-4 rounded border-emerald-200 text-emerald-400"
+                      className="w-4 h-4 rounded border-slate-300 text-blue-600"
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
                     {t('transactions.id')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
                     {t('common.date')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
                     {t('transactions.type')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
                     {t('transactions.party')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
                     {t('transactions.amount')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
                     {t('transactions.payment')}
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
                     {t('common.actions')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white/50 dark:bg-emerald-950/30 divide-y divide-emerald-100 dark:divide-emerald-800/50">
+              <tbody className="bg-white/60 dark:bg-emerald-950/30 divide-y divide-slate-100 dark:divide-emerald-800/50">
                 {filteredTransactions.map((transaction, index) => (
                   <tr
                     key={transaction.id}
-                    className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-200"
+                    className={`cursor-pointer transition-colors duration-150 ${
+                      index % 2 === 0
+                        ? 'bg-white/70 dark:bg-emerald-950/20'
+                        : 'bg-slate-50/60 dark:bg-emerald-950/35'
+                    } hover:bg-slate-100/70 dark:hover:bg-emerald-900/30`}
                     onClick={() => handleEditTransaction(transaction)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
@@ -542,13 +550,13 @@ const Transactions: React.FC = () => {
                         type="checkbox"
                         checked={selectedTransactions.includes(transaction.id)}
                         onChange={() => handleSelectTransaction(transaction.id)}
-                        className="w-4 h-4 rounded border-emerald-200 text-emerald-400"
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-900 dark:text-emerald-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-emerald-100">
                       #{transaction.id}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-700 dark:text-emerald-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-emerald-300">
                       {(() => {
                         const date = new Date(transaction.type === 'sale' ? (transaction as any).sale_date || transaction.created_at : (transaction as any).purchase_date || transaction.created_at);
                         const day = String(date.getDate()).padStart(2, '0');
@@ -566,26 +574,26 @@ const Transactions: React.FC = () => {
                         {transaction.type === 'sale' ? t('transactions.sales') : t('transactions.purchases')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-base font-bold text-emerald-900 dark:text-emerald-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-base font-bold text-slate-900 dark:text-emerald-100">
                       {transaction.customer_name || transaction.supplier_name || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-900 dark:text-emerald-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-emerald-100">
                       ৳{Math.floor(Number(transaction.total ?? 0))}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-700 dark:text-emerald-300 capitalize">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-emerald-300 capitalize">
                       {transaction.payment_method || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditTransaction(transaction)}
-                          className="px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white rounded-lg font-semibold text-xs hover:shadow-md"
+                          className="px-3 py-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold text-xs hover:shadow-md"
                         >
                           {t('common.edit')}
                         </button>
                         <button
                           onClick={() => handleDeleteTransaction(transaction)}
-                          className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-600 dark:to-pink-600 text-white rounded-lg font-semibold text-xs hover:shadow-md"
+                          className="px-3 py-1 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg font-semibold text-xs hover:shadow-md"
                         >
                           {t('common.delete')}
                         </button>
@@ -661,7 +669,7 @@ const Transactions: React.FC = () => {
               </h2>
             </div>
             
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-6">
               {/* Required Fields */}
               <div>
                 <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
@@ -671,7 +679,7 @@ const Transactions: React.FC = () => {
                   type="text"
                   value={formData.customer}
                   onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white/80 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all shadow-sm"
                   placeholder={formData.type === 'Sale' ? t('transactions.customerPlaceholder') : t('transactions.supplierPlaceholder')}
                   required
                 />
@@ -718,7 +726,7 @@ const Transactions: React.FC = () => {
                 <select
                   value={formData.paymentMethod}
                   onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white/80 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all shadow-sm"
                 >
                   <option value="due">{t('transactions.dueUnpaid')}</option>
                   <option value="cash">{t('transactions.cash')}</option>
@@ -727,9 +735,12 @@ const Transactions: React.FC = () => {
                 </select>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100">Items</label>
+              <div className="space-y-3 p-4 rounded-2xl border border-emerald-200/70 dark:border-emerald-800/60 bg-white/50 dark:bg-emerald-950/30">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wide font-semibold text-emerald-700 dark:text-emerald-300">{t('transactions.items') || 'Items'}</div>
+                    <div className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{t('transactions.itemsOptional') || 'Items (optional)'}</div>
+                  </div>
                   <button
                     type="button"
                     onClick={() =>
@@ -738,14 +749,14 @@ const Transactions: React.FC = () => {
                         lineItems: [...prev.lineItems, { product_name: '', quantity: 1, price: 0 }],
                       }))
                     }
-                    className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 hover:underline"
+                    className="px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white/80 dark:bg-emerald-950 text-sm font-semibold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all shadow-sm"
                   >
                     + Add Item
                   </button>
                 </div>
 
                 {formData.lineItems.map((item, index) => (
-                  <div key={index} className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white/70 dark:bg-emerald-950/50 space-y-3">
+                  <div key={index} className="p-4 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/70 bg-white/80 dark:bg-emerald-950/50 space-y-3 shadow-sm">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                       <div className="md:col-span-4">
                         <label className="block text-xs font-bold text-emerald-800 dark:text-emerald-200 mb-1">Item</label>
@@ -760,7 +771,7 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             });
                           }}
-                          className="w-full px-3 py-2 rounded-lg border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                          className="w-full px-3 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
                           placeholder="Item name"
                         />
                       </div>
@@ -779,7 +790,7 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             });
                           }}
-                          className="w-full px-3 py-2 rounded-lg border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                          className="w-full px-3 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
                           placeholder="1"
                         />
                       </div>
@@ -798,14 +809,14 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             });
                           }}
-                          className="w-full px-3 py-2 rounded-lg border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                          className="w-full px-3 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
                           placeholder="0.00"
                         />
                       </div>
 
                       <div className="md:col-span-2">
                         <label className="block text-xs font-bold text-emerald-800 dark:text-emerald-200 mb-1">Line Total</label>
-                        <div className="px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 border-2 border-emerald-200 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100">
+                        <div className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 border-2 border-emerald-200 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100 text-right font-semibold">
                           {Math.floor((typeof item.quantity === 'number' ? item.quantity : 0) * (typeof item.price === 'number' ? item.price : 0))}
                         </div>
                       </div>
@@ -820,7 +831,7 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             })
                           }
-                          className="text-red-500 hover:text-red-600 font-bold"
+                          className="p-2 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all font-bold"
                           title="Remove item"
                         >
                           ✕
@@ -831,7 +842,7 @@ const Transactions: React.FC = () => {
                 ))}
 
                 {/* Subtotal and Adjustment */}
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2 pt-2 p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-900/20 border border-emerald-200/70 dark:border-emerald-800/60">
                   <div className="flex items-center justify-between text-sm font-medium text-emerald-700 dark:text-emerald-300">
                     <span>Subtotal</span>
                     <span>
@@ -926,13 +937,13 @@ const Transactions: React.FC = () => {
             <div className="flex gap-3 px-6 pb-6 pt-2">
               <button
                 onClick={handleCancel}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={handleAddTransaction}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
               >
                 {editingTransaction ? t('common.save') : t('transactions.addTransaction')}
               </button>
