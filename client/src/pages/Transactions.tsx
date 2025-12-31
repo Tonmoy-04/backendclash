@@ -419,9 +419,9 @@ const Transactions: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/')}
-              className="p-2 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900 dark:to-teal-900 rounded-xl hover:shadow-lg hover:scale-110 transition-all duration-300 group"
+              className="p-2 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900 dark:to-teal-900 rounded-xl hover:shadow-md transition-all duration-200 group"
             >
-              <ArrowLeftIcon className="h-6 w-6 text-emerald-700 dark:text-emerald-400 group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeftIcon className="h-6 w-6 text-emerald-700 dark:text-emerald-400 group-hover:-translate-x-1 transition-transform duration-200" />
             </button>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 dark:from-emerald-400 dark:via-teal-400 dark:to-emerald-400 bg-clip-text text-transparent drop-shadow-lg">
               {t('transactions.title')}
@@ -431,7 +431,7 @@ const Transactions: React.FC = () => {
             {selectedTransactions.length > 0 && (
               <button 
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <span className="text-xl">🗑️</span>
                 {t('common.delete')} ({selectedTransactions.length})
@@ -454,30 +454,30 @@ const Transactions: React.FC = () => {
           <div className="flex gap-3">
             <button
             onClick={() => setFilter('all')}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
               filter === 'all'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white shadow-lg scale-105'
-                : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-300 hover:scale-105'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white shadow-lg'
+                : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-300'
             }`}
           >
             {t('transactions.all')}
           </button>
           <button
             onClick={() => setFilter('sale')}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
               filter === 'sale'
-                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-600 dark:to-cyan-600 text-white shadow-lg scale-105'
-                : 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 text-blue-700 dark:text-blue-300 hover:scale-105'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-600 dark:to-cyan-600 text-white shadow-lg'
+                : 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 text-blue-700 dark:text-blue-300'
             }`}
           >
             {t('transactions.sales')}
           </button>
           <button
             onClick={() => setFilter('purchase')}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
               filter === 'purchase'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-600 dark:to-pink-600 text-white shadow-lg scale-105'
-                : 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 text-purple-700 dark:text-purple-300 hover:scale-105'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-600 dark:to-pink-600 text-white shadow-lg'
+                : 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 text-purple-700 dark:text-purple-300'
             }`}
           >
             {t('transactions.purchases')}
@@ -495,92 +495,89 @@ const Transactions: React.FC = () => {
         </div>
 
         {/* Transactions Table */}
-        <div className="bg-white/80 dark:bg-emerald-950/30 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm border border-slate-200/70 dark:border-emerald-800/60">
+        <div className="bg-gradient-to-br from-white to-emerald-50/30 dark:from-emerald-900 dark:to-teal-900/30 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/30 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200/70 dark:divide-emerald-800">
-              <thead className="bg-slate-50/90 dark:bg-emerald-900/40">
-                <tr>
-                  <th className="px-6 py-4 text-left">
+            <table className="min-w-full divide-y divide-emerald-200 dark:divide-emerald-800">
+            <thead className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50">
+              <tr>
+                <th className="px-6 py-4 text-left">
+                  <input
+                    type="checkbox"
+                    onChange={() => handleSelectAll()}
+                    checked={
+                      filteredTransactions.length > 0 &&
+                      selectedTransactions.length === filteredTransactions.length
+                    }
+                    className="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  {t('transactions.id')}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  {t('common.date')}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  {t('transactions.type')}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  {t('transactions.party')}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  {t('transactions.amount')}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  {t('transactions.payment')}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
+                  {t('common.actions')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white/50 dark:bg-emerald-950/30 divide-y divide-emerald-100 dark:divide-emerald-800/50">
+              {filteredTransactions.map((transaction, index) => (
+                <tr
+                  key={transaction.id}
+                  className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-200 animate-fadeIn"
+                  style={{ animationDelay: `${0.4 + index * 0.05}s` }}
+                  onClick={() => handleEditTransaction(transaction)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
-                      onChange={() => handleSelectAll()}
-                      checked={
-                        filteredTransactions.length > 0 &&
-                        selectedTransactions.length === filteredTransactions.length
-                      }
-                      className="w-4 h-4 rounded border-slate-300 text-blue-600"
+                      checked={selectedTransactions.includes(transaction.id)}
+                      onChange={() => handleSelectTransaction(transaction.id)}
+                      className="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
                     />
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
-                    {t('transactions.id')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
-                    {t('common.date')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
-                    {t('transactions.type')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
-                    {t('transactions.party')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
-                    {t('transactions.amount')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
-                    {t('transactions.payment')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 dark:text-emerald-100 uppercase tracking-wider">
-                    {t('common.actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white/60 dark:bg-emerald-950/30 divide-y divide-slate-100 dark:divide-emerald-800/50">
-                {filteredTransactions.map((transaction, index) => (
-                  <tr
-                    key={transaction.id}
-                    className={`cursor-pointer transition-colors duration-150 ${
-                      index % 2 === 0
-                        ? 'bg-white/70 dark:bg-emerald-950/20'
-                        : 'bg-slate-50/60 dark:bg-emerald-950/35'
-                    } hover:bg-slate-100/70 dark:hover:bg-emerald-900/30`}
-                    onClick={() => handleEditTransaction(transaction)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedTransactions.includes(transaction.id)}
-                        onChange={() => handleSelectTransaction(transaction.id)}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-emerald-100">
-                      #{transaction.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-emerald-300">
-                      {(() => {
-                        const date = new Date(transaction.type === 'sale' ? (transaction as any).sale_date || transaction.created_at : (transaction as any).purchase_date || transaction.created_at);
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const year = date.getFullYear();
-                        return `${day}-${month}-${year}`;
-                      })()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold shadow-md ${
-                        transaction.type === 'sale'
-                          ? 'bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white'
-                          : 'bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 text-white'
-                      }`}>
-                        {transaction.type === 'sale' ? t('transactions.sales') : t('transactions.purchases')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-base font-bold text-slate-900 dark:text-emerald-100">
-                      {transaction.customer_name || transaction.supplier_name || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-emerald-100">
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-900 dark:text-emerald-100">
+                    #{transaction.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 dark:text-emerald-300">
+                    {(() => {
+                      const date = new Date(transaction.type === 'sale' ? (transaction as any).sale_date || transaction.created_at : (transaction as any).purchase_date || transaction.created_at);
+                      const day = String(date.getDate()).padStart(2, '0');
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const year = date.getFullYear();
+                      return `${day}-${month}-${year}`;
+                    })()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold shadow-md ${
+                      transaction.type === 'sale'
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white'
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 text-white'
+                    }`}>
+                      {transaction.type === 'sale' ? t('transactions.sales') : t('transactions.purchases')}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-base font-bold text-emerald-900 dark:text-emerald-100">
+                    {transaction.customer_name || transaction.supplier_name || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-900 dark:text-emerald-100">
                       ৳{Math.floor(Number(transaction.total ?? 0))}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-emerald-300 capitalize">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 dark:text-emerald-300 capitalize">
                       {transaction.payment_method || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
@@ -656,50 +653,53 @@ const Transactions: React.FC = () => {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={handleCancel}>
-          <div className="bg-gradient-to-br from-white to-emerald-50/30 dark:from-emerald-900 dark:to-teal-900/30 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-emerald-200/50 dark:border-emerald-700/30" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => {
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={handleCancel}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 animate-modalEnter" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleAddTransaction();
             }
           }}>
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 px-6 py-4 rounded-t-2xl">
-              <h2 className="text-2xl font-bold text-white">
+            {/* VISUAL ONLY: Header refactoring - improved visual hierarchy */}
+            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 dark:from-emerald-700 dark:via-teal-700 dark:to-emerald-800 px-8 py-6 rounded-t-2xl border-b border-emerald-500/30">
+              <h2 className="text-2xl font-bold text-white drop-shadow-md">
                 {editingTransaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
               </h2>
+              <p className="text-emerald-100/70 text-sm mt-1">{editingTransaction ? t('transactions.updateTransaction') : t('transactions.createTransaction')}</p>
             </div>
             
-            <div className="p-6 space-y-6">
-              {/* Required Fields */}
-              <div>
-                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
-                  {t('transactions.customerName')} <span className="text-red-500">*</span>
+            <div className="p-8 space-y-6">
+              {/* VISUAL ONLY: Required Fields - improved spacing and clarity */}
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {t('transactions.customerName')} <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.customer}
                   onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white/80 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all shadow-sm"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all duration-150 shadow-sm"
                   placeholder={formData.type === 'Sale' ? t('transactions.customerPlaceholder') : t('transactions.supplierPlaceholder')}
                   required
                 />
               </div>
 
-              {/* Optional: Transaction Type surfaced early */}
-              <div className="p-4 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/50 dark:to-teal-900/50 shadow-sm flex flex-col md:flex-row md:items-center gap-3">
-                <div className="flex-1">
-                  <div className="text-[11px] uppercase tracking-wide font-semibold text-emerald-600 dark:text-emerald-300">{t('transactions.optional')}</div>
-                  <div className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{t('transactions.transactionType')}</div>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">{t('transactions.chooseType')}</p>
+              {/* VISUAL ONLY: Transaction Type Section - improved card styling */}
+              <div className="p-5 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm">
+                <div className="flex flex-col gap-3 mb-4">
+                  <div>
+                    <div className="text-xs uppercase tracking-widest font-semibold text-slate-600 dark:text-slate-400">Optional</div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('transactions.transactionType')}</h3>
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, type: 'Sale' }))}
-                    className={`px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all duration-200 shadow-sm ${
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 text-sm font-semibold transition-all duration-200 ${
                       formData.type === 'Sale'
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-400 ring-2 ring-emerald-200/60'
-                        : 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-100 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 hover:shadow'
+                        ? 'bg-emerald-600 dark:bg-emerald-700 text-white border-emerald-600 dark:border-emerald-700 shadow-md'
+                        : 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500'
                     }`}
                   >
                     {t('transactions.sales')}
@@ -707,10 +707,10 @@ const Transactions: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, type: 'Purchase' }))}
-                    className={`px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all duration-200 shadow-sm ${
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 text-sm font-semibold transition-all duration-200 ${
                       formData.type === 'Purchase'
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-blue-400 ring-2 ring-blue-200/60'
-                        : 'bg-white dark:bg-emerald-950 text-emerald-800 dark:text-emerald-100 border-emerald-200 dark:border-emerald-700 hover:border-blue-300 hover:shadow'
+                        ? 'bg-blue-600 dark:bg-blue-700 text-white border-blue-600 dark:border-blue-700 shadow-md'
+                        : 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500'
                     }`}
                   >
                     {t('transactions.purchases')}
@@ -718,15 +718,15 @@ const Transactions: React.FC = () => {
                 </div>
               </div>
 
-              {/* Payment Method */}
-              <div>
-                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+              {/* VISUAL ONLY: Payment Method - improved styling */}
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
                   {t('transactions.paymentMethod')}
                 </label>
                 <select
                   value={formData.paymentMethod}
                   onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white/80 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all shadow-sm"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all shadow-sm"
                 >
                   <option value="due">{t('transactions.dueUnpaid')}</option>
                   <option value="cash">{t('transactions.cash')}</option>
@@ -735,11 +735,12 @@ const Transactions: React.FC = () => {
                 </select>
               </div>
 
-              <div className="space-y-3 p-4 rounded-2xl border border-emerald-200/70 dark:border-emerald-800/60 bg-white/50 dark:bg-emerald-950/30">
-                <div className="flex items-center justify-between gap-3">
+              {/* VISUAL ONLY: Line Items Section - improved card hierarchy and spacing */}
+              <div className="space-y-4 p-6 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-[11px] uppercase tracking-wide font-semibold text-emerald-700 dark:text-emerald-300">{t('transactions.items') || 'Items'}</div>
-                    <div className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{t('transactions.itemsOptional') || 'Items (optional)'}</div>
+                    <div className="text-xs uppercase tracking-widest font-semibold text-slate-600 dark:text-slate-400">{t('transactions.items')}</div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('transactions.itemsOptional')}</h3>
                   </div>
                   <button
                     type="button"
@@ -749,17 +750,17 @@ const Transactions: React.FC = () => {
                         lineItems: [...prev.lineItems, { product_name: '', quantity: 1, price: 0 }],
                       }))
                     }
-                    className="px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white/80 dark:bg-emerald-950 text-sm font-semibold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all shadow-sm"
+                    className="px-4 py-2 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm font-semibold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-600 transition-all duration-200 shadow-sm"
                   >
-                    + Add Item
+                    + {t('transactions.addItem')}
                   </button>
                 </div>
 
                 {formData.lineItems.map((item, index) => (
-                  <div key={index} className="p-4 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/70 bg-white/80 dark:bg-emerald-950/50 space-y-3 shadow-sm">
+                  <div key={index} className="p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-3 shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                      <div className="md:col-span-4">
-                        <label className="block text-xs font-bold text-emerald-800 dark:text-emerald-200 mb-1">Item</label>
+                      <div className="md:col-span-4 space-y-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('transactions.itemLabel')}</label>
                         <input
                           type="text"
                           value={item.product_name || ''}
@@ -771,13 +772,13 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             });
                           }}
-                          className="w-full px-3 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                          className="w-full px-3 py-2 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
                           placeholder="Item name"
                         />
                       </div>
 
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-emerald-800 dark:text-emerald-200 mb-1">Qty</label>
+                      <div className="md:col-span-2 space-y-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('transactions.qtyLabel')}</label>
                         <input
                           type="number"
                           min="1"
@@ -790,13 +791,13 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             });
                           }}
-                          className="w-full px-3 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                          className="w-full px-3 py-2 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
                           placeholder="1"
                         />
                       </div>
 
-                      <div className="md:col-span-3">
-                        <label className="block text-xs font-bold text-emerald-800 dark:text-emerald-200 mb-1">Unit {formData.type === 'Sale' ? 'Price' : 'Cost'}</label>
+                      <div className="md:col-span-3 space-y-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{formData.type === 'Sale' ? t('transactions.unitPriceLabel') : t('transactions.unitCostLabel')}</label>
                         <input
                           type="number"
                           min="0"
@@ -809,14 +810,14 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             });
                           }}
-                          className="w-full px-3 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 placeholder:text-emerald-400/70 dark:placeholder:text-emerald-300/40 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                          className="w-full px-3 py-2 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
                           placeholder="0.00"
                         />
                       </div>
 
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-emerald-800 dark:text-emerald-200 mb-1">Line Total</label>
-                        <div className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 border-2 border-emerald-200 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100 text-right font-semibold">
+                      <div className="md:col-span-2 space-y-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('transactions.lineTotalLabel')}</label>
+                        <div className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-right font-semibold text-sm">
                           {Math.floor((typeof item.quantity === 'number' ? item.quantity : 0) * (typeof item.price === 'number' ? item.price : 0))}
                         </div>
                       </div>
@@ -831,7 +832,7 @@ const Transactions: React.FC = () => {
                               return { ...prev, lineItems };
                             })
                           }
-                          className="p-2 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all font-bold"
+                          className="p-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 font-bold"
                           title="Remove item"
                         >
                           ✕
@@ -841,11 +842,11 @@ const Transactions: React.FC = () => {
                   </div>
                 ))}
 
-                {/* Subtotal and Adjustment */}
-                <div className="space-y-2 pt-2 p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-900/20 border border-emerald-200/70 dark:border-emerald-800/60">
-                  <div className="flex items-center justify-between text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                    <span>Subtotal</span>
-                    <span>
+                {/* VISUAL ONLY: Subtotal and Total - enhanced distinction */}
+                <div className="space-y-3 pt-4 border-t-2 border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('transactions.subtotal')}</span>
+                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       ৳{
                         formData.lineItems.reduce((sum, item) => {
                           const qty = typeof item.quantity === 'number' ? item.quantity : 0;
@@ -857,14 +858,14 @@ const Transactions: React.FC = () => {
                   </div>
                   
                   {formData.discount !== '' && formData.discount !== 0 && (
-                    <div className="flex items-center justify-between text-sm font-medium text-orange-700 dark:text-orange-300">
-                      <span>Discount</span>
-                      <span>-৳{Number(formData.discount).toFixed(2)}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">{t('transactions.discount')}</span>
+                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">-৳{Number(formData.discount).toFixed(2)}</span>
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between pt-2 border-t-2 border-emerald-300 dark:border-emerald-700">
-                    <span className="text-xl font-bold text-emerald-900 dark:text-emerald-100">Total</span>
+                  <div className="flex items-center justify-between pt-3 px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800">
+                    <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('transactions.total')}</span>
                     <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                       ৳{
                         (formData.lineItems.reduce((sum, item) => {
@@ -878,35 +879,35 @@ const Transactions: React.FC = () => {
                 </div>
               </div>
 
-              {/* Additional Details Toggle */}
+              {/* VISUAL ONLY: Additional Details Toggle - enhanced styling */}
               <button
                 type="button"
                 onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 rounded-xl hover:shadow-md transition-all duration-300 group"
+                className="w-full flex items-center justify-between px-5 py-3 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 border-2 border-slate-200 dark:border-slate-700"
               >
-                <span className="font-semibold text-emerald-900 dark:text-emerald-100">Additional Details</span>
-                <span className={`text-emerald-700 dark:text-emerald-300 transition-transform duration-300 ${
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{t('transactions.additionalDetails')}</span>
+                <span className={`text-slate-700 dark:text-slate-300 transition-transform duration-200 ${
                   showAdditionalDetails ? 'rotate-180' : ''
                 }`}>▼</span>
               </button>
 
-              {/* Optional Fields - Hidden by Default */}
+              {/* VISUAL ONLY: Optional Fields - refined spacing and styling */}
               {showAdditionalDetails && (
-                <div className="space-y-4 mt-4 animate-in slide-in-from-top duration-300">
-                  <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+                <div className="space-y-4 mt-4 p-6 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 animate-slideDown">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
                       {t('common.date')}
                     </label>
                     <input
                       type="date"
                       value={formData.transaction_date}
                       onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
                       {t('billGenerator.discount')} ({t('transactions.optional')})
                     </label>
                     <input
@@ -914,19 +915,19 @@ const Transactions: React.FC = () => {
                       value={formData.discount}
                       onChange={(e) => setFormData({ ...formData, discount: e.target.value === '' ? '' : parseNumericInput(e.target.value) })}
                       placeholder="0"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
-                      Notes / Description
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
+                      {t('transactions.notes')}
                     </label>
                     <textarea
                       value={formData.itemsNote}
                       onChange={(e) => setFormData({ ...formData, itemsNote: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                      placeholder="Optional details about this transaction"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
+                      placeholder={t('transactions.notesPlaceholder')}
                       rows={3}
                     />
                   </div>
@@ -934,16 +935,17 @@ const Transactions: React.FC = () => {
               )}
             </div>
 
-            <div className="flex gap-3 px-6 pb-6 pt-2">
+            {/* VISUAL ONLY: Footer Action Buttons - improved styling and spacing */}
+            <div className="flex gap-3 px-8 pb-8 pt-4">
               <button
                 onClick={handleCancel}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
+                className="flex-1 px-6 py-3 bg-slate-300 dark:bg-slate-700 text-slate-900 dark:text-slate-100 font-semibold rounded-lg hover:bg-slate-400 dark:hover:bg-slate-600 focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 focus:outline-none transition-all duration-200 shadow-sm"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={handleAddTransaction}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-800 text-white font-semibold rounded-lg hover:shadow-lg hover:from-emerald-700 hover:to-emerald-800 dark:hover:from-emerald-800 dark:hover:to-emerald-900 focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-600 focus:outline-none transition-all duration-200"
               >
                 {editingTransaction ? t('common.save') : t('transactions.addTransaction')}
               </button>
@@ -951,59 +953,6 @@ const Transactions: React.FC = () => {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes fadeInDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fadeInRight {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        .animate-fadeInDown {
-          animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        .animate-fadeInRight {
-          animation: fadeInRight 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-in forwards;
-        }
-      `}</style>
     </div>
   );
 };

@@ -167,7 +167,22 @@ export const en = {
     supplierPlaceholder: 'Supplier/Party name',
     optional: 'Optional',
     chooseType: 'Choose how this entry will be recorded before adding items.',
-    dueUnpaid: 'Due (Unpaid)'
+    dueUnpaid: 'Due (Unpaid)',
+    itemLabel: 'Item',
+    qtyLabel: 'Qty',
+    unitPriceLabel: 'Unit Price',
+    unitCostLabel: 'Unit Cost',
+    lineTotalLabel: 'Line Total',
+    additionalDetails: 'Additional Details',
+    notes: 'Notes / Description',
+    notesPlaceholder: 'Optional details about this transaction',
+    discount: 'Discount',
+    subtotal: 'Subtotal',
+    total: 'Total',
+    addItem: 'Add Item',
+    removeItem: 'Remove item',
+    createTransaction: 'Create a new transaction record',
+    updateTransaction: 'Update transaction details'
   },
 
   // Customers

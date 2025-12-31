@@ -269,7 +269,7 @@ const Inventory: React.FC = () => {
             {selectedProducts.length > 0 && (
               <button
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-600 dark:to-pink-600 text-white font-semibold px-4 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 animate-fadeInRight"
+                className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-600 dark:to-pink-600 text-white font-semibold px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 animate-fadeInRight"
                 style={{ animationDelay: '0.15s' }}
               >
                 <TrashIcon className="h-5 w-5" />
@@ -278,7 +278,7 @@ const Inventory: React.FC = () => {
             )}
             <button 
               onClick={() => navigate('/inventory/add')} 
-              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 animate-fadeInRight" 
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 animate-fadeInRight" 
               style={{ animationDelay: '0.2s' }}
             >
               <PlusIcon className="h-5 w-5" />
@@ -345,7 +345,7 @@ const Inventory: React.FC = () => {
               {filteredProducts.map((product, index) => {
                 const status = getStockStatus(product.quantity, product.min_stock);
                 return (
-                  <tr key={product.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-300 animate-fadeIn" style={{ animationDelay: `${0.5 + index * 0.05}s` }} onClick={() => navigate(`/inventory/edit/${product.id}`)}>
+                  <tr key={product.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-200 animate-fadeIn" style={{ animationDelay: `${0.5 + index * 0.05}s` }} onClick={() => navigate(`/inventory/edit/${product.id}`)}>
                     <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
@@ -385,13 +385,13 @@ const Inventory: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-2">
                         <button 
-                          className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white rounded-lg hover:shadow-lg hover:scale-110 transition-all duration-300" 
+                          className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all duration-200" 
                           title={t('inventory.editProduct')} 
                           onClick={() => navigate(`/inventory/edit/${product.id}`)}
                         >
                           <PencilIcon className="h-5 w-5" />
                         </button>
-                        <button className="p-2 bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-600 dark:to-pink-600 text-white rounded-lg hover:shadow-lg hover:scale-110 transition-all duration-300" title={t('inventory.deleteProduct')} onClick={() => handleDelete(product)}>
+                        <button className="p-2 bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-600 dark:to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200" title={t('inventory.deleteProduct')} onClick={() => handleDelete(product)}>
                           <TrashIcon className="h-5 w-5" />
                         </button>
                       </div>
@@ -420,7 +420,7 @@ const Inventory: React.FC = () => {
                   setEndDate('');
                   setShowDateFilter(false);
                 }}
-                className="text-white text-xl font-bold hover:scale-110 transition-transform"
+                className="text-white text-xl font-bold transition-all duration-175"
                 aria-label="Close"
               >
                 ✕
@@ -432,7 +432,7 @@ const Inventory: React.FC = () => {
               <div className="flex items-center justify-end mb-3">
                 <button
                   onClick={() => setShowDateFilter(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <span className="text-xl">📅</span>
                   {t('common.filter') || 'Filter'}

@@ -167,7 +167,22 @@ export const bn = {
     supplierPlaceholder: 'সরবরাহকারী/পক্ষের নাম',
     optional: 'ঐচ্ছিক',
     chooseType: 'আইটেম যোগ করার আগে এই এন্ট্রি কিভাবে রেকর্ড করা হবে তা চয়ন করুন।',
-    dueUnpaid: 'বকেয়া (অপরিশোধিত)'
+    dueUnpaid: 'বকেয়া (অপরিশোধিত)',
+    itemLabel: 'পণ্য',
+    qtyLabel: 'পরিমাণ',
+    unitPriceLabel: 'এককের মূল্য',
+    unitCostLabel: 'এককের খরচ',
+    lineTotalLabel: 'লাইন মোট',
+    additionalDetails: 'অতিরিক্ত বিবরণ',
+    notes: 'নোট / বর্ণনা',
+    notesPlaceholder: 'এই লেনদেন সম্পর্কে ঐচ্ছিক বিবরণ',
+    discount: 'ছাড়',
+    subtotal: 'সাব-টোটাল',
+    total: 'মোট',
+    addItem: 'পণ্য যোগ করুন',
+    removeItem: 'আইটেম সরান',
+    createTransaction: 'নতুন লেনদেন তৈরি করুন',
+    updateTransaction: 'লেনদেন আপডেট করুন'
   },
 
   // Customers

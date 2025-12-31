@@ -585,17 +585,6 @@ const Suppliers: React.FC = () => {
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950">
-      <style>{`
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fadeInDown { animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
-        .animate-fadeInRight { animation: fadeInRight 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
-        .animate-fadeInUp { animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
-        .animate-fadeIn { animation: fadeIn 0.4s ease-in forwards; opacity: 0; }
-      `}</style>
-      
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-8 animate-fadeInDown" style={{ animationDelay: '0.1s' }}>
@@ -606,7 +595,7 @@ const Suppliers: React.FC = () => {
             {selectedSuppliers.length > 0 && (
               <button 
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <TrashIcon className="h-5 w-5" />
                 Delete ({selectedSuppliers.length})
@@ -614,7 +603,7 @@ const Suppliers: React.FC = () => {
             )}
             <button 
               onClick={() => navigate('/suppliers/add')} 
-              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 animate-fadeInRight" 
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 animate-fadeInRight" 
               style={{ animationDelay: '0.2s' }}
             >
               <PlusIcon className="h-5 w-5" />
@@ -625,95 +614,50 @@ const Suppliers: React.FC = () => {
 
         {/* Balance Filter */}
         <div className="mb-6 animate-fadeInUp" style={{ animationDelay: '0.25s' }}>
-          <div className="relative bg-gradient-to-br from-white/90 via-emerald-50/80 to-teal-50/90 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-emerald-800/40 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-emerald-300/30 dark:border-emerald-600/30 overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/5 via-teal-400/5 to-cyan-400/5 pointer-events-none"></div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setBalanceFilter('all')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'all'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-300'
+              }`}
+            >
+              {t('suppliers.all') || 'All'}
+            </button>
             
-            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                </div>
-                <div>
-                  <label className="text-sm font-bold text-emerald-900 dark:text-emerald-100 block">
-                    {t('suppliers.filterByBalance') || 'Filter by Balance'}
-                  </label>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">Select status to filter</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-3 sm:ml-auto">
-                <button
-                  onClick={() => setBalanceFilter('all')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'all'
-                      ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">📊</span>
-                    {t('suppliers.all') || 'All'}
-                  </span>
-                  {balanceFilter === 'all' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => setBalanceFilter('debt')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'debt'
-                      ? 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white shadow-xl shadow-red-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">💸</span>
-                    {t('suppliers.payable') || 'Payable'}
-                  </span>
-                  {balanceFilter === 'debt' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => setBalanceFilter('owe')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'owe'
-                      ? 'bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white shadow-xl shadow-green-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">✅</span>
-                    {t('suppliers.credit') || 'Credit'}
-                  </span>
-                  {balanceFilter === 'owe' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => setBalanceFilter('clear')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'clear'
-                      ? 'bg-gradient-to-r from-gray-700 via-slate-700 to-gray-700 text-white shadow-xl shadow-gray-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">🎯</span>
-                    {t('suppliers.clear') || 'Clear'}
-                  </span>
-                  {balanceFilter === 'clear' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => setBalanceFilter('debt')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'debt'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-600 dark:to-cyan-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 text-blue-700 dark:text-blue-300'
+              }`}
+            >
+              {t('suppliers.payable') || 'Payable'}
+            </button>
+            
+            <button
+              onClick={() => setBalanceFilter('owe')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'owe'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-600 dark:to-pink-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 text-purple-700 dark:text-purple-300'
+              }`}
+            >
+              {t('suppliers.credit') || 'Credit'}
+            </button>
+            
+            <button
+              onClick={() => setBalanceFilter('clear')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'clear'
+                  ? 'bg-gradient-to-r from-slate-600 to-gray-600 dark:from-slate-600 dark:to-gray-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-slate-100 to-gray-100 dark:from-slate-900/50 dark:to-gray-900/50 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {t('suppliers.clear') || 'Clear'}
+            </button>
           </div>
         </div>
 
@@ -777,7 +721,7 @@ const Suppliers: React.FC = () => {
                   {suppliers.map((supplier, index) => (
                     <tr 
                       key={supplier.id}
-                      className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-300 animate-fadeIn"
+                      className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-200 animate-fadeIn"
                       style={{ animationDelay: `${0.4 + index * 0.05}s` }}
                       onClick={() => {
                         setSelectedSupplier(supplier);
@@ -801,7 +745,7 @@ const Suppliers: React.FC = () => {
                             e.stopPropagation();
                             handleViewHistory(supplier);
                           }}
-                          className="hover:text-emerald-600 dark:hover:text-emerald-300 transition-all"
+                          className="hover:text-emerald-600 dark:hover:text-emerald-300 transition-all duration-175"
                           title={t('suppliers.viewHistory')}
                         >
                           {supplier.contact_person || '-'}
@@ -830,7 +774,7 @@ const Suppliers: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-2">
                           <button 
-                            className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white rounded-lg hover:shadow-lg hover:scale-110 transition-all duration-300" 
+                            className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all duration-200" 
                             onClick={() => {
                               setSelectedSupplier(supplier);
                               setShowPaymentModal(true);
@@ -843,14 +787,14 @@ const Suppliers: React.FC = () => {
                             💰
                           </button>
                           <button 
-                            className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 dark:from-emerald-600 dark:to-green-600 text-white rounded-lg hover:shadow-lg hover:scale-110 transition-all duration-300" 
+                            className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 dark:from-emerald-600 dark:to-green-600 text-white rounded-lg hover:shadow-lg transition-all duration-200" 
                             onClick={() => handleEdit(supplier)} 
                             title={t('suppliers.editSupplier')}
                           >
                             <PencilIcon className="h-5 w-5" />
                           </button>
                           <button 
-                            className="p-2 bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-600 dark:to-pink-600 text-white rounded-lg hover:shadow-lg hover:scale-110 transition-all duration-300" 
+                            className="p-2 bg-gradient-to-r from-red-500 to-pink-500 dark:from-red-600 dark:to-pink-600 text-white rounded-lg hover:shadow-lg transition-all duration-200" 
                             onClick={() => handleDelete(supplier.id)} 
                             title={t('suppliers.deleteSupplier')}
                           >
@@ -907,7 +851,7 @@ const Suppliers: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setPaymentType('payment')}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all duration-175 ${
                         paymentType === 'payment'
                           ? 'bg-red-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -918,7 +862,7 @@ const Suppliers: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setPaymentType('charge')}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all duration-175 ${
                         paymentType === 'charge'
                           ? 'bg-green-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -975,13 +919,13 @@ const Suppliers: React.FC = () => {
                     setShowPaymentModal(false);
                     setSelectedSupplier(null);
                   }}
-                  className="flex-1 px-4 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all font-semibold"
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all duration-175 font-semibold"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   onClick={handlePaymentSubmit}
-                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:shadow-lg transition-all"
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:shadow-lg transition-all duration-175"
                 >
                   {t('suppliers.submit')}
                 </button>
@@ -1014,7 +958,7 @@ const Suppliers: React.FC = () => {
                     setEndDate('');
                     setShowDateFilter(false);
                   }}
-                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-175"
                 >
                   ✕
                 </button>
@@ -1025,7 +969,7 @@ const Suppliers: React.FC = () => {
                 <div className="flex items-center justify-end mb-4">
                   <button
                     onClick={() => setShowDateFilter(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                   >
                     <span className="text-xl">📅</span>
                     {t('common.filter') || 'Filter'}
@@ -1069,7 +1013,7 @@ const Suppliers: React.FC = () => {
                       </thead>
                       <tbody className="bg-white/50 dark:bg-emerald-950/30 divide-y divide-emerald-100 dark:divide-emerald-800/50">
                         {getDailySummary().map((day, index) => (
-                          <tr key={index} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all">
+                          <tr key={index} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all duration-175">
                             <td className="px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                               {day.date.toLocaleDateString('en-IN', {
                                 year: 'numeric',
