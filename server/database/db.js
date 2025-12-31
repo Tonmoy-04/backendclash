@@ -154,6 +154,28 @@ async function ensureSalesTables() {
     const salesCols = await dbAll("PRAGMA table_info('sales')");
     const salesNames = new Set(salesCols.map(c => c.name));
 
+    // Legacy compatibility: some older DBs used `total_amount` instead of `total`.
+    // Ensure both exist so inserts/queries don't hit NOT NULL constraints.
+    if (!salesNames.has('total') && salesNames.has('total_amount')) {
+      await dbRun("ALTER TABLE sales ADD COLUMN total DECIMAL(10, 2)");
+      console.log('Migrated: added sales.total (legacy total_amount compatibility)');
+      try {
+        await dbRun("UPDATE sales SET total = COALESCE(total, total_amount, 0) WHERE total IS NULL");
+      } catch (e) {
+        console.warn('Warning: failed to backfill sales.total from total_amount:', e.message);
+      }
+    }
+
+    if (!salesNames.has('total_amount') && salesNames.has('total')) {
+      await dbRun("ALTER TABLE sales ADD COLUMN total_amount DECIMAL(10, 2)");
+      console.log('Migrated: added sales.total_amount (legacy compatibility)');
+      try {
+        await dbRun("UPDATE sales SET total_amount = COALESCE(total, total_amount, 0) WHERE total_amount IS NULL");
+      } catch (e) {
+        console.warn('Warning: failed to backfill sales.total_amount from total:', e.message);
+      }
+    }
+
     if (!salesNames.has('customer_name')) {
       await dbRun("ALTER TABLE sales ADD COLUMN customer_name TEXT");
       console.log('Migrated: added sales.customer_name');
@@ -325,7 +347,25 @@ async function ensureSaleItemsShape() {
 async function ensurePurchaseItemsShape() {
   try {
     const cols = await dbAll("PRAGMA table_info('purchase_items')");
-    if (!cols || cols.length === 0) return;
+    if (!cols || cols.length === 0) {
+      // Table missing; create with expected shape.
+      await dbRun(`CREATE TABLE IF NOT EXISTS purchase_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchase_id INTEGER NOT NULL,
+        product_id INTEGER,
+        product_name TEXT,
+        quantity INTEGER NOT NULL,
+        cost DECIMAL(10, 2) DEFAULT 0,
+        subtotal DECIMAL(10, 2) DEFAULT 0,
+        unit_price DECIMAL(10, 2),
+        total_price DECIMAL(10, 2),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+      )`);
+      console.log('Created purchase_items table');
+      return;
+    }
 
     const names = new Set(cols.map(c => c.name));
     const productIdCol = cols.find(c => c.name === 'product_id');
@@ -388,6 +428,22 @@ async function ensurePurchasesTables() {
     const purchasesCols = await dbAll("PRAGMA table_info('purchases')");
     const purchasesNames = new Set(purchasesCols.map(c => c.name));
 
+    // Ensure purchase_items exists before attempting ALTERs.
+    await dbRun(`CREATE TABLE IF NOT EXISTS purchase_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchase_id INTEGER NOT NULL,
+      product_id INTEGER,
+      product_name TEXT,
+      quantity INTEGER NOT NULL,
+      cost DECIMAL(10, 2) DEFAULT 0,
+      subtotal DECIMAL(10, 2) DEFAULT 0,
+      unit_price DECIMAL(10, 2),
+      total_price DECIMAL(10, 2),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    )`);
+
     if (!purchasesNames.has('purchase_date')) {
       await dbRun("ALTER TABLE purchases ADD COLUMN purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP");
       console.log('Migrated: added purchases.purchase_date');
@@ -425,6 +481,16 @@ async function ensurePurchasesTables() {
     if (!itemsNames.has('subtotal')) {
       await dbRun("ALTER TABLE purchase_items ADD COLUMN subtotal DECIMAL(10, 2) DEFAULT 0");
       console.log('Migrated: added purchase_items.subtotal');
+    }
+
+    if (!itemsNames.has('unit_price')) {
+      await dbRun("ALTER TABLE purchase_items ADD COLUMN unit_price DECIMAL(10, 2)");
+      console.log('Migrated: added purchase_items.unit_price');
+    }
+
+    if (!itemsNames.has('total_price')) {
+      await dbRun("ALTER TABLE purchase_items ADD COLUMN total_price DECIMAL(10, 2)");
+      console.log('Migrated: added purchase_items.total_price');
     }
 
     console.log('Purchases tables migrated successfully');

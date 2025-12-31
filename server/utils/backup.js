@@ -5,17 +5,30 @@ const logger = require('./logger');
 
 class BackupManager {
   constructor() {
-    // Prefer a writable AppData base when running packaged/Electron
-    const appDataDir = process.env.APPDATA || os.homedir();
-    const electronBaseDir = path.join(appDataDir, 'InventoryManager');
     const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
-    const baseDir = isElectronEnv ? electronBaseDir : path.join(__dirname, '..');
+
+    // Use DB_DIR when available (Electron main sets it). This avoids the
+    // historical "InventoryManager" vs "Inventory Manager" folder mismatch.
+    const explicitDbDir = process.env.DB_DIR;
+    const appDataDir = process.env.APPDATA || os.homedir();
+    const candidateDbDirs = [
+      explicitDbDir,
+      path.join(appDataDir, 'Inventory Manager', 'database'),
+      path.join(appDataDir, 'InventoryManager', 'database')
+    ].filter(Boolean);
+
+    const dbDir = (isElectronEnv
+      ? candidateDbDirs.find(d => typeof d === 'string' && d.length > 0) || path.join(appDataDir, 'InventoryManager', 'database')
+      : path.join(__dirname, '..', 'database'));
+
+    // Base for backups/config should be userData root (parent of database dir)
+    const baseDir = isElectronEnv ? path.dirname(dbDir) : path.join(__dirname, '..');
 
     this.configPath = path.join(baseDir, 'backup.config.json');
     this.defaultBackupDir = path.join(baseDir, 'backups');
     this.backupDir = this.defaultBackupDir;
-    this.dbPath = path.join(baseDir, 'database', 'inventory.db');
-    this.stockDbPath = path.join(baseDir, 'database', 'stock.db');
+    this.dbPath = path.join(dbDir, 'inventory.db');
+    this.stockDbPath = path.join(dbDir, 'stock.db');
 
     // Ensure base directories exist in packaged mode
     try {
@@ -40,13 +53,33 @@ class BackupManager {
     try {
       if (fs.existsSync(this.configPath)) {
         const config = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
-        if (config.backupDir) {
+        if (config.backupDir && typeof config.backupDir === 'string') {
           this.backupDir = config.backupDir;
         }
       }
     } catch (error) {
       logger.error(`Failed to load backup config: ${error.message}`);
       this.backupDir = this.defaultBackupDir;
+    }
+
+    // If saved backupDir is invalid/unwritable, fall back to default.
+    try {
+      if (!this.backupDir || typeof this.backupDir !== 'string') {
+        this.backupDir = this.defaultBackupDir;
+      }
+      fs.mkdirSync(this.backupDir, { recursive: true });
+      const probe = path.join(this.backupDir, '.write-test');
+      fs.writeFileSync(probe, 'ok', 'utf8');
+      fs.unlinkSync(probe);
+    } catch (err) {
+      logger.warn(`Backup dir not writable (${this.backupDir}); using default. Reason: ${err.message}`);
+      this.backupDir = this.defaultBackupDir;
+      try {
+        fs.mkdirSync(this.backupDir, { recursive: true });
+      } catch {}
+      try {
+        this.saveConfig();
+      } catch {}
     }
   }
 
@@ -56,14 +89,33 @@ class BackupManager {
   }
 
   ensureBackupDir() {
-    if (!fs.existsSync(this.backupDir)) {
+    try {
+      if (!fs.existsSync(this.backupDir)) {
+        fs.mkdirSync(this.backupDir, { recursive: true });
+      }
+    } catch (err) {
+      logger.warn(`Failed to create backupDir (${this.backupDir}), falling back: ${err.message}`);
+      this.backupDir = this.defaultBackupDir;
       fs.mkdirSync(this.backupDir, { recursive: true });
+      try {
+        this.saveConfig();
+      } catch {}
     }
   }
 
   setBackupDir(newDir) {
     if (!newDir || typeof newDir !== 'string') {
       throw new Error('Invalid backup directory');
+    }
+
+    // Validate directory is writable
+    try {
+      fs.mkdirSync(newDir, { recursive: true });
+      const probe = path.join(newDir, `.write-test-${Date.now()}`);
+      fs.writeFileSync(probe, 'ok', 'utf8');
+      fs.unlinkSync(probe);
+    } catch (err) {
+      throw new Error(`Backup directory is not writable: ${err.message}`);
     }
 
     this.backupDir = newDir;
@@ -100,7 +152,7 @@ class BackupManager {
       // Copy main database file if it exists
       if (!fs.existsSync(this.dbPath)) {
         logger.warn(`Database file not found at ${this.dbPath}, skipping backup`);
-        return { success: false, message: 'Database file not found' };
+        return { success: false, message: `Database file not found at ${this.dbPath}` };
       }
 
       try {
@@ -148,6 +200,9 @@ class BackupManager {
       // Create a backup of current database before restoring
       await this.createBackup();
 
+      // Close sqlite connections to avoid file locks on Windows
+      await this.closeDatabases();
+
       // Restore main database backup
       fs.copyFileSync(backupPath, this.dbPath);
 
@@ -162,6 +217,9 @@ class BackupManager {
         logger.warn(`Stock backup file not found: ${stockBackupFileName}`);
       }
 
+      // Reload DB modules so the app continues working without manual restart
+      await this.reloadDatabases();
+
       logger.info(`Database restored from: ${backupFileName}`);
       
       return {
@@ -172,6 +230,55 @@ class BackupManager {
       logger.error(`Backup restoration failed: ${error.message}`);
       throw error;
     }
+  }
+
+  async closeDatabases() {
+    const closeOne = async (modPath) => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const mod = require(modPath);
+        const db = mod?.db;
+        if (!db || typeof db.close !== 'function') return;
+        await new Promise(resolve => {
+          try {
+            db.close(() => resolve());
+          } catch {
+            resolve();
+          }
+        });
+      } catch {
+        // ignore
+      }
+    };
+
+    await closeOne('../database/db');
+    await closeOne('../database/stockDb');
+  }
+
+  async reloadDatabases() {
+    const purge = (modPath) => {
+      try {
+        const resolved = require.resolve(modPath);
+        if (resolved && require.cache[resolved]) {
+          delete require.cache[resolved];
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    purge('../database/db');
+    purge('../database/stockDb');
+
+    // Re-require modules to re-open connections
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('../database/db');
+    } catch {}
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('../database/stockDb');
+    } catch {}
   }
 
   // List all available backups

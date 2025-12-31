@@ -127,8 +127,8 @@ exports.createPurchase = async (req, res, next) => {
 
       // Persist purchase item (in inventory.db)
       await db.run(
-        'INSERT INTO purchase_items (purchase_id, product_id, product_name, quantity, cost, subtotal) VALUES (?, ?, ?, ?, ?, ?)',
-        [purchaseId, item.product_id || null, item.product_name || null, quantity, cost, subtotalItem]
+        'INSERT INTO purchase_items (purchase_id, product_id, product_name, quantity, cost, subtotal, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [purchaseId, item.product_id || null, item.product_name || null, quantity, cost, subtotalItem, cost, subtotalItem]
       );
 
       // Stock updates disabled - transactions and inventory are completely separated
@@ -232,9 +232,9 @@ exports.updatePurchase = async (req, res, next) => {
         const itemSubtotal = quantity * unitCost;
 
         await db.run(
-          `INSERT INTO purchase_items (purchase_id, product_id, product_name, quantity, cost, subtotal)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [req.params.id, productId, productName, quantity, unitCost, itemSubtotal]
+          `INSERT INTO purchase_items (purchase_id, product_id, product_name, quantity, cost, subtotal, unit_price, total_price)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [req.params.id, productId, productName, quantity, unitCost, itemSubtotal, unitCost, itemSubtotal]
         );
       }
     }

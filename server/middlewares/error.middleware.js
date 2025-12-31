@@ -27,8 +27,10 @@ exports.errorHandler = (err, req, res, next) => {
   // SQLite errors
   if (err.code === 'SQLITE_CONSTRAINT') {
     return res.status(400).json({ 
-      error: 'Database constraint violation',
-      details: message 
+      // Surface the real SQLite message to the UI (it was previously hidden)
+      error: message,
+      code: err.code,
+      details: message
     });
   }
 

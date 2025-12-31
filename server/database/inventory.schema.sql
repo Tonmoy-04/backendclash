@@ -69,8 +69,7 @@ CREATE TABLE IF NOT EXISTS sale_items (
   subtotal DECIMAL(10, 2) NOT NULL,
   price DECIMAL(10, 2),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+  FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE
 );
 
 -- Purchases table
@@ -94,7 +93,7 @@ CREATE TABLE IF NOT EXISTS purchases (
 CREATE TABLE IF NOT EXISTS purchase_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   purchase_id INTEGER NOT NULL,
-  product_id INTEGER NOT NULL,
+  product_id INTEGER,
   product_name TEXT,
   quantity INTEGER NOT NULL,
   cost DECIMAL(10, 2) DEFAULT 0,
@@ -102,8 +101,7 @@ CREATE TABLE IF NOT EXISTS purchase_items (
   unit_price DECIMAL(10, 2) NOT NULL,
   total_price DECIMAL(10, 2) NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+  FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE
 );
 
 -- Customer Transactions table (for tracking payment/charge history)

@@ -3,6 +3,15 @@ const stockDb = require('../database/stockDb');
 const { generateBill } = require('../utils/billGenerator');
 const { ensureItemTransactionsTable, insertItemTransaction } = require('../utils/itemTransactions');
 
+async function getSalesColumnSet() {
+  try {
+    const cols = await db.all("PRAGMA table_info('sales')");
+    return new Set((cols || []).map(c => c.name));
+  } catch {
+    return new Set();
+  }
+}
+
 exports.getAllSales = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
@@ -126,10 +135,27 @@ exports.createSale = async (req, res, next) => {
 
     // Create sale with minimal required data
     const userId = req.user?.id || 1;
+    const salesCols = await getSalesColumnSet();
+    const hasTotal = salesCols.has('total');
+    const hasTotalAmount = salesCols.has('total_amount');
+
+    const fields = ['customer_name', 'payment_method', 'notes', 'subtotal', 'discount', 'tax'];
+    const values = [customer_name.trim(), payment_method, notes, subtotal, discount, tax];
+    if (hasTotal) {
+      fields.push('total');
+      values.push(total);
+    }
+    if (hasTotalAmount) {
+      fields.push('total_amount');
+      values.push(total);
+    }
+    fields.push('sale_date', 'user_id');
+    values.push(saleDate, userId);
+
+    const placeholders = fields.map(() => '?').join(', ');
     const saleResult = await db.run(
-      `INSERT INTO sales (customer_name, payment_method, notes, subtotal, discount, tax, total, sale_date, user_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [customer_name.trim(), payment_method, notes, subtotal, discount, tax, total, saleDate, userId]
+      `INSERT INTO sales (${fields.join(', ')}) VALUES (${placeholders})`,
+      values
     );
 
     const saleId = saleResult.lastID;
@@ -238,9 +264,9 @@ exports.updateSale = async (req, res, next) => {
         const itemSubtotal = quantity * unitPrice;
 
         await db.run(
-          `INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price, subtotal)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [req.params.id, productId, productName, quantity, unitPrice, itemSubtotal]
+          `INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price, subtotal, unit_price, total_price)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [req.params.id, productId, productName, quantity, unitPrice, itemSubtotal, unitPrice, itemSubtotal]
         );
       }
     }
