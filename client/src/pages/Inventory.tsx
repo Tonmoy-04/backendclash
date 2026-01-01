@@ -4,6 +4,8 @@ import { useTranslation } from '../context/TranslationContext';
 import { PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { formatDateTime } from '../utils/numberConverter';
+import DateInput from '../components/DateInput';
 import '../styles/Inventory.css';
 
 interface Product {
@@ -204,6 +206,17 @@ const Inventory: React.FC = () => {
       setMovements(movementsAll);
       return;
     }
+    
+    const parseDisplayDate = (dateStr: string): string => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      return dateStr;
+    };
+    
     const effectiveStart = startDate || endDate;
     const effectiveEnd = endDate || startDate;
     const normalizeDateOnly = (value: string) => {
@@ -213,8 +226,8 @@ const Inventory: React.FC = () => {
         return '';
       }
     };
-    const startKey = effectiveStart || '';
-    const endKey = effectiveEnd || '';
+    const startKey = parseDisplayDate(effectiveStart) || '';
+    const endKey = parseDisplayDate(effectiveEnd) || '';
     const filtered = movementsAll.filter((m: any) => {
       const rawDate = m.transaction_date || m.created_at;
       const dateKey = normalizeDateOnly(rawDate);
@@ -475,7 +488,7 @@ const Inventory: React.FC = () => {
                         return (
                           <tr key={m.id} className="cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors" onClick={() => navigate(`/inventory/edit/${movementProduct?.id}`, { state: { editMovement: m } })}>
                             <td className="px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
-                              {new Date(dateValue).toLocaleString()}
+                              {formatDateTime(dateValue)}
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
                               {m.type}
@@ -508,20 +521,16 @@ const Inventory: React.FC = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('common.startDate')}</label>
-                <input
-                  type="date"
+                <DateInput
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
+                  onChange={setStartDate}
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('common.endDate')}</label>
-                <input
-                  type="date"
+                <DateInput
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
+                  onChange={setEndDate}
                 />
               </div>
               <div className="flex items-center justify-end gap-3 pt-2">

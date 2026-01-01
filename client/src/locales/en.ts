@@ -151,7 +151,36 @@ export const en = {
     stockPurchased: 'Stock purchased',
     stockPurchasedMsg: 'Stock purchased successfully.',
     stockSold: 'Stock sold',
-    stockSoldMsg: 'Stock sold successfully.'
+    stockSoldMsg: 'Stock sold successfully.',
+    
+    // Buy/Sell Stock Form
+    buyStock: 'Buy Stock',
+    sellStock: 'Sell Stock',
+    details: 'Details',
+    editProductDetails: 'Edit Product Details',
+    productName: 'Product Name',
+    description: 'Description',
+    unitPlaceholder: 'e.g., kg, liter, piece',
+    minimumStock: 'Minimum Stock',
+    sellingPrice: 'Selling Price',
+    costPrice: 'Cost Price',
+    updateDetails: 'Update Details',
+    dateOptional: 'Date (optional)',
+    quantityToPurchase: 'Quantity to Purchase',
+    enterQuantity: 'Enter quantity',
+    totalPriceOptional: 'Total Price (optional)',
+    enterTotalPrice: 'Enter total price',
+    unitPrice: 'Unit Price',
+    back: 'Back',
+    purchaseStock: 'Purchase Stock',
+    quantityToSell: 'Quantity to Sell',
+    totalSalePriceOptional: 'Total Sale Price (optional)',
+    enterTotalSalePrice: 'Enter total sale price',
+    sellStockButton: 'Sell Stock',
+    productNotFound: 'Product not found',
+    backToInventory: 'Back to Inventory',
+    deleteFailed: 'Failed to delete product',
+    bulkDeleteFailed: 'Failed to delete products'
   },
 
   // Transactions

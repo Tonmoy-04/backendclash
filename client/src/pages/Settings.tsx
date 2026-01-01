@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { formatDateTime } from '../utils/numberConverter';
 import {
   Cog6ToothIcon,
   ShieldCheckIcon,
@@ -538,7 +539,7 @@ const Settings: React.FC = () => {
                             <div className="flex-1">
                               <p className="font-medium text-emerald-900 dark:text-emerald-100">{backup.fileName}</p>
                               <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                                {new Date(backup.created || backup.timestamp).toLocaleString()} • {(backup.size / 1024).toFixed(2)} KB
+                                {formatDateTime(new Date(backup.created || backup.timestamp))} • {(backup.size / 1024).toFixed(2)} KB
                               </p>
                             </div>
                             <div className="flex gap-2">

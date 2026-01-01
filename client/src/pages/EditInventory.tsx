@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from '../context/TranslationContext';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
-import { parseNumericInput } from '../utils/numberConverter';
+import { parseNumericInput, formatDate, parseDisplayDateToAPI, formatAPIDateToDisplay } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
+import DateInput from '../components/DateInput';
 
 interface Product {
   id: number;
@@ -40,8 +41,8 @@ const EditInventory: React.FC = () => {
   const [stockFormData, setStockFormData] = useState({
     quantity: '',
     totalPrice: '',
-    // Default to today's date; user can change or leave as-is
-    date: new Date().toISOString().slice(0, 10)
+    // Default to today's date in dd/mm/yyyy format
+    date: formatDate(new Date())
   });
 
   useEffect(() => {
@@ -135,10 +136,25 @@ const EditInventory: React.FC = () => {
     try {
       setError('');
 
-      // Use selected date if provided; otherwise current datetime
-      const transactionDate = stockFormData.date
-        ? new Date(stockFormData.date).toISOString()
-        : new Date().toISOString();
+      // Convert dd/mm/yyyy to ISO datetime with current time
+      let apiDate = new Date().toISOString(); // default to now
+      
+      if (stockFormData.date) {
+        const parts = stockFormData.date.split('/');
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          const now = new Date();
+          const dateObj = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day),
+            now.getHours(),
+            now.getMinutes(),
+            now.getSeconds()
+          );
+          apiDate = dateObj.toISOString();
+        }
+      }
 
       if (activeTab === 'buy') {
         await api.post(`/products/${product.id}/movements`, {
@@ -146,7 +162,7 @@ const EditInventory: React.FC = () => {
           quantity,
           price: totalPrice || null,
           reference_id: null,
-          transaction_date: transactionDate,
+          transaction_date: apiDate,
         });
         showSuccess({ title: t('inventory.stockPurchased') || 'Stock purchased', message: t('inventory.stockPurchasedMsg') || 'Stock purchased successfully.' });
       } else if (activeTab === 'sale') {
@@ -155,12 +171,12 @@ const EditInventory: React.FC = () => {
           quantity,
           price: totalPrice || null,
           reference_id: null,
-          transaction_date: transactionDate,
+          transaction_date: apiDate,
         });
         showSuccess({ title: t('inventory.stockSold') || 'Stock sold', message: t('inventory.stockSoldMsg') || 'Stock sold successfully.' });
       }
 
-      setStockFormData({ quantity: '', totalPrice: '', date: new Date().toISOString().slice(0, 10) });
+      setStockFormData({ quantity: '', totalPrice: '', date: formatDate(new Date()) });
       navigate('/inventory');
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update stock';
@@ -184,12 +200,12 @@ const EditInventory: React.FC = () => {
     return (
       <div className="min-h-screen p-8 bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xl text-red-600 dark:text-red-400">Product not found</p>
+          <p className="text-xl text-red-600 dark:text-red-400">{t('inventory.productNotFound')}</p>
           <button
             onClick={() => navigate('/inventory')}
             className="mt-4 px-4 py-2 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50"
           >
-            Back to Inventory
+            {t('inventory.backToInventory')}
           </button>
         </div>
       </div>
@@ -232,7 +248,7 @@ const EditInventory: React.FC = () => {
                 : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
             }`}
           >
-            🛒 Buy Stock
+            🛒 {t('inventory.buyStock')}
           </button>
           <button
             onClick={() => setActiveTab('sale')}
@@ -242,7 +258,7 @@ const EditInventory: React.FC = () => {
                 : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
             }`}
           >
-            💰 Sell Stock
+            💰 {t('inventory.sellStock')}
           </button>
           <button
             onClick={() => setActiveTab('details')}
@@ -252,7 +268,7 @@ const EditInventory: React.FC = () => {
                 : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
             }`}
           >
-            📝 Details
+            📝 {t('inventory.details')}
           </button>
         </div>
 
@@ -267,9 +283,9 @@ const EditInventory: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-emerald-50/30 dark:from-emerald-900 dark:to-teal-900/30 rounded-2xl shadow-2xl border border-emerald-200/50 dark:border-emerald-700/30 backdrop-blur-sm overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 px-6 py-4">
             <h2 className="text-2xl font-bold text-white">
-              {activeTab === 'details' && '📝 Edit Product Details'}
-              {activeTab === 'buy' && '🛒 Buy Stock'}
-              {activeTab === 'sale' && '💰 Sell Stock'}
+              {activeTab === 'details' && `📝 ${t('inventory.editProductDetails')}`}
+              {activeTab === 'buy' && `🛒 ${t('inventory.buyStock')}`}
+              {activeTab === 'sale' && `💰 ${t('inventory.sellStock')}`}
             </h2>
           </div>
 
@@ -278,7 +294,7 @@ const EditInventory: React.FC = () => {
             {activeTab === 'details' && (
               <form onSubmit={handleUpdateDetails} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Product Name</label>
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.productName')}</label>
                   <input
                     type="text"
                     name="name"
@@ -290,7 +306,7 @@ const EditInventory: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Description</label>
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.description')}</label>
                   <textarea
                     name="description"
                     value={formData.description}
@@ -302,18 +318,18 @@ const EditInventory: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Unit</label>
+                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.unit')}</label>
                     <input
                       type="text"
                       name="unit"
                       value={formData.unit}
                       onChange={handleFormChange}
                       className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                      placeholder="e.g., kg, liter, piece"
+                      placeholder={t('inventory.unitPlaceholder')}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Minimum Stock</label>
+                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.minimumStock')}</label>
                     <input
                       type="number"
                       name="min_stock"
@@ -326,7 +342,7 @@ const EditInventory: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Selling Price</label>
+                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.sellingPrice')}</label>
                     <input
                       type="number"
                       name="price"
@@ -336,7 +352,7 @@ const EditInventory: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Cost Price</label>
+                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.costPrice')}</label>
                     <input
                       type="number"
                       name="cost"
@@ -353,13 +369,13 @@ const EditInventory: React.FC = () => {
                     onClick={() => navigate('/inventory')}
                     className="px-6 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all duration-300 font-semibold"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 font-semibold"
                   >
-                    Update Details
+                    {t('inventory.updateDetails')}
                   </button>
                 </div>
               </form>
@@ -369,23 +385,20 @@ const EditInventory: React.FC = () => {
             {activeTab === 'buy' && (
               <form onSubmit={handleStockUpdate} className="space-y-6">
                 <div className="p-4 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg border border-emerald-200 dark:border-emerald-700">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>Product:</strong> {product.name}</p>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>Current Stock:</strong> {product.quantity} {product.unit || ''}</p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.product')}:</strong> {product.name}</p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.currentStock')}:</strong> {product.quantity} {product.unit || ''}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Date (optional)</label>
-                  <input
-                    type="date"
-                    name="date"
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.dateOptional')}</label>
+                  <DateInput
                     value={stockFormData.date}
-                    onChange={handleStockFormChange}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                    onChange={(value) => setStockFormData({ ...stockFormData, date: value })}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Quantity to Purchase</label>
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.quantityToPurchase')}</label>
                   <input
                     type="number"
                     name="quantity"
@@ -393,13 +406,13 @@ const EditInventory: React.FC = () => {
                     onChange={handleStockFormChange}
                     onWheel={(e) => e.currentTarget.blur()}
                     className="no-spin w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Enter quantity"
+                    placeholder={t('inventory.enterQuantity')}
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Total Price (optional)</label>
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.totalPriceOptional')}</label>
                   <input
                     type="number"
                     name="totalPrice"
@@ -407,14 +420,14 @@ const EditInventory: React.FC = () => {
                     onChange={handleStockFormChange}
                     onWheel={(e) => e.currentTarget.blur()}
                     className="no-spin w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Enter total price"
+                    placeholder={t('inventory.enterTotalPrice')}
                   />
                 </div>
 
                 {stockFormData.quantity && stockFormData.totalPrice && (
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-700">
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      <strong>Unit Price:</strong> {Math.floor(Number(stockFormData.totalPrice) / Number(stockFormData.quantity))}
+                      <strong>{t('inventory.unitPrice')}:</strong> {Math.floor(Number(stockFormData.totalPrice) / Number(stockFormData.quantity))}
                     </p>
                   </div>
                 )}
@@ -425,13 +438,13 @@ const EditInventory: React.FC = () => {
                     onClick={() => setActiveTab('details')}
                     className="px-6 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all duration-300 font-semibold"
                   >
-                    Back
+                    {t('inventory.back')}
                   </button>
                   <button
                     type="submit"
                     className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 font-semibold"
                   >
-                    Purchase Stock
+                    {t('inventory.purchaseStock')}
                   </button>
                 </div>
               </form>
@@ -441,23 +454,20 @@ const EditInventory: React.FC = () => {
             {activeTab === 'sale' && (
               <form onSubmit={handleStockUpdate} className="space-y-6">
                 <div className="p-4 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg border border-emerald-200 dark:border-emerald-700">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>Product:</strong> {product.name}</p>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>Current Stock:</strong> {product.quantity} {product.unit || ''}</p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.product')}:</strong> {product.name}</p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.currentStock')}:</strong> {product.quantity} {product.unit || ''}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Date (optional)</label>
-                  <input
-                    type="date"
-                    name="date"
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.dateOptional')}</label>
+                  <DateInput
                     value={stockFormData.date}
-                    onChange={handleStockFormChange}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                    onChange={(value) => setStockFormData({ ...stockFormData, date: value })}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Quantity to Sell</label>
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.quantityToSell')}</label>
                   <input
                     type="number"
                     name="quantity"
@@ -465,13 +475,13 @@ const EditInventory: React.FC = () => {
                     onChange={handleStockFormChange}
                     onWheel={(e) => e.currentTarget.blur()}
                     className="no-spin w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Enter quantity"
+                    placeholder={t('inventory.enterQuantity')}
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Total Sale Price (optional)</label>
+                  <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.totalSalePriceOptional')}</label>
                   <input
                     type="number"
                     name="totalPrice"
@@ -479,14 +489,14 @@ const EditInventory: React.FC = () => {
                     onChange={handleStockFormChange}
                     onWheel={(e) => e.currentTarget.blur()}
                     className="no-spin w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Enter total sale price"
+                    placeholder={t('inventory.enterTotalSalePrice')}
                   />
                 </div>
 
                 {stockFormData.quantity && stockFormData.totalPrice && (
                   <div className="p-4 bg-green-50 dark:bg-green-950/50 rounded-lg border border-green-200 dark:border-green-700">
                     <p className="text-sm text-green-700 dark:text-green-300">
-                      <strong>Unit Price:</strong> {Math.floor(Number(stockFormData.totalPrice) / Number(stockFormData.quantity))}
+                      <strong>{t('inventory.unitPrice')}:</strong> {Math.floor(Number(stockFormData.totalPrice) / Number(stockFormData.quantity))}
                     </p>
                   </div>
                 )}
@@ -497,13 +507,13 @@ const EditInventory: React.FC = () => {
                     onClick={() => setActiveTab('details')}
                     className="px-6 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all duration-300 font-semibold"
                   >
-                    Back
+                    {t('inventory.back')}
                   </button>
                   <button
                     type="submit"
                     className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 font-semibold"
                   >
-                    Sell Stock
+                    {t('inventory.sellStockButton')}
                   </button>
                 </div>
               </form>

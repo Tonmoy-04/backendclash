@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../context/TranslationContext';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
-import { parseNumericInput } from '../utils/numberConverter';
+import { parseNumericInput, formatDate, formatDateTime, toInputDateFormat } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
+import DateInput from '../components/DateInput';
 import '../styles/Suppliers.css';
 
 interface Supplier {
@@ -41,7 +42,7 @@ const Suppliers: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentType, setPaymentType] = useState<'payment' | 'charge'>('payment');
   const [paymentDescription, setPaymentDescription] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate, setPaymentDate] = useState(toInputDateFormat(new Date()));
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transactionsAll, setTransactionsAll] = useState<Transaction[]>([]);
@@ -161,7 +162,7 @@ const Suppliers: React.FC = () => {
       setSelectedSupplier(null);
       setPaymentAmount('');
       setPaymentDescription('');
-      setPaymentDate(new Date().toISOString().split('T')[0]);
+      setPaymentDate(toInputDateFormat(new Date()));
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to update balance');
     }
@@ -234,6 +235,18 @@ const Suppliers: React.FC = () => {
       setTransactions(transactionsAll);
       return;
     }
+    
+    const parseDisplayDate = (dateStr: string): string => {
+      if (!dateStr) return '';
+      // Convert dd/mm/yyyy to yyyy-mm-dd
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      return dateStr;
+    };
+    
     const effectiveStart = startDate || endDate;
     const effectiveEnd = endDate || startDate;
     const normalizeDateOnly = (value: string) => {
@@ -243,8 +256,8 @@ const Suppliers: React.FC = () => {
         return '';
       }
     };
-    const startKey = effectiveStart || '';
-    const endKey = effectiveEnd || '';
+    const startKey = parseDisplayDate(effectiveStart) || '';
+    const endKey = parseDisplayDate(effectiveEnd) || '';
     const filtered = transactionsAll.filter((t: any) => {
       const dateKey = normalizeDateOnly(t.created_at);
       if (!dateKey) return false;
@@ -253,15 +266,8 @@ const Suppliers: React.FC = () => {
     setTransactions(filtered);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatTransactionDate = (dateString: string) => {
+    return formatDateTime(new Date(dateString));
   };
 
   const getDailySummary = () => {
@@ -270,12 +276,7 @@ const Suppliers: React.FC = () => {
     // Group transactions by date
     transactions.forEach((t) => {
       const dateObj = new Date(t.created_at);
-      const dateKey = dateObj.toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        timeZone: 'Asia/Dhaka'
-      });
+      const dateKey = formatDate(dateObj);
 
       if (!dailyMap.has(dateKey)) {
         dailyMap.set(dateKey, { timestamp: dateObj.getTime(), taken: 0, given: 0, balance: 0 });
@@ -483,7 +484,7 @@ const Suppliers: React.FC = () => {
             <p style="margin: 5px 0; font-size: 10px; color: #333;">ঠিকানা: ৭৮ মৌলভীবাজার, ট্রেড সেন্টার, ঢাকা-১২১১</p>
           </div>
           <h1 style="margin: 15px 0 5px 0; color: #059669; font-size: 24px;">📊 Supplier Statement</h1>
-          <p>Generated on: ${new Date().toLocaleString('en-IN')}</p>
+          <p>Generated on: ${formatDateTime(new Date())}</p>
         </div>
 
         <div class="supplier-info">
@@ -510,7 +511,7 @@ const Suppliers: React.FC = () => {
             ${(() => {
               const dailySummary: Record<string, { given: number; taken: number; balance: number; status: string }> = {};
               transactions.forEach(t => {
-                const dateKey = new Date(t.created_at).toLocaleDateString('en-GB');
+                const dateKey = formatDate(new Date(t.created_at));
                 if (!dailySummary[dateKey]) {
                   dailySummary[dateKey] = { given: 0, taken: 0, balance: 0, status: '' };
                 }
@@ -817,7 +818,7 @@ const Suppliers: React.FC = () => {
             setSelectedSupplier(null);
             setPaymentAmount('');
             setPaymentDescription('');
-            setPaymentDate(new Date().toISOString().split('T')[0]);
+            setPaymentDate(toInputDateFormat(new Date()));
           }}>
             <div className="bg-white dark:bg-emerald-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeInUp" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -891,11 +892,9 @@ const Suppliers: React.FC = () => {
                   <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
                     {t('common.date')} <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
+                  <DateInput
                     value={paymentDate}
-                    onChange={(e) => setPaymentDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
+                    onChange={setPaymentDate}
                   />
                 </div>
 
@@ -1015,12 +1014,7 @@ const Suppliers: React.FC = () => {
                         {getDailySummary().map((day, index) => (
                           <tr key={index} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all duration-175">
                             <td className="px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
-                              {day.date.toLocaleDateString('en-IN', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                timeZone: 'Asia/Dhaka'
-                              })}
+                              {formatDate(day.date)}
                             </td>
                             <td className="px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400">
                               ৳{day.given.toFixed(2)}
@@ -1075,20 +1069,16 @@ const Suppliers: React.FC = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('common.startDate')}</label>
-                <input
-                  type="date"
+                <DateInput
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
+                  onChange={setStartDate}
                 />
               </div>
               <div>
                 <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('common.endDate')}</label>
-                <input
-                  type="date"
+                <DateInput
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
+                  onChange={setEndDate}
                 />
               </div>
               <div className="flex items-center justify-end gap-3 pt-2">

@@ -68,3 +68,101 @@ export const formatNumericOutput = (
   
   return result;
 };
+
+/**
+ * Parse date string in dd/mm/yyyy format and return yyyy-mm-dd format for API
+ * @param dateString - Date string in dd/mm/yyyy format
+ * @returns Date string in yyyy-mm-dd format for API, or empty string if invalid
+ */
+export const parseDisplayDateToAPI = (dateString: string): string => {
+  if (!dateString) return '';
+  const parts = dateString.split('/');
+  if (parts.length !== 3) return '';
+  const [day, month, year] = parts;
+  const dayNum = parseInt(day, 10);
+  const monthNum = parseInt(month, 10);
+  const yearNum = parseInt(year, 10);
+  
+  // Validate
+  if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < 1900 || yearNum > 2100) {
+    return '';
+  }
+  
+  return `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+};
+
+/**
+ * Convert yyyy-mm-dd format to dd/mm/yyyy format for display
+ * @param dateString - Date string in yyyy-mm-dd format
+ * @returns Date string in dd/mm/yyyy format
+ */
+export const formatAPIDateToDisplay = (dateString: string): string => {
+  if (!dateString) return '';
+  const parts = dateString.split('-');
+  if (parts.length !== 3) return dateString;
+  const [year, month, day] = parts;
+  return `${day}/${month}/${year}`;
+};
+/**
+ * Format date to dd/mm/yyyy format
+ * @param date - Date object or string
+ * @returns Formatted date string in dd/mm/yyyy format
+ */
+export const formatDate = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const year = dateObj.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+/**
+ * Format date and time to dd/mm/yyyy, hh:mm:ss AM/PM format
+ * Ensures the time is displayed in local timezone with 12-hour format
+ * @param date - Date object or string (ISO 8601 format)
+ * @returns Formatted datetime string in local time with 12-hour format
+ */
+export const formatDateTime = (date: Date | string): string => {
+  let dateObj: Date;
+  
+  if (typeof date === 'string') {
+    // Parse ISO 8601 date string and ensure local time conversion
+    dateObj = new Date(date);
+  } else {
+    dateObj = date;
+  }
+  
+  // Check if the date is valid
+  if (isNaN(dateObj.getTime())) {
+    return '';
+  }
+  
+  // Get local date and time components
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const year = dateObj.getFullYear();
+  
+  // Convert to 12-hour format
+  let hours = dateObj.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // 0 should be 12
+  const hoursStr = String(hours).padStart(2, '0');
+  
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+  return `${day}/${month}/${year}, ${hoursStr}:${minutes}:${seconds} ${ampm}`;
+};
+
+/**
+ * Convert date to yyyy-mm-dd format for input[type="date"]
+ * @param date - Date object or string
+ * @returns Formatted date string in yyyy-mm-dd format
+ */
+export const toInputDateFormat = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};

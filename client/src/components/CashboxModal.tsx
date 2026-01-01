@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { XMarkIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from '../context/TranslationContext';
 import api from '../services/api';
-import { parseNumericInput } from '../utils/numberConverter';
+import { parseNumericInput, toInputDateFormat, parseDisplayDateToAPI } from '../utils/numberConverter';
+import DateInput from './DateInput';
 
 interface CashboxModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdrawal'>('deposit');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(toInputDateFormat(new Date()));
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -86,10 +87,12 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
         return;
       }
 
+      const convertedDate = parseDisplayDateToAPI(date);
+
       await api.post('/cashbox/transaction', {
         type: activeTab,
         amount: amountValue,
-        date: date,
+        date: convertedDate,
         note: note
       });
 
@@ -225,11 +228,9 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
                     <label className="block text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-2">
                       {t('common.date')}
                     </label>
-                    <input
-                      type="date"
+                    <DateInput
                       value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 focus:outline-none transition-colors"
+                      onChange={setDate}
                     />
                   </div>
 

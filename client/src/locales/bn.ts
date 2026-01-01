@@ -151,7 +151,36 @@ export const bn = {
     stockPurchased: 'স্টক ক্রয়',
     stockPurchasedMsg: 'স্টক সফলভাবে ক্রয় করা হয়েছে।',
     stockSold: 'স্টক বিক্রয়',
-    stockSoldMsg: 'স্টক সফলভাবে বিক্রয় করা হয়েছে।'
+    stockSoldMsg: 'স্টক সফলভাবে বিক্রয় করা হয়েছে।',
+    
+    // Buy/Sell Stock Form
+    buyStock: 'স্টক ক্রয়',
+    sellStock: 'স্টক বিক্রয়',
+    details: 'বিবরণ',
+    editProductDetails: 'পণ্যের বিবরণ সম্পাদনা',
+    productName: 'পণ্যের নাম',
+    description: 'বিবরণ',
+    unitPlaceholder: 'যেমন, কেজি, লিটার, পিস',
+    minimumStock: 'ন্যূনতম স্টক',
+    sellingPrice: 'বিক্রয় মূল্য',
+    costPrice: 'ক্রয় মূল্য',
+    updateDetails: 'বিবরণ আপডেট করুন',
+    dateOptional: 'তারিখ (ঐচ্ছিক)',
+    quantityToPurchase: 'ক্রয়ের পরিমাণ',
+    enterQuantity: 'পরিমাণ লিখুন',
+    totalPriceOptional: 'মোট মূল্য (ঐচ্ছিক)',
+    enterTotalPrice: 'মোট মূল্য লিখুন',
+    unitPrice: 'একক মূল্য',
+    back: 'পিছনে',
+    purchaseStock: 'স্টক ক্রয় করুন',
+    quantityToSell: 'বিক্রয়ের পরিমাণ',
+    totalSalePriceOptional: 'মোট বিক্রয় মূল্য (ঐচ্ছিক)',
+    enterTotalSalePrice: 'মোট বিক্রয় মূল্য লিখুন',
+    sellStockButton: 'স্টক বিক্রয় করুন',
+    productNotFound: 'পণ্য পাওয়া যায়নি',
+    backToInventory: 'স্টকে ফিরে যান',
+    deleteFailed: 'পণ্য মুছতে ব্যর্থ হয়েছে',
+    bulkDeleteFailed: 'পণ্যগুলো মুছতে ব্যর্থ হয়েছে'
   },
 
   // Transactions

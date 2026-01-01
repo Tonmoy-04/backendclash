@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../context/TranslationContext';
+import { formatDate } from '../utils/numberConverter';
 import StatCard from '../components/StatCard';
 import LowStockCard from '../components/LowStockCard';
 import CashboxModal from '../components/CashboxModal';
@@ -139,17 +140,17 @@ const Dashboard: React.FC = () => {
   const fmtMoney = (n?: number) => Math.floor(Number(n || 0)).toString();
   const fmtCashbox = (n?: number) => (showCashboxAmounts ? `৳${fmtMoney(n)}` : '****');
 
-  const todayKey = new Date().toLocaleDateString();
+  const todayKey = formatDate(new Date());
   const todayDeposited = cashboxTransactions
     .filter(tx => {
-      const txDate = new Date(tx.created_at).toLocaleDateString();
+      const txDate = formatDate(new Date(tx.created_at));
       return tx.type === 'deposit' && txDate === todayKey;
     })
     .reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
   const todayWithdrawn = cashboxTransactions
     .filter(tx => {
-      const txDate = new Date(tx.created_at).toLocaleDateString();
+      const txDate = formatDate(new Date(tx.created_at));
       return tx.type === 'withdrawal' && txDate === todayKey;
     })
     .reduce((sum, tx) => sum + (tx.amount || 0), 0);

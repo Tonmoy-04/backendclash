@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ArrowUpIcon, ArrowDownIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from '../context/TranslationContext';
+import { formatDate as formatDateDMY } from '../utils/numberConverter';
 
 interface Transaction {
   id: number;
@@ -36,15 +37,7 @@ const CashboxTransactions: React.FC<CashboxTransactionsProps> = ({
   const [expandedDates, setExpandedDates] = React.useState<Set<string>>(new Set());
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    if (language === 'bn') {
-      return date.toLocaleDateString('bn-BD');
-    }
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    return formatDateDMY(new Date(dateString));
   };
 
   const formatTime = (dateString: string) => {

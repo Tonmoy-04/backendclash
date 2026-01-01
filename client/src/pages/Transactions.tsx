@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../context/TranslationContext';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
-import { parseNumericInput } from '../utils/numberConverter';
+import { parseNumericInput, toInputDateFormat } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
+import DateInput from '../components/DateInput';
 import '../styles/Transactions.css';
 
 interface Transaction {
@@ -145,6 +146,18 @@ const Transactions: React.FC = () => {
     const combined = allTransactions;
     const effectiveStart = startDate || endDate;
     const effectiveEnd = endDate || startDate;
+    
+    const parseDisplayDate = (dateStr: string): string => {
+      if (!dateStr) return '';
+      // Convert dd/mm/yyyy to yyyy-mm-dd
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      return dateStr;
+    };
+    
     const normalizeDateOnly = (value: string) => {
       try {
         return new Date(value).toISOString().split('T')[0];
@@ -152,8 +165,8 @@ const Transactions: React.FC = () => {
         return '';
       }
     };
-    const startKey = effectiveStart || '';
-    const endKey = effectiveEnd || '';
+    const startKey = parseDisplayDate(effectiveStart) || '';
+    const endKey = parseDisplayDate(effectiveEnd) || '';
     const filteredByDate = combined.filter((t: any) => {
       const rawDate = t.type === 'sale' ? t.sale_date : t.purchase_date;
       const dateKey = normalizeDateOnly(rawDate || t.created_at);
@@ -244,8 +257,27 @@ const Transactions: React.FC = () => {
         }
 
         if (formData.transaction_date) {
-          payload.sale_date = formData.transaction_date;
-          payload.purchase_date = formData.transaction_date;
+          // Convert dd/mm/yyyy to proper ISO datetime with current time
+          const dateStr = formData.transaction_date;
+          const parts = dateStr.split('/');
+          let isoDate = dateStr; // fallback to original
+          
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            const now = new Date();
+            const dateObj = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              parseInt(day),
+              now.getHours(),
+              now.getMinutes(),
+              now.getSeconds()
+            );
+            isoDate = dateObj.toISOString();
+          }
+          
+          payload.sale_date = isoDate;
+          payload.purchase_date = isoDate;
         }
 
         if (formData.type === 'Sale') {
@@ -615,7 +647,8 @@ const Transactions: React.FC = () => {
                 <div>
                   <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('common.startDate')}</label>
                   <input
-                    type="date"
+                    type="text"
+                    placeholder="dd/mm/yyyy"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-full px-4 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
@@ -624,7 +657,8 @@ const Transactions: React.FC = () => {
                 <div>
                   <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('common.endDate')}</label>
                   <input
-                    type="date"
+                    type="text"
+                    placeholder="dd/mm/yyyy"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-full px-4 py-2 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none"
@@ -898,17 +932,16 @@ const Transactions: React.FC = () => {
                     <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
                       {t('common.date')}
                     </label>
-                    <input
-                      type="date"
+                    <DateInput
                       value={formData.transaction_date}
-                      onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, transaction_date: value })}
                       className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
-                      {t('billGenerator.discount')} ({t('transactions.optional')})
+                      {t('Discount')} ({t('transactions.optional')})
                     </label>
                     <input
                       type="number"

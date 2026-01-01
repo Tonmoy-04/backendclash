@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Bars3Icon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from '../context/TranslationContext';
 import { useDarkMode } from '../context/DarkModeContext';
+import { formatDate } from '../utils/numberConverter';
 import adminImage from '../assets/edited-photo.png';
 
 interface TopbarProps {
@@ -33,13 +34,8 @@ const Topbar: React.FC<TopbarProps> = ({
       return `${weekdays[bdDate.getDay()]}, ${bdDate.getDate()} ${months[bdDate.getMonth()]} ${bdDate.getFullYear()}`;
     }
     
-    // English date
-    return bdDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    // English date in dd/mm/yyyy format
+    return formatDate(bdDate);
   };
 
   return (
