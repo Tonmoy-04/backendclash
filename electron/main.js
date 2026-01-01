@@ -143,6 +143,25 @@ async function startBackendServer() {
 
   // Choose a port with conflict handling.
   const preferredPort = Number(process.env.BACKEND_PORT || process.env.PORT || 5000) || 5000;
+
+  // In production, if a previous backend instance is still running on the preferred port,
+  // reuse it instead of failing with EADDRINUSE or spawning another instance.
+  if (!isDev) {
+    const preferredHealthUrl = `http://${host}:${preferredPort}/api/health`;
+    const alreadyRunning = await waitForServerReady(preferredHealthUrl, 1200, 250);
+    if (alreadyRunning) {
+      backendInfo = {
+        port: preferredPort,
+        baseUrl: `http://${host}:${preferredPort}`,
+        apiBaseUrl: `http://${host}:${preferredPort}/api`,
+        startedByElectron: false,
+        pid: null
+      };
+      logToFile(`[PRODUCTION] Backend already running at http://${host}:${preferredPort}`);
+      return;
+    }
+  }
+
   const port = await findAvailablePort({ preferredPort, host, maxTries: 50 });
   const healthUrl = `http://${host}:${port}/api/health`;
 

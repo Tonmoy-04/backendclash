@@ -99,11 +99,11 @@ const Settings: React.FC = () => {
   const handleRestoreBackup = (fileName: string) => {
     showConfirm({
       title: t('settings.restoreBackup') || 'Restore Backup',
-      message: `Restore from backup ${fileName}? This will replace all current data.`,
+      message: `${t('settings.restoreConfirmPrefix')}${fileName}${t('settings.restoreConfirmSuffix')}`,
       onConfirm: async () => {
         try {
           await api.post('/backup/restore', { fileName });
-          showSuccess({ title: t('settings.restored') || 'Restored', message: 'Database restored successfully! Please refresh the page.' });
+          showSuccess({ title: t('settings.restored') || 'Restored', message: t('settings.restoredMsg') || 'Database restored successfully. Please refresh the page.' });
           window.location.reload();
         } catch (error: any) {
           const message = error.response?.data?.error || 'Failed to restore backup';
@@ -116,12 +116,12 @@ const Settings: React.FC = () => {
   const handleDeleteBackup = (fileName: string) => {
     showConfirm({
       title: t('settings.deleteBackup') || 'Delete Backup',
-      message: `Delete backup ${fileName}? This cannot be undone.`,
+      message: `${t('settings.deleteConfirmPrefix')}${fileName}${t('settings.deleteConfirmSuffix')}`,
       onConfirm: async () => {
         try {
           await api.post('/backup/delete', { fileName });
           await loadBackups();
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Backup deleted.' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('settings.backupDeletedMsg') || 'Backup deleted successfully.' });
         } catch (error: any) {
           const message = error.response?.data?.error || 'Failed to delete backup';
           showError({ title: t('common.error') || 'Error', message });
@@ -142,7 +142,7 @@ const Settings: React.FC = () => {
 
   const handleUpdateBackupLocation = async () => {
     if (!backupLocation.trim()) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please enter a backup location' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('settings.backupLocationRequired') || 'Please enter a backup location.' });
       return;
     }
 
@@ -150,7 +150,7 @@ const Settings: React.FC = () => {
     try {
       await api.post('/backup/location', { backupDir: backupLocation.trim() });
       await loadBackups();
-      showSuccess({ title: t('settings.updated') || 'Updated', message: 'Backup location updated.' });
+      showSuccess({ title: t('common.updated') || 'Updated', message: t('settings.backupLocationUpdatedMsg') || 'Backup location updated.' });
     } catch (error: any) {
       const message = error.response?.data?.error || 'Failed to update backup location';
       showError({ title: t('common.error') || 'Error', message });
@@ -165,7 +165,7 @@ const Settings: React.FC = () => {
       const res = await api.post('/backup/location/reset');
       setBackupLocation(res.data.backupDir || '');
       await loadBackups();
-      showSuccess({ title: t('settings.reset') || 'Reset', message: 'Backup location reset to default.' });
+      showSuccess({ title: t('settings.reset') || 'Reset', message: t('settings.backupLocationResetMsg') || 'Backup location reset to default.' });
     } catch (error: any) {
       const message = error.response?.data?.error || 'Failed to reset backup location';
       showError({ title: t('common.error') || 'Error', message });
@@ -178,14 +178,15 @@ const Settings: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.db')) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select a valid .db backup file' });
+    const lower = file.name.toLowerCase();
+    if (!(lower.endsWith('.db') || lower.endsWith('.zip'))) {
+      showWarning({ title: t('common.warning') || 'Warning', message: t('settings.selectValidBackupFile') || 'Please select a valid .db or .zip backup file.' });
       return;
     }
 
     showConfirm({
       title: t('settings.importBackup') || 'Import Backup',
-      message: `Import and restore from ${file.name}? This will replace all current data.`,
+      message: `${t('settings.importConfirmPrefix')}${file.name}${t('settings.importConfirmSuffix')}`,
       onConfirm: async () => {
         try {
           const formData = new FormData();
@@ -201,7 +202,7 @@ const Settings: React.FC = () => {
             const error = await response.json();
             throw new Error(error.error || 'Upload failed');
           }
-          showSuccess({ title: t('settings.imported') || 'Imported', message: 'Backup imported and restored successfully! Please refresh the page.' });
+          showSuccess({ title: t('settings.imported') || 'Imported', message: t('settings.importedMsg') || 'Backup imported and restored successfully. Please refresh the page.' });
           window.location.reload();
         } catch (error: any) {
           const message = error.message || 'Failed to import backup';
@@ -230,7 +231,7 @@ const Settings: React.FC = () => {
     setTimeout(() => {
       setIsSaving(false);
       setSaveMessage(t('settings.savedSuccess'));
-      showSuccess({ title: t('settings.saved') || 'Settings saved', message: t('settings.savedSuccess') || 'Settings have been saved.' });
+      showSuccess({ title: t('settings.saved') || 'Settings saved', message: t('settings.savedSuccess') || 'Settings saved successfully.' });
       setTimeout(() => setSaveMessage(''), 3000);
     }, 500);
   };
@@ -589,7 +590,7 @@ const Settings: React.FC = () => {
                   onClick={handleLogout}
                   className="px-6 py-2 bg-gradient-to-r from-red-600 to-rose-600 dark:from-red-600 dark:to-rose-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300"
                 >
-                  {t('settings.logout')}
+                  {t('Log out')}
                 </button>
               </div>
             </div>

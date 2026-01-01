@@ -37,7 +37,8 @@ class AuthService {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    // App uses HashRouter; in packaged Electron file://, `/login` would resolve to a file path.
+    window.location.hash = '#/login';
   }
 
   getCurrentUser(): User | null {

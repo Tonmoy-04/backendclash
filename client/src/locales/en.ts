@@ -23,7 +23,19 @@ export const en = {
     transactions: 'transactions',
     sales: 'sales',
     chartComingSoon: 'Chart coming soon...',
-    viewAll: 'View All'
+    viewAll: 'View All',
+    success: 'Success',
+    info: 'Information',
+    warning: 'Warning',
+    error: 'Error',
+    saved: 'Saved',
+    updated: 'Updated',
+    deleted: 'Deleted',
+    confirm: 'Confirm',
+    close: 'Close',
+    invalidAmount: 'Please enter a valid amount.',
+    deleteConfirm: 'This action cannot be undone.',
+    logoutConfirm: 'Are you sure you want to log out?'
   },
 
   // Navigation
@@ -125,7 +137,21 @@ export const en = {
     piece: 'piece',
     minimumStockOptional: 'Minimum Stock (optional)',
     leaveEmptyPlaceholder: 'Leave empty if not set',
-    productInformation: 'Product Information'
+    productInformation: 'Product Information',
+
+    // Notifications / confirmations
+    deleteConfirm: 'Are you sure you want to delete this product? This action cannot be undone.',
+    productDeleted: 'Product deleted successfully.',
+    selectToDeleteWarning: 'Please select products to delete.',
+    bulkDeleteConfirmPrefix: 'Delete ',
+    bulkDeleteConfirmSuffix: ' product(s)? This action cannot be undone.',
+    bulkDeletedSuccess: 'Products deleted successfully.',
+    updateSuccessMsg: 'Product details updated successfully.',
+    validQuantityRequired: 'Please enter a valid quantity.',
+    stockPurchased: 'Stock purchased',
+    stockPurchasedMsg: 'Stock purchased successfully.',
+    stockSold: 'Stock sold',
+    stockSoldMsg: 'Stock sold successfully.'
   },
 
   // Transactions
@@ -162,7 +188,18 @@ export const en = {
     paymentMethod: 'Payment Method',
     upi: 'UPI',
     credit: 'Credit',
+    saved: 'Saved',
+    saveSuccess: 'Transaction saved successfully.',
     deleteConfirm: 'Are you sure you want to delete this transaction?',
+    deleteConfirmTitle: 'Delete transaction?',
+    deletedSuccess: 'Transaction deleted.',
+    selectToDeleteWarning: 'Please select transactions to delete.',
+    bulkDeleteConfirmPrefix: 'Delete ',
+    bulkDeleteConfirmSuffix: ' transaction(s)? This action cannot be undone.',
+    bulkDeletedSuccess: 'Transactions deleted successfully.',
+    deleteFailed: 'Failed to delete transaction.',
+    bulkDeleteFailed: 'Failed to delete transactions.',
+    customerNameRequired: 'Customer name is required.',
     customerPlaceholder: 'Customer name',
     supplierPlaceholder: 'Supplier/Party name',
     optional: 'Optional',
@@ -231,6 +268,13 @@ export const en = {
     loadingHistory: 'Loading history...',
     printStatement: 'Print Statement',
     close: 'Close'
+    ,
+    // Notifications / confirmations
+    deletedSuccess: 'Customer deleted successfully.',
+    selectToDeleteWarning: 'Please select customers to delete.',
+    bulkDeleteConfirmPrefix: 'Delete ',
+    bulkDeleteConfirmSuffix: ' customer(s)? This action cannot be undone.',
+    bulkDeletedSuccess: 'Customers deleted successfully.'
   },
 
   // Suppliers
@@ -281,7 +325,14 @@ export const en = {
     viewHistory: 'View transaction history',
     manageBalanceAction: 'Manage balance',
     editSupplier: 'Edit supplier',
-    deleteSupplier: 'Delete supplier'
+    deleteSupplier: 'Delete supplier',
+
+    // Notifications / confirmations
+    deletedSuccess: 'Supplier deleted successfully.',
+    selectToDeleteWarning: 'Please select suppliers to delete.',
+    bulkDeleteConfirmPrefix: 'Delete ',
+    bulkDeleteConfirmSuffix: ' supplier(s)? This action cannot be undone.',
+    bulkDeletedSuccess: 'Suppliers deleted successfully.'
   },
 
   // Reports
@@ -309,6 +360,11 @@ export const en = {
     signingIn: 'Signing In...',
     loginFailed: 'Login failed. Please check your credentials.',
     defaultCredentials: 'Default Login Credentials'
+  },
+
+  // Auth
+  auth: {
+    logout: 'Log out'
   },
 
   // Topbar
@@ -377,7 +433,32 @@ export const en = {
     monthly: 'Monthly',
     databaseLocation: 'Database Location',
     databaseLocationDesc: 'Your data is stored locally on this device',
-    exportDatabase: 'Export Database'
+    exportDatabase: 'Export Database',
+
+    // Notifications / confirmations
+    saved: 'Settings saved',
+    backupCreated: 'Backup created',
+    backupCreatedMsg: 'Backup created successfully.',
+    restoreBackup: 'Restore backup',
+    restoreConfirmPrefix: 'Restore from backup "',
+    restoreConfirmSuffix: '"? This will replace all current data.',
+    restored: 'Restored',
+    restoredMsg: 'Database restored successfully. Please refresh the page.',
+    deleteBackup: 'Delete backup',
+    deleteConfirmPrefix: 'Delete backup "',
+    deleteConfirmSuffix: '"? This action cannot be undone.',
+    backupDeletedMsg: 'Backup deleted successfully.',
+    updated: 'Updated',
+    reset: 'Reset',
+    backupLocationRequired: 'Please enter a backup location.',
+    backupLocationUpdatedMsg: 'Backup location updated.',
+    backupLocationResetMsg: 'Backup location reset to default.',
+    selectValidBackupFile: 'Please select a valid .db or .zip backup file.',
+    importBackup: 'Import backup',
+    importConfirmPrefix: 'Import and restore from "',
+    importConfirmSuffix: '"? This will replace all current data.',
+    imported: 'Imported',
+    importedMsg: 'Backup imported and restored successfully. Please refresh the page.'
   }
   ,
   // Bill Generator

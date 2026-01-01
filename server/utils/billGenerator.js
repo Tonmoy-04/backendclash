@@ -20,7 +20,7 @@ function openFileWindows(filePath) {
 
 function getShopName() {
   try {
-    const settingsPath = path.join(__dirname, '..', 'config', 'settings.json');
+    const settingsPath = resolveConfigPath('settings.json');
     if (fs.existsSync(settingsPath)) {
       const raw = fs.readFileSync(settingsPath, 'utf-8');
       const json = JSON.parse(raw);
@@ -34,7 +34,7 @@ function getShopName() {
 
 function getCurrencySymbol() {
   try {
-    const settingsPath = path.join(__dirname, '..', 'config', 'settings.json');
+    const settingsPath = resolveConfigPath('settings.json');
     if (fs.existsSync(settingsPath)) {
       const raw = fs.readFileSync(settingsPath, 'utf-8');
       const json = JSON.parse(raw);
@@ -53,10 +53,23 @@ function sanitizeForAscii(text, fallback = '') {
   return str.replace(/[^\u0000-\u007F]/g, '').trim() || fallback;
 }
 
+function resolveConfigPath(...segments) {
+  // Works in both layouts:
+  // - Source: server/utils -> server/config
+  // - Built:  server/dist/utils -> server/config
+  const candidates = [
+    path.join(__dirname, '..', 'config', ...segments),
+    path.join(__dirname, '..', '..', 'config', ...segments),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return candidates[0];
+}
+
 function selectUnicodeFont(doc) {
   try {
-    const fontsDir = path.join(__dirname, '..', 'config', 'fonts');
-    ensureDir(fontsDir);
+    const fontsDir = resolveConfigPath('fonts');
     const candidates = [
       'NotoSerifBengali-Regular.ttf',
       'NotoSansBengaliUI-Regular.ttf', // preferred (UI) to avoid shaping issues

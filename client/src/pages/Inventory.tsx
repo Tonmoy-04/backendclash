@@ -82,14 +82,14 @@ const Inventory: React.FC = () => {
   const handleDelete = (product: Product) => {
     showConfirm({
       title: t('common.delete') || 'Delete',
-      message: t('common.deleteConfirm') || 'Delete this product? This cannot be undone.',
+      message: t('inventory.deleteConfirm') || 'Are you sure you want to delete this product? This action cannot be undone.',
       onConfirm: async () => {
         try {
           await api.delete(`/products/${product.id}`);
           await fetchProducts();
           showSuccess({ title: t('common.deleted') || 'Deleted', message: t('inventory.productDeleted') || 'Product deleted successfully.' });
         } catch (error: any) {
-          const message = error.response?.data?.error || 'Failed to delete product';
+          const message = error.response?.data?.error || t('inventory.deleteFailed') || 'Failed to delete product';
           console.error('Error deleting product:', error);
           showError({ title: t('common.error') || 'Error', message });
         }
@@ -113,20 +113,20 @@ const Inventory: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedProducts.length === 0) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select products to delete' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('inventory.selectToDeleteWarning') || 'Please select products to delete.' });
       return;
     }
     showConfirm({
       title: t('common.delete') || 'Delete',
-      message: `Delete ${selectedProducts.length} product(s)? This cannot be undone.`,
+      message: `${t('inventory.bulkDeleteConfirmPrefix')}${selectedProducts.length}${t('inventory.bulkDeleteConfirmSuffix')}`,
       onConfirm: async () => {
         try {
           await Promise.all(selectedProducts.map(id => api.delete(`/products/${id}`)));
           setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
           setSelectedProducts([]);
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Products deleted successfully.' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('inventory.bulkDeletedSuccess') || 'Products deleted successfully.' });
         } catch (error: any) {
-          const message = error.response?.data?.error || 'Failed to delete products';
+          const message = error.response?.data?.error || t('inventory.bulkDeleteFailed') || 'Failed to delete products';
           console.error('Error deleting products:', error);
           showError({ title: t('common.error') || 'Error', message });
         }

@@ -23,7 +23,19 @@ export const bn = {
     transactions: 'লেনদেন',
     sales: 'বিক্রয়',
     chartComingSoon: 'চার্ট শীঘ্রই আসছে...',
-    viewAll: 'সব দেখুন'
+    viewAll: 'সব দেখুন',
+    success: 'সফল',
+    info: 'তথ্য',
+    warning: 'সতর্কতা',
+    error: 'ত্রুটি',
+    saved: 'সংরক্ষিত হয়েছে',
+    updated: 'আপডেট হয়েছে',
+    deleted: 'মুছে ফেলা হয়েছে',
+    confirm: 'নিশ্চিত করুন',
+    close: 'বন্ধ করুন',
+    invalidAmount: 'দয়া করে একটি বৈধ পরিমাণ লিখুন।',
+    deleteConfirm: 'এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    logoutConfirm: 'আপনি কি নিশ্চিত যে আপনি লগ আউট করতে চান?'
   },
 
   // Navigation
@@ -125,7 +137,21 @@ export const bn = {
     piece: 'পিস',
     minimumStockOptional: 'ন্যূনতম স্টক (ঐচ্ছিক)',
     leaveEmptyPlaceholder: 'সেট না থাকলে খালি রাখুন',
-    productInformation: 'পণ্যের তথ্য'
+    productInformation: 'পণ্যের তথ্য',
+
+    // Notifications / confirmations
+    deleteConfirm: 'আপনি কি নিশ্চিত যে এই পণ্যটি মুছে ফেলতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    productDeleted: 'পণ্যটি সফলভাবে মুছে ফেলা হয়েছে।',
+    selectToDeleteWarning: 'মুছে ফেলতে পণ্য নির্বাচন করুন।',
+    bulkDeleteConfirmPrefix: 'আপনি কি ',
+    bulkDeleteConfirmSuffix: 'টি পণ্য মুছে ফেলতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    bulkDeletedSuccess: 'পণ্যগুলো সফলভাবে মুছে ফেলা হয়েছে।',
+    updateSuccessMsg: 'পণ্যের তথ্য সফলভাবে আপডেট হয়েছে।',
+    validQuantityRequired: 'দয়া করে একটি বৈধ পরিমাণ লিখুন।',
+    stockPurchased: 'স্টক ক্রয়',
+    stockPurchasedMsg: 'স্টক সফলভাবে ক্রয় করা হয়েছে।',
+    stockSold: 'স্টক বিক্রয়',
+    stockSoldMsg: 'স্টক সফলভাবে বিক্রয় করা হয়েছে।'
   },
 
   // Transactions
@@ -162,7 +188,18 @@ export const bn = {
     paymentMethod: 'পেমেন্ট পদ্ধতি',
     upi: 'ইউপিআই',
     credit: 'ক্রেডিট',
+    saved: 'সংরক্ষিত হয়েছে',
+    saveSuccess: 'লেনদেনটি সফলভাবে সংরক্ষিত হয়েছে।',
     deleteConfirm: 'আপনি কি এই লেনদেন মুছে ফেলতে চান?',
+    deleteConfirmTitle: 'লেনদেন মুছে ফেলবেন?',
+    deletedSuccess: 'লেনদেনটি মুছে ফেলা হয়েছে।',
+    selectToDeleteWarning: 'মুছে ফেলতে লেনদেন নির্বাচন করুন।',
+    bulkDeleteConfirmPrefix: 'আপনি কি ',
+    bulkDeleteConfirmSuffix: 'টি লেনদেন মুছে ফেলতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    bulkDeletedSuccess: 'লেনদেনগুলো সফলভাবে মুছে ফেলা হয়েছে।',
+    deleteFailed: 'লেনদেন মুছতে ব্যর্থ হয়েছে।',
+    bulkDeleteFailed: 'লেনদেনগুলো মুছতে ব্যর্থ হয়েছে।',
+    customerNameRequired: 'গ্রাহকের নাম প্রয়োজন।',
     customerPlaceholder: 'গ্রাহকের নাম',
     supplierPlaceholder: 'সরবরাহকারী/পক্ষের নাম',
     optional: 'ঐচ্ছিক',
@@ -230,7 +267,14 @@ export const bn = {
     transactionHistoryWillAppear: 'লেনদেনের ইতিহাস এখানে প্রদর্শিত হবে',
     loadingHistory: 'ইতিহাস লোড হচ্ছে...',
     printStatement: 'স্টেটমেন্ট প্রিন্ট করুন',
-    close: 'বন্ধ করুন'
+    close: 'বন্ধ করুন',
+
+    // Notifications / confirmations
+    deletedSuccess: 'গ্রাহক সফলভাবে মুছে ফেলা হয়েছে।',
+    selectToDeleteWarning: 'মুছে ফেলতে গ্রাহক নির্বাচন করুন।',
+    bulkDeleteConfirmPrefix: 'আপনি কি ',
+    bulkDeleteConfirmSuffix: 'জন গ্রাহক মুছে ফেলতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    bulkDeletedSuccess: 'গ্রাহকরা সফলভাবে মুছে ফেলা হয়েছে।'
   },
 
   // Suppliers
@@ -281,7 +325,14 @@ export const bn = {
     viewHistory: 'লেনদেনের ইতিহাস দেখুন',
     manageBalanceAction: 'ব্যালেন্স পরিচালনা',
     editSupplier: 'সরবরাহকারী সম্পাদনা',
-    deleteSupplier: 'সরবরাহকারী মুছে ফেলুন'
+    deleteSupplier: 'সরবরাহকারী মুছে ফেলুন',
+
+    // Notifications / confirmations
+    deletedSuccess: 'সরবরাহকারী সফলভাবে মুছে ফেলা হয়েছে।',
+    selectToDeleteWarning: 'মুছে ফেলতে সরবরাহকারী নির্বাচন করুন।',
+    bulkDeleteConfirmPrefix: 'আপনি কি ',
+    bulkDeleteConfirmSuffix: 'জন সরবরাহকারী মুছে ফেলতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    bulkDeletedSuccess: 'সরবরাহকারীরা সফলভাবে মুছে ফেলা হয়েছে।'
   },
 
   // Reports
@@ -309,6 +360,11 @@ export const bn = {
     signingIn: 'সাইন ইন হচ্ছে...',
     loginFailed: 'লগইন ব্যর্থ হয়েছে। আপনার শংসাপত্র পরীক্ষা করুন।',
     defaultCredentials: 'ডিফল্ট লগইন শংসাপত্র'
+  },
+
+  // Auth
+  auth: {
+    logout: 'লগ আউট'
   },
 
   // Topbar
@@ -378,7 +434,32 @@ export const bn = {
     monthly: 'মাসিক',
     databaseLocation: 'ডাটাবেস অবস্থান',
     databaseLocationDesc: 'আপনার ডেটা এই ডিভাইসে স্থানীয়ভাবে সংরক্ষিত আছে',
-    exportDatabase: 'ডাটাবেস রপ্তানি করুন'
+    exportDatabase: 'ডাটাবেস রপ্তানি করুন',
+
+    // Notifications / confirmations
+    saved: 'সেটিংস সংরক্ষিত হয়েছে',
+    backupCreated: 'ব্যাকআপ তৈরি হয়েছে',
+    backupCreatedMsg: 'ব্যাকআপ সফলভাবে তৈরি হয়েছে।',
+    restoreBackup: 'ব্যাকআপ পুনরুদ্ধার',
+    restoreConfirmPrefix: '"',
+    restoreConfirmSuffix: '" ব্যাকআপ থেকে পুনরুদ্ধার করবেন? এতে বর্তমান সব ডেটা প্রতিস্থাপিত হবে।',
+    restored: 'পুনরুদ্ধার হয়েছে',
+    restoredMsg: 'ডাটাবেস সফলভাবে পুনরুদ্ধার হয়েছে। দয়া করে পেজটি রিফ্রেশ করুন।',
+    deleteBackup: 'ব্যাকআপ মুছুন',
+    deleteConfirmPrefix: '"',
+    deleteConfirmSuffix: '" ব্যাকআপ মুছে ফেলবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।',
+    backupDeletedMsg: 'ব্যাকআপ সফলভাবে মুছে ফেলা হয়েছে।',
+    updated: 'আপডেট হয়েছে',
+    reset: 'রিসেট হয়েছে',
+    backupLocationRequired: 'দয়া করে ব্যাকআপ লোকেশন লিখুন।',
+    backupLocationUpdatedMsg: 'ব্যাকআপ লোকেশন আপডেট হয়েছে।',
+    backupLocationResetMsg: 'ব্যাকআপ লোকেশন ডিফল্ট অবস্থায় রিসেট হয়েছে।',
+    selectValidBackupFile: 'দয়া করে একটি বৈধ .db বা .zip ব্যাকআপ ফাইল নির্বাচন করুন।',
+    importBackup: 'ব্যাকআপ ইমপোর্ট',
+    importConfirmPrefix: '"',
+    importConfirmSuffix: '" ইমপোর্ট করে পুনরুদ্ধার করবেন? এতে বর্তমান সব ডেটা প্রতিস্থাপিত হবে।',
+    imported: 'ইমপোর্ট হয়েছে',
+    importedMsg: 'ব্যাকআপ সফলভাবে ইমপোর্ট ও পুনরুদ্ধার হয়েছে। দয়া করে পেজটি রিফ্রেশ করুন।'
   }
   ,
   // Bill Generator

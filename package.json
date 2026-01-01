@@ -49,7 +49,7 @@
   },
   "build": {
     "appId": "com.tonmoyrifat.inventorymanager",
-    "productName": "Inventory Manager",
+    "productName": "M∕S DIDAR TRADING",
     "copyright": "Copyright © 2025 Tonmoy & Rifat",
     "asar": true,
     "directories": {
@@ -61,21 +61,21 @@
       "electron/**/*",
       "!electron/**/*.ts",
       "server/dist/**/*",
+      "!server/dist/**/*.db",
+      "!server/dist/**/*.db-*",
       "server/package.json",
       "client/build/**/*",
       "!client/build/**/*.map",
       "package.json"
     ],
     "asarUnpack": [
-      "server/config/**",
-      "server/database/**",
-      "server/dist/database/**"
+      "server/config/**"
     ],
     "extraResources": [
       {
         "from": "server/dist",
         "to": "server/dist",
-        "filter": ["**/*"]
+        "filter": ["**/*", "!**/*.db", "!**/*.db-*"]
       },
       {
         "from": "server/node_modules",
@@ -109,7 +109,7 @@
       "icon": "build/icon.ico",
       "publisherName": "Tonmoy & Rifat",
       "verifyUpdateCodeSignature": false,
-      "legalTrademarks": "Tonmoy & Rifat",
+      "legalTrademarks": "M∕S DIDAR TRADING",
       "requestedExecutionLevel": "asInvoker",
       "sign": null,
       "signingHashAlgorithms": ["sha256"]
@@ -124,7 +124,7 @@
       "deleteAppDataOnUninstall": false,
       "menuCategory": true,
       "runAfterFinish": true,
-      "shortcutName": "Inventory Manager",
+      "shortcutName": "M∕S DIDAR TRADING",
       "artifactName": "Setup.${ext}",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",

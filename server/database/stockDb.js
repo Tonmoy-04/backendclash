@@ -8,25 +8,92 @@ const os = require('os');
 let STOCK_DB_DIR;
 const explicitDbDir = process.env.DB_DIR;
 const appDataDir = process.env.APPDATA || os.homedir();
-const electronDbDir = path.join(appDataDir, 'InventoryManager', 'database');
 
-try {
-  if (explicitDbDir && typeof explicitDbDir === 'string') {
-    if (!fs.existsSync(explicitDbDir)) {
-      fs.mkdirSync(explicitDbDir, { recursive: true });
-    }
-    STOCK_DB_DIR = explicitDbDir;
-  } else {
-    const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
-    if (isElectronEnv) {
-      if (!fs.existsSync(electronDbDir)) {
-        fs.mkdirSync(electronDbDir, { recursive: true });
-      }
-      STOCK_DB_DIR = electronDbDir;
-    } else {
-      STOCK_DB_DIR = __dirname;
+function isPackagedReadonlyPath(p) {
+  const s = String(p || '').toLowerCase();
+  return s.includes('app.asar') || s.includes(`${path.sep}resources${path.sep}`);
+}
+
+function tryMkdir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch {}
+}
+
+function pickMigrationSource({ candidates = [] } = {}) {
+  const scored = [];
+  for (const dir of candidates) {
+    if (!dir || typeof dir !== 'string') continue;
+    if (isPackagedReadonlyPath(dir)) continue;
+    const stockPath = path.join(dir, 'stock.db');
+    if (!fs.existsSync(stockPath)) continue;
+    try {
+      const st = fs.statSync(stockPath);
+      const size = st.size || 0;
+      const mtimeMs = st.mtimeMs || 0;
+      if (size <= 0) continue;
+      scored.push({ dir, size, mtimeMs });
+    } catch {
+      // ignore
     }
   }
+  scored.sort((a, b) => (b.mtimeMs - a.mtimeMs) || (b.size - a.size));
+  return scored[0]?.dir || null;
+}
+
+function scoreDbDir(dir) {
+  try {
+    const invPath = path.join(dir, 'inventory.db');
+    const stockPath = path.join(dir, 'stock.db');
+    const invSize = fs.existsSync(invPath) ? fs.statSync(invPath).size : 0;
+    const stockSize = fs.existsSync(stockPath) ? fs.statSync(stockPath).size : 0;
+    return invSize + stockSize;
+  } catch {
+    return 0;
+  }
+}
+
+function resolveDbDir({ explicitDir, appDataRoot, isElectronEnv }) {
+  const hasExplicit = explicitDir && typeof explicitDir === 'string';
+
+  if (!isElectronEnv) {
+    if (hasExplicit) {
+      tryMkdir(explicitDir);
+      return explicitDir;
+    }
+    return __dirname;
+  }
+
+  if (hasExplicit) {
+    tryMkdir(explicitDir);
+
+    const explicitStock = path.join(explicitDir, 'stock.db');
+    const explicitHasData = scoreDbDir(explicitDir) > 0;
+    if (!explicitHasData) {
+      const legacy1 = path.join(appDataRoot, 'InventoryManager', 'database');
+      const legacy2 = path.join(appDataRoot, 'Inventory Manager', 'database');
+      const src = pickMigrationSource({ candidates: [legacy1, legacy2] });
+      if (src) {
+        try {
+          if (!fs.existsSync(explicitStock) || (fs.statSync(explicitStock).size || 0) === 0) {
+            tryMkdir(explicitDir);
+            fs.copyFileSync(path.join(src, 'stock.db'), explicitStock);
+          }
+        } catch {}
+      }
+    }
+
+    return explicitDir;
+  }
+
+  const fallback = path.join(appDataRoot, 'InventoryManager', 'database');
+  tryMkdir(fallback);
+  return fallback;
+}
+
+try {
+  const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
+  STOCK_DB_DIR = resolveDbDir({ explicitDir: explicitDbDir, appDataRoot: appDataDir, isElectronEnv });
 } catch (err) {
   console.warn('Could not create stock database directory, falling back to local folder:', err.message);
   STOCK_DB_DIR = __dirname;
@@ -39,17 +106,78 @@ try {
   fs.mkdirSync(path.dirname(STOCK_DB_PATH), { recursive: true });
 } catch {}
 
+let stockDb;
+let initPromise = Promise.resolve();
+
+function awaitWithTimeout(promise, timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) resolve();
+    }, timeoutMs);
+    Promise.resolve(promise)
+      .then(() => {
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      })
+      .catch(() => {
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      });
+  });
+}
+
+function openStockDatabase() {
+  return new Promise((resolve, reject) => {
+    try {
+      stockDb = new sqlite3.Database(STOCK_DB_PATH, (err) => {
+        if (err) {
+          console.error('Error opening stock database:', err);
+          return reject(err);
+        }
+
+        console.log('Connected to SQLite stock database');
+        initPromise = Promise.resolve()
+          .then(() => initializeStockDatabase())
+          .catch((initErr) => {
+            console.error('Error initializing stock database schema:', initErr);
+          });
+
+        initPromise.then(() => resolve()).catch(() => resolve());
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function closeStockDatabase() {
+  await awaitWithTimeout(initPromise, 5000);
+  if (!stockDb || typeof stockDb.close !== 'function') return;
+  await new Promise((resolve) => {
+    try {
+      stockDb.close(() => resolve());
+    } catch {
+      resolve();
+    }
+  });
+  stockDb = null;
+}
+
+async function reopenStockDatabase() {
+  await closeStockDatabase();
+  await openStockDatabase();
+}
+
 // Create stock database connection
-const stockDb = new sqlite3.Database(STOCK_DB_PATH, (err) => {
-  if (err) {
-    console.error('Error opening stock database:', err);
-  } else {
-    console.log('Connected to SQLite stock database');
-    initializeStockDatabase();
-  }
+openStockDatabase().catch(() => {
+  // Error already logged above.
 });
 
 const run = (sql, params = []) => new Promise((resolve, reject) => {
+  if (!stockDb) return reject(new Error('Stock database is not initialized'));
   stockDb.run(sql, params, function(err) {
     if (err) reject(err);
     else resolve({ lastID: this.lastID, changes: this.changes });
@@ -57,6 +185,7 @@ const run = (sql, params = []) => new Promise((resolve, reject) => {
 });
 
 const get = (sql, params = []) => new Promise((resolve, reject) => {
+  if (!stockDb) return reject(new Error('Stock database is not initialized'));
   stockDb.get(sql, params, (err, row) => {
     if (err) reject(err);
     else resolve(row);
@@ -64,6 +193,7 @@ const get = (sql, params = []) => new Promise((resolve, reject) => {
 });
 
 const all = (sql, params = []) => new Promise((resolve, reject) => {
+  if (!stockDb) return reject(new Error('Stock database is not initialized'));
   stockDb.all(sql, params, (err, rows) => {
     if (err) reject(err);
     else resolve(rows);
@@ -127,4 +257,17 @@ async function initializeStockDatabase() {
   }
 }
 
-module.exports = { db: stockDb, run, get, all };
+module.exports = {
+  get db() {
+    return stockDb;
+  },
+  run,
+  get,
+  all,
+  close: closeStockDatabase,
+  reopen: reopenStockDatabase,
+  getPaths: () => ({
+    dbDir: STOCK_DB_DIR,
+    stockDbPath: STOCK_DB_PATH
+  })
+};

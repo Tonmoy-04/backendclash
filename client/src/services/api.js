@@ -32,7 +32,17 @@ const MUTATING_METHODS = ['post', 'put', 'patch', 'delete'];
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    // In Electron, the backend may not be on port 5000 (port conflicts).
+    // Ensure baseURL is initialized before issuing the first API request.
+    if (!apiInitialized) {
+      try {
+        await initApiBaseUrl();
+      } catch {
+        // Keep fallback baseURL.
+      }
+    }
+
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -58,7 +68,8 @@ api.interceptors.response.use(
       // Unauthorized - clear token and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // App uses HashRouter; in packaged Electron file://, `/login` would resolve to a file path.
+      window.location.hash = '#/login';
     }
     return Promise.reject(error);
   }

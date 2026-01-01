@@ -182,7 +182,7 @@ const Transactions: React.FC = () => {
 
   const handleAddTransaction = async () => {
     if (!formData.customer.trim()) {
-      showWarning({ title: t('common.warning') || 'Warning', message: (t('transactions.customerName') || 'Customer') + ' is required' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('transactions.customerNameRequired') || 'Customer name is required.' });
       return;
     }
 
@@ -339,10 +339,10 @@ const Transactions: React.FC = () => {
           const endpoint = transaction.type === 'sale' ? '/sales' : '/purchases';
           await api.delete(`${endpoint}/${transaction.id}`);
           await fetchTransactions();
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Transaction deleted.' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('transactions.deletedSuccess') || 'Transaction deleted.' });
         } catch (error: any) {
           console.error('Error deleting transaction:', error);
-          const message = error.response?.data?.error || 'Failed to delete transaction';
+          const message = error.response?.data?.error || t('transactions.deleteFailed') || 'Failed to delete transaction';
           showError({ title: t('common.error') || 'Error', message });
         }
       }
@@ -366,12 +366,12 @@ const Transactions: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedTransactions.length === 0) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select transactions to delete' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('transactions.selectToDeleteWarning') || 'Please select transactions to delete.' });
       return;
     }
     showConfirm({
       title: t('common.delete') || 'Delete',
-      message: `Delete ${selectedTransactions.length} transaction(s)? This cannot be undone.`,
+      message: `${t('transactions.bulkDeleteConfirmPrefix')}${selectedTransactions.length}${t('transactions.bulkDeleteConfirmSuffix')}`,
       onConfirm: async () => {
         try {
           const deletePromises = selectedTransactions.map(id => {
@@ -383,10 +383,10 @@ const Transactions: React.FC = () => {
           await Promise.all(deletePromises);
           await fetchTransactions();
           setSelectedTransactions([]);
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Transactions deleted.' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('transactions.bulkDeletedSuccess') || 'Transactions deleted successfully.' });
         } catch (error: any) {
           console.error('Error deleting transactions:', error);
-          const message = error.response?.data?.error || 'Failed to delete transactions';
+          const message = error.response?.data?.error || t('transactions.bulkDeleteFailed') || 'Failed to delete transactions';
           showError({ title: t('common.error') || 'Error', message });
         }
       }

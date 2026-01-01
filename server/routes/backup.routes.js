@@ -23,11 +23,11 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
-    // Accept only .db files
-    if (file.originalname.endsWith('.db')) {
+    // Accept legacy .db and new .zip backup archives
+    if (file.originalname.endsWith('.db') || file.originalname.endsWith('.zip')) {
       cb(null, true);
     } else {
-      cb(new Error('Only .db files are allowed'));
+      cb(new Error('Only .db or .zip files are allowed'));
     }
   },
   limits: {

@@ -29,11 +29,36 @@ exports.initializeCashbox = async (req, res, next) => {
     }
 
     // Initialize cashbox
-    const result = await db.run(
-      `INSERT INTO cashbox (opening_balance, current_balance, is_initialized) 
-       VALUES (?, ?, 1)`,
-      [opening_balance, opening_balance]
-    );
+    // Support legacy schemas that had additional NOT NULL columns (e.g. transaction_type).
+    const tableInfo = await db.all("PRAGMA table_info('cashbox')");
+    const columnNames = new Set((tableInfo || []).map((c) => c?.name).filter(Boolean));
+
+    const insertColumns = ['opening_balance', 'current_balance', 'is_initialized'];
+    const insertValues = [opening_balance, opening_balance, 1];
+
+    // Some older schemas used `amount` as the balance column and may enforce NOT NULL.
+    if (columnNames.has('amount')) {
+      insertColumns.push('amount');
+      insertValues.push(opening_balance);
+    }
+
+    // Legacy fields (observed in older releases)
+    if (columnNames.has('transaction_type')) {
+      insertColumns.push('transaction_type');
+      insertValues.push('opening_balance');
+    }
+    if (columnNames.has('transaction_amount')) {
+      insertColumns.push('transaction_amount');
+      insertValues.push(opening_balance);
+    }
+    if (columnNames.has('transaction_date')) {
+      insertColumns.push('transaction_date');
+      insertValues.push(new Date().toISOString());
+    }
+
+    const placeholders = insertColumns.map(() => '?').join(', ');
+    const sql = `INSERT INTO cashbox (${insertColumns.join(', ')}) VALUES (${placeholders})`;
+    const result = await db.run(sql, insertValues);
 
     const cashbox = await db.get('SELECT * FROM cashbox WHERE id = ?', [result.lastID]);
 
@@ -118,10 +143,21 @@ exports.addTransaction = async (req, res, next) => {
       const finalNewBalance = parseFloat(newBalance) || 0;
 
       // Update cashbox balance
-      await db.run(
-        'UPDATE cashbox SET current_balance = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [finalNewBalance, cashbox.id]
-      );
+      // Keep legacy `amount` column in sync when present.
+      const cashboxCols = await db.all("PRAGMA table_info('cashbox')");
+      const cashboxNames = new Set((cashboxCols || []).map((c) => c?.name).filter(Boolean));
+
+      if (cashboxNames.has('amount')) {
+        await db.run(
+          'UPDATE cashbox SET current_balance = ?, amount = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+          [finalNewBalance, finalNewBalance, cashbox.id]
+        );
+      } else {
+        await db.run(
+          'UPDATE cashbox SET current_balance = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+          [finalNewBalance, cashbox.id]
+        );
+      }
 
       // Insert transaction record
       const transactionDate = date || new Date().toISOString();

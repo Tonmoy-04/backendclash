@@ -60,7 +60,8 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || t('cashbox.initError'));
+      const data = err?.response?.data;
+      setError(data?.message || data?.error || data?.details || t('cashbox.initError'));
     } finally {
       setLoading(false);
     }
@@ -95,7 +96,8 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || t('cashbox.transactionError'));
+      const data = err?.response?.data;
+      setError(data?.message || data?.error || data?.details || t('cashbox.transactionError'));
     } finally {
       setLoading(false);
     }

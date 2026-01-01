@@ -24,8 +24,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
-    if (currentUser) {
+    const token = authService.getToken();
+    // Only treat the session as authenticated if BOTH user and token exist.
+    // This prevents a stale `user` value (without token) from causing 401 spam in packaged builds.
+    if (currentUser && token) {
       setUser(currentUser);
+    } else {
+      // Clean up any partial/stale auth state.
+      if (currentUser && !token) {
+        authService.logout();
+      }
+      setUser(null);
     }
     setLoading(false);
   }, []);
@@ -42,7 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const value = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!authService.getToken(),
     login,
     logout,
     loading

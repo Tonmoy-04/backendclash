@@ -1,5 +1,5 @@
 appId: com.inventory.manager
-productName: Inventory Manager
+productName: M∕S DIDAR TRADING
 copyright: Copyright © 2025
 directories:
   output: dist
@@ -19,7 +19,7 @@ win:
       arch:
         - x64
   icon: build/icon.ico
-  publisherName: Inventory Manager
+  publisherName: M∕S DIDAR TRADING
   verifyUpdateCodeSignature: false
 
 nsis:
@@ -28,7 +28,7 @@ nsis:
   perMachine: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: Inventory Manager
+  shortcutName: M∕S DIDAR TRADING
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
   license: LICENSE.txt

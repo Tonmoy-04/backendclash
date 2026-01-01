@@ -15,7 +15,7 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 768,
     backgroundColor: '#ffffff',
-    title: 'Inventory Manager',
+    title: 'M/S DIDAR TRADING',
     icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

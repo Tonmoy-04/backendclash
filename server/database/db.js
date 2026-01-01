@@ -8,27 +8,105 @@ const os = require('os');
 let DB_DIR;
 const explicitDbDir = process.env.DB_DIR;
 const appDataDir = process.env.APPDATA || os.homedir();
-const electronDbDir = path.join(appDataDir, 'InventoryManager', 'database');
 
-try {
-  if (explicitDbDir && typeof explicitDbDir === 'string') {
-    if (!fs.existsSync(explicitDbDir)) {
-      fs.mkdirSync(explicitDbDir, { recursive: true });
-    }
-    DB_DIR = explicitDbDir;
-  } else {
-    // If APP_ENV explicitly says electron OR we are running from a packaged resources path,
-    // direct the DB to AppData (avoids read-only Program Files/resources).
-    const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
-    if (isElectronEnv) {
-      if (!fs.existsSync(electronDbDir)) {
-        fs.mkdirSync(electronDbDir, { recursive: true });
-      }
-      DB_DIR = electronDbDir;
-    } else {
-      DB_DIR = __dirname;
+function scoreDbDir(dir) {
+  try {
+    const invPath = path.join(dir, 'inventory.db');
+    const stockPath = path.join(dir, 'stock.db');
+    const invSize = fs.existsSync(invPath) ? fs.statSync(invPath).size : 0;
+    const stockSize = fs.existsSync(stockPath) ? fs.statSync(stockPath).size : 0;
+    return invSize + stockSize;
+  } catch {
+    return 0;
+  }
+}
+
+function isPackagedReadonlyPath(p) {
+  const s = String(p || '').toLowerCase();
+  return s.includes('app.asar') || s.includes(`${path.sep}resources${path.sep}`);
+}
+
+function tryMkdir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch {}
+}
+
+function pickMigrationSource({ candidates = [] } = {}) {
+  const scored = [];
+  for (const dir of candidates) {
+    if (!dir || typeof dir !== 'string') continue;
+    if (isPackagedReadonlyPath(dir)) continue;
+    const invPath = path.join(dir, 'inventory.db');
+    if (!fs.existsSync(invPath)) continue;
+    try {
+      const st = fs.statSync(invPath);
+      const size = st.size || 0;
+      const mtimeMs = st.mtimeMs || 0;
+      if (size <= 0) continue;
+      scored.push({ dir, size, mtimeMs });
+    } catch {
+      // ignore
     }
   }
+  scored.sort((a, b) => (b.mtimeMs - a.mtimeMs) || (b.size - a.size));
+  return scored[0]?.dir || null;
+}
+
+function resolveDbDir({ explicitDir, appDataRoot, isElectronEnv }) {
+  const hasExplicit = explicitDir && typeof explicitDir === 'string';
+
+  if (!isElectronEnv) {
+    if (hasExplicit) {
+      tryMkdir(explicitDir);
+      return explicitDir;
+    }
+    return __dirname;
+  }
+
+  // Packaged/Electron: DB must live under userData (provided via DB_DIR).
+  // We still support a one-way migration from older AppData folders to avoid data loss.
+  if (hasExplicit) {
+    tryMkdir(explicitDir);
+
+    const explicitInv = path.join(explicitDir, 'inventory.db');
+    const explicitHasData = scoreDbDir(explicitDir) > 0;
+
+    if (!explicitHasData) {
+      const legacy1 = path.join(appDataRoot, 'InventoryManager', 'database');
+      const legacy2 = path.join(appDataRoot, 'Inventory Manager', 'database');
+      const src = pickMigrationSource({ candidates: [legacy1, legacy2] });
+      if (src) {
+        try {
+          // Only copy if explicit is missing/empty to prevent overwriting newer userData.
+          if (!fs.existsSync(explicitInv) || (fs.statSync(explicitInv).size || 0) === 0) {
+            tryMkdir(explicitDir);
+            fs.copyFileSync(path.join(src, 'inventory.db'), explicitInv);
+            const stockSrc = path.join(src, 'stock.db');
+            const stockDst = path.join(explicitDir, 'stock.db');
+            if (fs.existsSync(stockSrc) && !fs.existsSync(stockDst)) {
+              fs.copyFileSync(stockSrc, stockDst);
+            }
+          }
+        } catch {}
+      }
+    }
+
+    return explicitDir;
+  }
+
+  // If Electron didn't provide DB_DIR, fall back to a writable folder under AppData.
+  // (This should not happen in the installed app; DB_DIR is required.)
+  const fallback = path.join(appDataRoot, 'InventoryManager', 'database');
+  tryMkdir(fallback);
+  return fallback;
+}
+
+try {
+  // If APP_ENV explicitly says electron OR we are running from a packaged resources path,
+  // direct the DB to AppData (avoids read-only Program Files/resources).
+  const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
+  DB_DIR = resolveDbDir({ explicitDir: explicitDbDir, appDataRoot: appDataDir, isElectronEnv });
 } catch (err) {
   console.warn('Could not create database directory, falling back to local folder:', err.message);
   DB_DIR = __dirname;
@@ -36,19 +114,82 @@ try {
 
 const DB_PATH = path.join(DB_DIR, 'inventory.db');
 
+let db;
+let initPromise = Promise.resolve();
+
+function awaitWithTimeout(promise, timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) resolve();
+    }, timeoutMs);
+    Promise.resolve(promise)
+      .then(() => {
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      })
+      .catch(() => {
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      });
+  });
+}
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    try {
+      db = new sqlite3.Database(DB_PATH, (err) => {
+        if (err) {
+          console.error('Error opening database:', err);
+          return reject(err);
+        }
+
+        console.log('Connected to SQLite database');
+        initPromise = Promise.resolve()
+          .then(() => initializeDatabase())
+          .catch((initErr) => {
+            // Keep DB usable even if a migration step fails.
+            console.error('Error initializing database:', initErr);
+          });
+
+        initPromise.then(() => resolve()).catch(() => resolve());
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function closeDatabase() {
+  // Avoid closing while schema initialization is running.
+  await awaitWithTimeout(initPromise, 5000);
+  if (!db || typeof db.close !== 'function') return;
+  await new Promise((resolve) => {
+    try {
+      db.close(() => resolve());
+    } catch {
+      resolve();
+    }
+  });
+  db = null;
+}
+
+async function reopenDatabase() {
+  await closeDatabase();
+  await openDatabase();
+}
+
 // Create database connection
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error('Error opening database:', err);
-  } else {
-    console.log('Connected to SQLite database');
-    initializeDatabase();
-  }
+openDatabase().catch(() => {
+  // Error already logged above.
 });
 
 // Promisify database methods
 const dbRun = (sql, params = []) => {
   return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database is not initialized'));
     db.run(sql, params, function(err) {
       if (err) reject(err);
       else resolve({ lastID: this.lastID, changes: this.changes });
@@ -58,6 +199,7 @@ const dbRun = (sql, params = []) => {
 
 const dbGet = (sql, params = []) => {
   return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database is not initialized'));
     db.get(sql, params, (err, row) => {
       if (err) reject(err);
       else resolve(row);
@@ -67,6 +209,7 @@ const dbGet = (sql, params = []) => {
 
 const dbAll = (sql, params = []) => {
   return new Promise((resolve, reject) => {
+    if (!db) return reject(new Error('Database is not initialized'));
     db.all(sql, params, (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
@@ -633,6 +776,61 @@ async function ensureCashboxTables() {
       FOREIGN KEY (cashbox_id) REFERENCES cashbox(id) ON DELETE CASCADE
     )`);
 
+    // Handle older DBs where tables exist but columns differ.
+    try {
+      const cashboxCols = await dbAll("PRAGMA table_info('cashbox')");
+      const cashboxNames = new Set(cashboxCols.map(c => c.name));
+      if (!cashboxNames.has('opening_balance')) {
+        await dbRun('ALTER TABLE cashbox ADD COLUMN opening_balance DECIMAL(10, 2) NOT NULL DEFAULT 0');
+      }
+      if (!cashboxNames.has('current_balance')) {
+        await dbRun('ALTER TABLE cashbox ADD COLUMN current_balance DECIMAL(10, 2) NOT NULL DEFAULT 0');
+      }
+      if (!cashboxNames.has('is_initialized')) {
+        await dbRun('ALTER TABLE cashbox ADD COLUMN is_initialized INTEGER DEFAULT 0');
+        // Best-effort backfill from legacy column name.
+        if (cashboxNames.has('initialized')) {
+          try {
+            await dbRun('UPDATE cashbox SET is_initialized = COALESCE(is_initialized, initialized, 0)');
+          } catch {}
+        }
+      }
+      if (!cashboxNames.has('updated_at')) {
+        await dbRun('ALTER TABLE cashbox ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+      }
+
+      // Legacy schemas sometimes include an `amount` column with NOT NULL.
+      // Keep it populated so inserts/updates don't violate constraints.
+      if (cashboxNames.has('amount')) {
+        try {
+          await dbRun(
+            'UPDATE cashbox SET amount = COALESCE(amount, current_balance, opening_balance, 0) WHERE amount IS NULL'
+          );
+        } catch {}
+      }
+    } catch (e) {
+      console.warn('Cashbox table migration warning:', e.message);
+    }
+
+    try {
+      const txCols = await dbAll("PRAGMA table_info('cashbox_transactions')");
+      const txNames = new Set(txCols.map(c => c.name));
+      if (!txNames.has('note')) {
+        await dbRun('ALTER TABLE cashbox_transactions ADD COLUMN note TEXT');
+      }
+      if (!txNames.has('balance_after')) {
+        await dbRun('ALTER TABLE cashbox_transactions ADD COLUMN balance_after DECIMAL(10, 2) NOT NULL DEFAULT 0');
+      }
+      if (!txNames.has('created_at')) {
+        await dbRun('ALTER TABLE cashbox_transactions ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP');
+      }
+      if (!txNames.has('date')) {
+        await dbRun('ALTER TABLE cashbox_transactions ADD COLUMN date DATETIME DEFAULT CURRENT_TIMESTAMP');
+      }
+    } catch (e) {
+      console.warn('Cashbox transactions migration warning:', e.message);
+    }
+
     console.log('Cashbox tables ensured');
   } catch (err) {
     console.error('Error ensuring cashbox tables:', err);
@@ -640,10 +838,18 @@ async function ensureCashboxTables() {
 }
 
 module.exports = {
-  db,
+  get db() {
+    return db;
+  },
   run: dbRun,
   get: dbGet,
-  all: dbAll
+  all: dbAll,
+  close: closeDatabase,
+  reopen: reopenDatabase,
+  getPaths: () => ({
+    dbDir: DB_DIR,
+    inventoryDbPath: DB_PATH
+  })
 };
 
 // Create computed views for daily ledgers

@@ -108,7 +108,7 @@ const EditInventory: React.FC = () => {
       };
 
       await api.put(`/products/${product.id}`, updatePayload);
-      showSuccess({ title: t('inventory.updated') || 'Updated', message: 'Product details updated successfully!' });
+      showSuccess({ title: t('common.updated') || 'Updated', message: t('inventory.updateSuccessMsg') || 'Product details updated successfully.' });
       navigate('/inventory');
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update product';
@@ -126,7 +126,7 @@ const EditInventory: React.FC = () => {
     const unitPrice = quantity > 0 && totalPrice > 0 ? totalPrice / quantity : null;
 
     if (!quantity || quantity <= 0) {
-      const message = 'Please enter a valid quantity';
+      const message = t('inventory.validQuantityRequired') || 'Please enter a valid quantity.';
       setError(message);
       showWarning({ title: t('common.warning') || 'Warning', message });
       return;
@@ -148,7 +148,7 @@ const EditInventory: React.FC = () => {
           reference_id: null,
           transaction_date: transactionDate,
         });
-        showSuccess({ title: t('inventory.stockPurchased') || 'Stock purchased', message: 'Stock purchased successfully!' });
+        showSuccess({ title: t('inventory.stockPurchased') || 'Stock purchased', message: t('inventory.stockPurchasedMsg') || 'Stock purchased successfully.' });
       } else if (activeTab === 'sale') {
         await api.post(`/products/${product.id}/movements`, {
           type: 'SELL',
@@ -157,7 +157,7 @@ const EditInventory: React.FC = () => {
           reference_id: null,
           transaction_date: transactionDate,
         });
-        showSuccess({ title: t('inventory.stockSold') || 'Stock sold', message: 'Stock sold successfully!' });
+        showSuccess({ title: t('inventory.stockSold') || 'Stock sold', message: t('inventory.stockSoldMsg') || 'Stock sold successfully.' });
       }
 
       setStockFormData({ quantity: '', totalPrice: '', date: new Date().toISOString().slice(0, 10) });

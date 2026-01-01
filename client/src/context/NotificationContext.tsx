@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from './TranslationContext';
 import '../styles/Notification.css';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
@@ -33,6 +34,7 @@ const NotificationContext = createContext<NotificationContextValue | undefined>(
 const DEFAULT_AUTO_CLOSE = 3200;
 
 const NotificationPortal: React.FC<{ item: NotificationItem | null; onClose: (confirmed?: boolean) => void; }> = ({ item, onClose }) => {
+  const { t } = useTranslation();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -97,11 +99,11 @@ const NotificationPortal: React.FC<{ item: NotificationItem | null; onClose: (co
         <div className="notify-actions">
           {item.type === 'confirm' ? (
             <>
-              <button className="notify-btn ghost" onClick={() => onClose(false)}>Cancel</button>
-              <button className="notify-btn solid" style={{ background: tone }} onClick={() => onClose(true)}>Confirm</button>
+              <button className="notify-btn ghost" onClick={() => onClose(false)}>{t('common.cancel')}</button>
+              <button className="notify-btn solid" style={{ background: tone }} onClick={() => onClose(true)}>{t('common.confirm')}</button>
             </>
           ) : (
-            <button className="notify-btn solid" style={{ background: tone }} onClick={() => onClose(false)}>Close</button>
+            <button className="notify-btn solid" style={{ background: tone }} onClick={() => onClose(false)}>{t('common.close')}</button>
           )}
         </div>
       </div>

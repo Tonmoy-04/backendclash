@@ -87,7 +87,7 @@ const Suppliers: React.FC = () => {
         try {
           await api.delete(`/suppliers/${id}`);
           setSuppliers(prev => prev.filter(supplier => supplier.id !== id));
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Supplier deleted successfully.' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('suppliers.deletedSuccess') || 'Supplier deleted successfully.' });
         } catch (err: any) {
           const message = err.response?.data?.error || 'Failed to delete supplier';
           setError(message);
@@ -117,18 +117,18 @@ const Suppliers: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedSuppliers.length === 0) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select suppliers to delete' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('suppliers.selectToDeleteWarning') || 'Please select suppliers to delete.' });
       return;
     }
     showConfirm({
       title: t('common.delete') || 'Delete',
-      message: `Delete ${selectedSuppliers.length} supplier(s)? This cannot be undone.`,
+      message: `${t('suppliers.bulkDeleteConfirmPrefix')}${selectedSuppliers.length}${t('suppliers.bulkDeleteConfirmSuffix')}`,
       onConfirm: async () => {
         try {
           await Promise.all(selectedSuppliers.map(id => api.delete(`/suppliers/${id}`)));
           setSuppliers(prev => prev.filter(s => !selectedSuppliers.includes(s.id)));
           setSelectedSuppliers([]);
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Suppliers deleted successfully.' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('suppliers.bulkDeletedSuccess') || 'Suppliers deleted successfully.' });
         } catch (err: any) {
           const message = err.response?.data?.error || 'Failed to delete suppliers';
           setError(message);
@@ -140,7 +140,7 @@ const Suppliers: React.FC = () => {
 
   const handlePaymentSubmit = async () => {
     if (!selectedSupplier || !paymentAmount || parseFloat(paymentAmount) <= 0) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please enter a valid amount' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('common.invalidAmount') || 'Please enter a valid amount.' });
       return;
     }
 
@@ -645,7 +645,7 @@ const Suppliers: React.FC = () => {
                   : 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 text-purple-700 dark:text-purple-300'
               }`}
             >
-              {t('suppliers.credit') || 'Credit'}
+              {t('suppliers.advance') || t('suppliers.credit') || 'Credit'}
             </button>
             
             <button

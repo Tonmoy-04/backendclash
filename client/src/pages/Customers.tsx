@@ -86,9 +86,9 @@ const Customers: React.FC = () => {
         try {
           await api.delete(`/customers/${id}`);
           setCustomers(prev => prev.filter(customer => customer.id !== id));
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('customers.deleteCustomer') || 'Customer deleted' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('customers.deletedSuccess') || 'Customer deleted successfully.' });
         } catch (err: any) {
-          const message = err.response?.data?.error || 'Failed to delete customer';
+          const message = err.response?.data?.error || t('customers.deleteFailed') || 'Failed to delete customer';
           setError(message);
           showError({ title: t('common.error') || 'Error', message });
         }
@@ -116,20 +116,20 @@ const Customers: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedCustomers.length === 0) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please select customers to delete' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('customers.selectToDeleteWarning') || 'Please select customers to delete.' });
       return;
     }
     showConfirm({
       title: t('common.delete') || 'Delete',
-      message: `Delete ${selectedCustomers.length} customer(s)? This cannot be undone.`,
+      message: `${t('customers.bulkDeleteConfirmPrefix')}${selectedCustomers.length}${t('customers.bulkDeleteConfirmSuffix')}`,
       onConfirm: async () => {
         try {
           await Promise.all(selectedCustomers.map(id => api.delete(`/customers/${id}`)));
           setCustomers(prev => prev.filter(c => !selectedCustomers.includes(c.id)));
           setSelectedCustomers([]);
-          showSuccess({ title: t('common.deleted') || 'Deleted', message: 'Customers deleted successfully.' });
+          showSuccess({ title: t('common.deleted') || 'Deleted', message: t('customers.bulkDeletedSuccess') || 'Customers deleted successfully.' });
         } catch (err: any) {
-          const message = err.response?.data?.error || 'Failed to delete customers';
+          const message = err.response?.data?.error || t('customers.bulkDeleteFailed') || 'Failed to delete customers';
           setError(message);
           showError({ title: t('common.error') || 'Error', message });
         }
@@ -139,7 +139,7 @@ const Customers: React.FC = () => {
 
   const handlePaymentSubmit = async () => {
     if (!selectedCustomer || !paymentAmount || parseFloat(paymentAmount) <= 0) {
-      showWarning({ title: t('common.warning') || 'Warning', message: 'Please enter a valid amount' });
+      showWarning({ title: t('common.warning') || 'Warning', message: t('common.invalidAmount') || 'Please enter a valid amount.' });
       return;
     }
 
@@ -602,95 +602,50 @@ const Customers: React.FC = () => {
 
         {/* Balance Filter */}
         <div className="mb-6 animate-fadeInUp" style={{ animationDelay: '0.25s' }}>
-          <div className="relative bg-gradient-to-br from-white/90 via-emerald-50/80 to-teal-50/90 dark:from-emerald-900/40 dark:via-teal-900/30 dark:to-emerald-800/40 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-emerald-300/30 dark:border-emerald-600/30 overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/5 via-teal-400/5 to-cyan-400/5 pointer-events-none"></div>
-            
-            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                </div>
-                <div>
-                  <label className="text-sm font-bold text-emerald-900 dark:text-emerald-100 block">
-                    {t('customers.filterByBalance') || 'Filter by Balance'}
-                  </label>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">Select status to filter</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-3 sm:ml-auto">
-                <button
-                  onClick={() => setBalanceFilter('all')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'all'
-                      ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white shadow-xl shadow-emerald-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">📊</span>
-                    {t('customers.all') || 'All'}
-                  </span>
-                  {balanceFilter === 'all' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => setBalanceFilter('debt')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'debt'
-                      ? 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white shadow-xl shadow-red-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">💰</span>
-                    {t('customers.receivable') || 'Receivable'}
-                  </span>
-                  {balanceFilter === 'debt' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => setBalanceFilter('owe')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'owe'
-                      ? 'bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white shadow-xl shadow-green-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">✅</span>
-                    {t('customers.credit') || ''}
-                  </span>
-                  {balanceFilter === 'owe' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => setBalanceFilter('clear')}
-                  className={`group relative px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
-                    balanceFilter === 'clear'
-                      ? 'bg-gradient-to-r from-gray-700 via-slate-700 to-gray-700 text-white shadow-xl shadow-gray-500/50 scale-105'
-                      : 'bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 shadow-md backdrop-blur-sm border border-emerald-200/50 dark:border-gray-600/50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-lg">🎯</span>
-                    {t('customers.clear') || 'Clear'}
-                  </span>
-                  {balanceFilter === 'clear' && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                  )}
-                </button>
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setBalanceFilter('all')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'all'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-300'
+              }`}
+            >
+              {t('customers.all') || 'All'}
+            </button>
+
+            <button
+              onClick={() => setBalanceFilter('debt')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'debt'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-600 dark:to-cyan-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 text-blue-700 dark:text-blue-300'
+              }`}
+            >
+              {t('customers.receivable') || 'Receivable'}
+            </button>
+
+            <button
+              onClick={() => setBalanceFilter('owe')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'owe'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-600 dark:to-pink-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 text-purple-700 dark:text-purple-300'
+              }`}
+            >
+              {t('customers.credit') || 'Credit'}
+            </button>
+
+            <button
+              onClick={() => setBalanceFilter('clear')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                balanceFilter === 'clear'
+                  ? 'bg-gradient-to-r from-slate-600 to-gray-600 dark:from-slate-600 dark:to-gray-600 text-white shadow-lg'
+                  : 'bg-gradient-to-r from-slate-100 to-gray-100 dark:from-slate-900/50 dark:to-gray-900/50 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {t('customers.clear') || 'Clear'}
+            </button>
           </div>
         </div>
 
