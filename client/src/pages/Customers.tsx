@@ -6,6 +6,7 @@ import api from '../services/api';
 import { parseNumericInput, formatDate, formatDateTime, toInputDateFormat } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
+import TransactionDetailsModal from '../components/TransactionDetailsModal';
 import '../styles/Customers.css';
 
 interface Customer {
@@ -50,6 +51,9 @@ const Customers: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [balanceFilter, setBalanceFilter] = useState<'all' | 'debt' | 'owe' | 'clear'>('all');
+  // Transaction Details Modal state
+  const [showTransactionDetails, setShowTransactionDetails] = useState(false);
+  const [selectedTransactionDate, setSelectedTransactionDate] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -995,7 +999,14 @@ const Customers: React.FC = () => {
                       </thead>
                       <tbody className="bg-white/50 dark:bg-emerald-950/30 divide-y divide-emerald-100 dark:divide-emerald-800/50">
                         {getDailySummary().map((day, index) => (
-                          <tr key={index} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all">
+                          <tr 
+                            key={index} 
+                            className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all cursor-pointer"
+                            onClick={() => {
+                              setSelectedTransactionDate(formatDate(day.date));
+                              setShowTransactionDetails(true);
+                            }}
+                          >
                             <td className="px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                               {formatDate(day.date)}
                             </td>
@@ -1083,6 +1094,17 @@ const Customers: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Transaction Details Modal - Displays detailed transaction information when amount is clicked */}
+      {showHistoryModal && selectedCustomer && (
+        <TransactionDetailsModal
+          isOpen={showTransactionDetails}
+          onClose={() => setShowTransactionDetails(false)}
+          selectedDate={selectedTransactionDate}
+          transactions={transactions}
+          mode="customer"
+        />
       )}
     </div>
   </div>

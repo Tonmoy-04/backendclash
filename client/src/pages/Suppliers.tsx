@@ -6,6 +6,7 @@ import api from '../services/api';
 import { parseNumericInput, formatDate, formatDateTime, toInputDateFormat } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
+import TransactionDetailsModal from '../components/TransactionDetailsModal';
 import '../styles/Suppliers.css';
 
 interface Supplier {
@@ -51,6 +52,9 @@ const Suppliers: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [balanceFilter, setBalanceFilter] = useState<'all' | 'debt' | 'owe' | 'clear'>('all');
+  // Transaction Details Modal state
+  const [showTransactionDetails, setShowTransactionDetails] = useState(false);
+  const [selectedTransactionDate, setSelectedTransactionDate] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -1012,7 +1016,14 @@ const Suppliers: React.FC = () => {
                       </thead>
                       <tbody className="bg-white/50 dark:bg-emerald-950/30 divide-y divide-emerald-100 dark:divide-emerald-800/50">
                         {getDailySummary().map((day, index) => (
-                          <tr key={index} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all duration-175">
+                          <tr 
+                            key={index} 
+                            className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all duration-175 cursor-pointer"
+                            onClick={() => {
+                              setSelectedTransactionDate(formatDate(day.date));
+                              setShowTransactionDetails(true);
+                            }}
+                          >
                             <td className="px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                               {formatDate(day.date)}
                             </td>
@@ -1100,6 +1111,17 @@ const Suppliers: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Transaction Details Modal - Displays detailed transaction information when amount is clicked */}
+      {showHistoryModal && selectedSupplier && (
+        <TransactionDetailsModal
+          isOpen={showTransactionDetails}
+          onClose={() => setShowTransactionDetails(false)}
+          selectedDate={selectedTransactionDate}
+          transactions={transactions}
+          mode="supplier"
+        />
       )}
     </div>
   </div>
