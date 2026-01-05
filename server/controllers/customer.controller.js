@@ -320,3 +320,120 @@ exports.getCustomerLedger = async (req, res, next) => {
     next(error);
   }
 };
+
+// Update an existing customer transaction and recalculate balances
+exports.updateCustomerTransaction = async (req, res, next) => {
+  try {
+    const { id, transactionId } = req.params;
+    const { amount, type, description } = req.body;
+    const transactionDate = req.body.transaction_date || null;
+
+    // Validate inputs
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ error: 'Valid positive amount is required' });
+    }
+
+    if (!type || !['payment', 'charge'].includes(type)) {
+      return res.status(400).json({ error: 'Type must be either "payment" or "charge"' });
+    }
+
+    // Ensure customer exists
+    const customer = await db.get('SELECT * FROM customers WHERE id = ?', [id]);
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    // Ensure transaction exists and belongs to the customer
+    const existingTx = await db.get(
+      'SELECT * FROM customer_transactions WHERE id = ? AND customer_id = ?',
+      [transactionId, id]
+    );
+    if (!existingTx) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    // Build the updated transaction object (use provided date or existing date)
+    const updatedTx = {
+      ...existingTx,
+      type,
+      amount: parsedAmount,
+      description: description || null,
+      created_at: transactionDate ? transactionDate : existingTx.created_at,
+    };
+
+    // Fetch all other transactions for this customer
+    const otherTransactions = await db.all(
+      `SELECT * FROM customer_transactions 
+       WHERE customer_id = ? AND id != ?
+       ORDER BY datetime(created_at) ASC, id ASC`,
+      [id, transactionId]
+    );
+
+    // Rebuild ordered list including updated transaction (keep stable ordering)
+    const allTransactions = [...otherTransactions, updatedTx].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      if (dateA === dateB) return (a.id || 0) - (b.id || 0);
+      return dateA - dateB;
+    });
+
+    // Recalculate balances in a transaction-safe manner
+    await db.run('BEGIN TRANSACTION');
+
+    let runningBalance = 0;
+    for (const tx of allTransactions) {
+      const balanceBefore = runningBalance;
+      const newBalanceAfter = tx.type === 'charge'
+        ? balanceBefore + parseFloat(tx.amount)
+        : balanceBefore - parseFloat(tx.amount);
+
+      if (tx.id === parseInt(transactionId, 10)) {
+        // Update the edited transaction with new values
+        await db.run(
+          `UPDATE customer_transactions 
+             SET type = ?, amount = ?, description = ?, created_at = ?, 
+                 balance_before = ?, balance_after = ?
+           WHERE id = ?`,
+          [updatedTx.type, updatedTx.amount, updatedTx.description, updatedTx.created_at, balanceBefore, newBalanceAfter, tx.id]
+        );
+      } else {
+        // Only refresh balances for untouched transactions
+        await db.run(
+          `UPDATE customer_transactions 
+             SET balance_before = ?, balance_after = ? 
+           WHERE id = ?`,
+          [balanceBefore, newBalanceAfter, tx.id]
+        );
+      }
+
+      runningBalance = newBalanceAfter;
+    }
+
+    // Persist customer balance to final running balance
+    await db.run(
+      'UPDATE customers SET balance = ?, updated_at = datetime("now") WHERE id = ?',
+      [runningBalance, id]
+    );
+
+    await db.run('COMMIT');
+
+    const updatedCustomer = await db.get('SELECT * FROM customers WHERE id = ?', [id]);
+
+    res.json({
+      ...updatedCustomer,
+      transaction: {
+        id: parseInt(transactionId, 10),
+        type,
+        amount: parsedAmount,
+        description: updatedTx.description,
+        transaction_date: updatedTx.created_at,
+        balanceBefore: null, // not needed on update response
+        balanceAfter: runningBalance
+      }
+    });
+  } catch (error) {
+    try { await db.run('ROLLBACK'); } catch (_) {}
+    next(error);
+  }
+};

@@ -16,6 +16,8 @@ interface Product {
   cost: number;
   quantity: number;
   min_stock: number;
+  purchase_rate?: number;
+  selling_rate?: number;
 }
 
 interface ProductMovement {
@@ -28,6 +30,7 @@ interface ProductMovement {
   reference_id?: number;
   stock_after?: number | null;
   created_at?: string;
+  rate?: number;
 }
 
 const Inventory: React.FC = () => {
@@ -49,6 +52,13 @@ const Inventory: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [filterLowStock, setFilterLowStock] = useState(false);
+  // Edit movement state
+  const [editingMovement, setEditingMovement] = useState<ProductMovement | null>(null);
+  const [showEditMovementModal, setShowEditMovementModal] = useState(false);
+  const [editMovementType, setEditMovementType] = useState<'PURCHASE' | 'SELL'>('PURCHASE');
+  const [editMovementQty, setEditMovementQty] = useState('');
+  const [editMovementPrice, setEditMovementPrice] = useState('');
+  const [editMovementDate, setEditMovementDate] = useState('');
 
   useEffect(() => {
     // Check if we're coming from dashboard with low stock filter
@@ -237,6 +247,68 @@ const Inventory: React.FC = () => {
     setMovements(filtered);
   };
 
+  const handleEditMovement = (movement: ProductMovement) => {
+    if (!movementProduct) return;
+    setEditingMovement(movement);
+    setEditMovementType(movement.type);
+    setEditMovementQty(movement.quantity?.toString() || '');
+    setEditMovementPrice(movement.price?.toString() || '');
+    try {
+      const dateValue = new Date(movement.transaction_date || movement.created_at || new Date());
+      setEditMovementDate(dateValue.toISOString().split('T')[0]);
+    } catch {
+      setEditMovementDate(new Date().toISOString().split('T')[0]);
+    }
+    setShowHistoryModal(false);
+    setShowEditMovementModal(true);
+  };
+
+  const handleSaveMovement = async () => {
+    if (!movementProduct || !editingMovement || !editMovementQty) {
+      showWarning({ title: t('common.warning') || 'Warning', message: 'Please fill in all required fields.' });
+      return;
+    }
+
+    try {
+      const payload = {
+        type: editMovementType,
+        quantity: parseInt(editMovementQty, 10),
+        price: editMovementPrice ? parseFloat(editMovementPrice) : 0,
+        transaction_date: editMovementDate
+      };
+
+      const response = await api.put(
+        `/products/${movementProduct.id}/movements/${editingMovement.id}`,
+        payload
+      );
+
+      // Update the product in the list
+      setProducts(prev => prev.map(p => 
+        p.id === movementProduct.id ? { 
+          ...p, 
+          quantity: response.data.product.quantity, 
+          purchase_rate: response.data.product.purchase_rate,
+          selling_rate: response.data.product.selling_rate
+        } : p
+      ));
+
+      // Refresh history modal
+      if (showHistoryModal || showEditMovementModal) {
+        await handleViewHistory(movementProduct);
+      }
+
+      setShowEditMovementModal(false);
+      setEditingMovement(null);
+      setEditMovementQty('');
+      setEditMovementPrice('');
+      setEditMovementType('PURCHASE');
+      showSuccess({ title: t('common.success') || 'Success', message: 'Movement updated successfully.' });
+    } catch (error: any) {
+      const message = error.response?.data?.error || 'Failed to update movement';
+      showError({ title: t('common.error') || 'Error', message });
+    }
+  };
+
   const getStockStatus = (quantity: number, minStock: number) => {
     if (quantity === 0) return { 
       text: t('inventory.outOfStock'), 
@@ -350,6 +422,7 @@ const Inventory: React.FC = () => {
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.product')}</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.stock')}</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Rate</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.status')}</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('common.actions')}</th>
               </tr>
@@ -387,6 +460,16 @@ const Inventory: React.FC = () => {
                               width: `${Math.min((product.quantity / (product.min_stock * 3)) * 100, 100)}%` 
                             }}
                           />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1 text-xs font-semibold">
+                        <div className="text-green-600 dark:text-green-400">
+                          S: {product.selling_rate !== undefined && product.selling_rate !== null ? `৳${product.selling_rate.toFixed(3)}` : '—'}
+                        </div>
+                        <div className="text-red-600 dark:text-red-400">
+                          P: {product.purchase_rate !== undefined && product.purchase_rate !== null ? `৳${product.purchase_rate.toFixed(3)}` : '—'}
                         </div>
                       </div>
                     </td>
@@ -479,6 +562,7 @@ const Inventory: React.FC = () => {
                         <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Type</th>
                         <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Quantity</th>
                         <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Price</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Rate</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-emerald-50 dark:divide-emerald-800">
@@ -486,7 +570,7 @@ const Inventory: React.FC = () => {
                         const dateValue = m.transaction_date || m.created_at || new Date().toISOString();
                         const qtyDisplay = m.type === 'PURCHASE' ? `+${m.quantity}` : `-${m.quantity}`;
                         return (
-                          <tr key={m.id} className="cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors" onClick={() => navigate(`/inventory/edit/${movementProduct?.id}`, { state: { editMovement: m } })}>
+                          <tr key={m.id} className="cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors" onClick={() => handleEditMovement(m)}>
                             <td className="px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
                               {formatDateTime(dateValue)}
                             </td>
@@ -498,6 +582,9 @@ const Inventory: React.FC = () => {
                             </td>
                             <td className="px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
                               {formatMoney(m.price)}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                              {m.rate !== undefined && m.rate !== null ? `৳${m.rate.toFixed(3)}` : '—'}
                             </td>
                           </tr>
                         );
@@ -547,6 +634,103 @@ const Inventory: React.FC = () => {
                   className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow hover:shadow-md"
                 >
                   {t('common.apply')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Movement Modal */}
+      {showEditMovementModal && editingMovement && movementProduct && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowEditMovementModal(false)}>
+          <div className="bg-gradient-to-br from-white to-emerald-50/40 dark:from-emerald-900 dark:to-teal-900/40 rounded-2xl shadow-2xl max-w-md w-full border border-emerald-200/50 dark:border-emerald-700/30" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-emerald-100 dark:border-emerald-800 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 rounded-t-2xl">
+              <div>
+                <div className="text-xs font-semibold text-white/80 uppercase">Edit Movement</div>
+                <div className="text-xl font-bold text-white">{movementProduct?.name || 'Product'}</div>
+              </div>
+              <button
+                onClick={() => setShowEditMovementModal(false)}
+                className="text-white text-xl font-bold transition-all duration-175"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Type</label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setEditMovementType('SELL')}
+                    className={`flex-1 py-2 px-3 rounded-lg font-semibold transition-all ${
+                      editMovementType === 'SELL'
+                        ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg'
+                        : 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'
+                    }`}
+                  >
+                    Sell
+                  </button>
+                  <button
+                    onClick={() => setEditMovementType('PURCHASE')}
+                    className={`flex-1 py-2 px-3 rounded-lg font-semibold transition-all ${
+                      editMovementType === 'PURCHASE'
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg'
+                        : 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'
+                    }`}
+                  >
+                    Buy
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editMovementQty}
+                  onChange={(e) => setEditMovementQty(e.target.value)}
+                  className="w-full px-4 py-2 border border-emerald-200 dark:border-emerald-700 rounded-lg bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Total Amount <span className="text-red-600">*</span></label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editMovementPrice}
+                  onChange={(e) => setEditMovementPrice(e.target.value)}
+                  className="w-full px-4 py-2 border border-emerald-200 dark:border-emerald-700 rounded-lg bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="৳ (defaults to 0)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Date</label>
+                <input
+                  type="date"
+                  value={editMovementDate}
+                  onChange={(e) => setEditMovementDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-emerald-200 dark:border-emerald-700 rounded-lg bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowEditMovementModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveMovement}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                >
+                  Save
                 </button>
               </div>
             </div>

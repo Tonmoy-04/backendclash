@@ -41,9 +41,10 @@ const Suppliers: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentType, setPaymentType] = useState<'payment' | 'charge'>('payment');
+  const [paymentType, setPaymentType] = useState<'payment' | 'charge'>('charge');
   const [paymentDescription, setPaymentDescription] = useState('');
   const [paymentDate, setPaymentDate] = useState(toInputDateFormat(new Date()));
+  const [editingTransactionId, setEditingTransactionId] = useState<number | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transactionsAll, setTransactionsAll] = useState<Transaction[]>([]);
@@ -193,26 +194,57 @@ const Suppliers: React.FC = () => {
     }
 
     try {
-      const response = await api.post(`/suppliers/${selectedSupplier.id}/balance`, {
+      const payload = {
         amount: parseFloat(paymentAmount),
         type: paymentType,
         description: paymentDescription,
         transaction_date: paymentDate
-      });
+      };
 
-      // Update the supplier in the list
+      const response = editingTransactionId
+        ? await api.put(`/suppliers/${selectedSupplier.id}/transactions/${editingTransactionId}`, payload)
+        : await api.post(`/suppliers/${selectedSupplier.id}/balance`, payload);
+
+      // Update the supplier in the list with the latest balance
       setSuppliers(prev => prev.map(s => 
         s.id === selectedSupplier.id ? { ...s, balance: response.data.balance } : s
       ));
+
+      // Refresh history if modal open
+      if (showHistoryModal && selectedSupplier) {
+        await handleViewHistory(selectedSupplier);
+      }
 
       setShowPaymentModal(false);
       setSelectedSupplier(null);
       setPaymentAmount('');
       setPaymentDescription('');
-      setPaymentDate(toInputDateFormat(new Date()));
+      setPaymentDate(new Date().toISOString().split('T')[0]);
+      setEditingTransactionId(null);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to update balance');
     }
+  };
+
+  // Open existing transaction in edit mode using the same payment form
+  const handleEditTransaction = (transaction: any) => {
+    if (!selectedSupplier) return;
+
+    setEditingTransactionId(transaction.id);
+    setPaymentAmount(transaction.amount?.toString() || '');
+    setPaymentType(transaction.type === 'charge' ? 'charge' : 'payment');
+    setPaymentDescription(transaction.description || '');
+
+    try {
+      const dateValue = new Date(transaction.created_at);
+      setPaymentDate(toInputDateFormat(dateValue));
+    } catch {
+      setPaymentDate(toInputDateFormat(new Date()));
+    }
+
+    setShowTransactionDetails(false);
+    setShowHistoryModal(false);
+    setShowPaymentModal(true);
   };
 
   const handleViewHistory = async (supplier: Supplier) => {
@@ -650,7 +682,7 @@ const Suppliers: React.FC = () => {
               </button>
             )}
             <button 
-              onClick={() => navigate('/suppliers/add')} 
+              onClick={() => navigate('/suppliers/add')}
               className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 animate-fadeInRight" 
               style={{ animationDelay: '0.2s' }}
             >
@@ -807,7 +839,7 @@ const Suppliers: React.FC = () => {
                         setSelectedSupplier(supplier);
                         setShowPaymentModal(true);
                         setPaymentAmount('');
-                        setPaymentType('payment');
+                        setPaymentType('charge');
                         setPaymentDescription('');
                       }}
                     >
@@ -859,7 +891,7 @@ const Suppliers: React.FC = () => {
                               setSelectedSupplier(supplier);
                               setShowPaymentModal(true);
                               setPaymentAmount('');
-                              setPaymentType('payment');
+                              setPaymentType('charge');
                               setPaymentDescription('');
                             }} 
                             title={t('suppliers.manageBalanceAction')}
@@ -898,6 +930,7 @@ const Suppliers: React.FC = () => {
             setPaymentAmount('');
             setPaymentDescription('');
             setPaymentDate(toInputDateFormat(new Date()));
+            setEditingTransactionId(null);
           }}>
             <div className="bg-white dark:bg-emerald-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeInUp" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -930,17 +963,6 @@ const Suppliers: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => setPaymentType('payment')}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-all duration-175 ${
-                        paymentType === 'payment'
-                          ? 'bg-red-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      {t('suppliers.given')}
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => setPaymentType('charge')}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all duration-175 ${
                         paymentType === 'charge'
@@ -949,6 +971,17 @@ const Suppliers: React.FC = () => {
                       }`}
                     >
                       {t('suppliers.taken')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentType('payment')}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all duration-175 ${
+                        paymentType === 'payment'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      {t('suppliers.given')}
                     </button>
                   </div>
                 </div>
@@ -1195,7 +1228,8 @@ const Suppliers: React.FC = () => {
           onClose={() => setShowTransactionDetails(false)}
           selectedDate={selectedTransactionDate}
           transactions={transactions}
-          mode="supplier"
+            mode="supplier"
+            onEditTransaction={handleEditTransaction}
         />
       )}
     </div>

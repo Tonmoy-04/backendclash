@@ -22,6 +22,7 @@ router.get('/low-stock', productController.getLowStockProducts);
 router.get('/:id/movements', productController.getProductMovements);
 router.get('/:id', productController.getProductById);
 router.post('/:id/movements', productController.addProductMovement);
+router.put('/:id/movements/:movementId', productController.updateProductMovement);
 router.post('/', productController.createProduct);
 router.put('/:id', productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);

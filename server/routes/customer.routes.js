@@ -15,6 +15,9 @@ router.post('/:id/balance', customerController.updateCustomerBalance);
 // GET customer transaction history
 router.get('/:id/transactions', customerController.getCustomerTransactions);
 
+// UPDATE specific customer transaction
+router.put('/:id/transactions/:transactionId', customerController.updateCustomerTransaction);
+
 // GET customer daily ledger (date, deposit, spend, balance, status)
 router.get('/:id/ledger', customerController.getCustomerLedger);
 

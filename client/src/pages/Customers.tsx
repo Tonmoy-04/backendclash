@@ -40,9 +40,10 @@ const Customers: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentType, setPaymentType] = useState<'payment' | 'charge'>('payment');
+  const [paymentType, setPaymentType] = useState<'payment' | 'charge'>('charge');
   const [paymentDescription, setPaymentDescription] = useState('');
   const [paymentDate, setPaymentDate] = useState(toInputDateFormat(new Date()));
+  const [editingTransactionId, setEditingTransactionId] = useState<number | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transactionsAll, setTransactionsAll] = useState<Transaction[]>([]);
@@ -191,26 +192,58 @@ const Customers: React.FC = () => {
     }
 
     try {
-      const response = await api.post(`/customers/${selectedCustomer.id}/balance`, {
+      const payload = {
         amount: parseFloat(paymentAmount),
         type: paymentType,
         description: paymentDescription,
         transaction_date: paymentDate
-      });
+      };
 
-      // Update the customer in the list
+      const response = editingTransactionId
+        ? await api.put(`/customers/${selectedCustomer.id}/transactions/${editingTransactionId}`, payload)
+        : await api.post(`/customers/${selectedCustomer.id}/balance`, payload);
+
+      // Update the customer in the list with the latest balance
       setCustomers(prev => prev.map(c => 
         c.id === selectedCustomer.id ? { ...c, balance: response.data.balance } : c
       ));
+
+      // Refresh history if modal open
+      if (showHistoryModal && selectedCustomer) {
+        await handleViewHistory(selectedCustomer);
+      }
 
       setShowPaymentModal(false);
       setSelectedCustomer(null);
       setPaymentAmount('');
       setPaymentDescription('');
       setPaymentDate(new Date().toISOString().split('T')[0]);
+      setEditingTransactionId(null);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to update balance');
     }
+  };
+
+  // Open existing transaction in edit mode using the same payment form
+  const handleEditTransaction = (transaction: any) => {
+    if (!selectedCustomer) return;
+
+    setEditingTransactionId(transaction.id);
+    setPaymentAmount(transaction.amount?.toString() || '');
+    setPaymentType(transaction.type === 'charge' ? 'charge' : 'payment');
+    setPaymentDescription(transaction.description || '');
+
+    try {
+      const dateValue = new Date(transaction.created_at);
+      setPaymentDate(toInputDateFormat(dateValue));
+    } catch {
+      setPaymentDate(toInputDateFormat(new Date()));
+    }
+
+    // Close the details view and open the edit form
+    setShowTransactionDetails(false);
+    setShowHistoryModal(false);
+    setShowPaymentModal(true);
   };
 
   const handleViewHistory = async (customer: Customer) => {
@@ -841,7 +874,7 @@ const Customers: React.FC = () => {
                           setSelectedCustomer(customer);
                           setShowPaymentModal(true);
                           setPaymentAmount('');
-                          setPaymentType('payment');
+                          setPaymentType('charge');
                           setPaymentDescription('');
                         }} 
                         title={t('customers.manageBalanceAction')}
@@ -880,6 +913,7 @@ const Customers: React.FC = () => {
             setPaymentAmount('');
             setPaymentDescription('');
             setPaymentDate(toInputDateFormat(new Date()));
+            setEditingTransactionId(null);
           }}>
             <div className="bg-white dark:bg-emerald-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeInUp" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -912,6 +946,17 @@ const Customers: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
+                      onClick={() => setPaymentType('charge')}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                        paymentType === 'charge'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      বিক্রি
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setPaymentType('payment')}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                         paymentType === 'payment'
@@ -920,17 +965,6 @@ const Customers: React.FC = () => {
                       }`}
                     >
                       জমা
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentType('charge')}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                        paymentType === 'charge'
-                          ? 'bg-red-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      খরচ
                     </button>
                   </div>
                 </div>
@@ -978,6 +1012,10 @@ const Customers: React.FC = () => {
                   onClick={() => {
                     setShowPaymentModal(false);
                     setSelectedCustomer(null);
+                    setEditingTransactionId(null);
+                    setPaymentAmount('');
+                    setPaymentDescription('');
+                    setPaymentDate(toInputDateFormat(new Date()));
                   }}
                   className="flex-1 px-4 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all font-semibold"
                 >
@@ -1178,6 +1216,7 @@ const Customers: React.FC = () => {
           selectedDate={selectedTransactionDate}
           transactions={transactions}
           mode="customer"
+          onEditTransaction={handleEditTransaction}
         />
       )}
     </div>

@@ -16,12 +16,74 @@ async function ensureStockHistoryTable() {
   stockHistoryInitialized = true;
 }
 
+// Helper: Calculate average rate for a product from all movements
+async function calculateAverageRate(productId) {
+  try {
+    await ensureItemTransactionsTable();
+    const result = await db.get(
+      `SELECT AVG(CASE WHEN quantity > 0 THEN price / quantity ELSE 0 END) as avg_rate
+       FROM inventory_item_transactions
+       WHERE item_id = ? AND price IS NOT NULL AND price > 0 AND quantity > 0`,
+      [productId]
+    );
+    const avgRate = result?.avg_rate;
+    return avgRate ? parseFloat(avgRate.toFixed(3)) : 0;
+  } catch (error) {
+    console.error('Error calculating average rate:', error);
+    return 0;
+  }
+}
+
+// Helper: Calculate separate rates for purchase and sell
+async function calculateSeparateRates(productId) {
+  try {
+    await ensureItemTransactionsTable();
+    
+    // Calculate purchase rate (PURCHASE transactions only)
+    const purchaseResult = await db.get(
+      `SELECT AVG(CASE WHEN quantity > 0 THEN price / quantity ELSE 0 END) as purchase_rate
+       FROM inventory_item_transactions
+       WHERE item_id = ? AND type = 'PURCHASE' AND price IS NOT NULL AND price > 0 AND quantity > 0`,
+      [productId]
+    );
+    
+    // Calculate selling rate (SELL transactions only)
+    const sellResult = await db.get(
+      `SELECT AVG(CASE WHEN quantity > 0 THEN price / quantity ELSE 0 END) as selling_rate
+       FROM inventory_item_transactions
+       WHERE item_id = ? AND type = 'SELL' AND price IS NOT NULL AND price > 0 AND quantity > 0`,
+      [productId]
+    );
+    
+    return {
+      purchase_rate: purchaseResult?.purchase_rate ? parseFloat(purchaseResult.purchase_rate.toFixed(3)) : 0,
+      selling_rate: sellResult?.selling_rate ? parseFloat(sellResult.selling_rate.toFixed(3)) : 0
+    };
+  } catch (error) {
+    console.error('Error calculating separate rates:', error);
+    return { purchase_rate: 0, selling_rate: 0 };
+  }
+}
+
 exports.getAllProducts = async (req, res, next) => {
   try {
     const products = await db.all(
       `SELECT * FROM products ORDER BY created_at DESC`
     );
-    res.json(products);
+
+    // Add separate purchase and selling rates to each product
+    const productsWithRates = await Promise.all(
+      products.map(async (p) => {
+        const rates = await calculateSeparateRates(p.id);
+        return {
+          ...p,
+          purchase_rate: rates.purchase_rate,
+          selling_rate: rates.selling_rate
+        };
+      })
+    );
+
+    res.json(productsWithRates);
   } catch (error) {
     next(error);
   }
@@ -34,7 +96,20 @@ exports.getLowStockProducts = async (req, res, next) => {
        WHERE quantity <= min_stock
        ORDER BY quantity ASC`
     );
-    res.json(products);
+
+    // Add separate purchase and selling rates to each product
+    const productsWithRates = await Promise.all(
+      products.map(async (p) => {
+        const rates = await calculateSeparateRates(p.id);
+        return {
+          ...p,
+          purchase_rate: rates.purchase_rate,
+          selling_rate: rates.selling_rate
+        };
+      })
+    );
+
+    res.json(productsWithRates);
   } catch (error) {
     next(error);
   }
@@ -51,7 +126,9 @@ exports.getProductById = async (req, res, next) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json(product);
+    // Add separate purchase and selling rates to product
+    const rates = await calculateSeparateRates(product.id);
+    res.json({ ...product, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate });
   } catch (error) {
     next(error);
   }
@@ -249,7 +326,19 @@ exports.getProductMovements = async (req, res, next) => {
 
     const movements = await db.all(query, params);
 
-    res.json({ product, movements });
+    // Add rate to each movement (price / quantity, with 3 decimal places)
+    const movementsWithRates = movements.map((m) => ({
+      ...m,
+      rate: (m.price && m.quantity && m.quantity > 0) 
+        ? parseFloat((m.price / m.quantity).toFixed(3))
+        : 0
+    }));
+
+    // Add separate purchase and selling rates to product
+    const rates = await calculateSeparateRates(productId);
+    const productWithRate = { ...product, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate };
+
+    res.json({ product: productWithRate, movements: movementsWithRates });
   } catch (error) {
     next(error);
   }
@@ -258,7 +347,7 @@ exports.getProductMovements = async (req, res, next) => {
 exports.addProductMovement = async (req, res, next) => {
   try {
     const productId = Number(req.params.id);
-    const { type, quantity, price = null, reference_id = null, transaction_date = null } = req.body || {};
+    const { type, quantity, price = 0, reference_id = null, transaction_date = null } = req.body || {};
 
     if (!productId || !Number.isFinite(productId)) {
       return res.status(400).json({ error: 'Invalid product id' });
@@ -285,16 +374,81 @@ exports.addProductMovement = async (req, res, next) => {
       item_id: productId,
       type,
       quantity: qty,
-      price: price === undefined ? null : Number(price),
+      price: Number(price),
       transaction_date: transaction_date || new Date().toISOString(),
       reference_type: null,
       reference_id
     });
 
     const updated = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
-    res.json({ message: 'Movement recorded', product: updated });
+    const rates = await calculateSeparateRates(productId);
+    res.json({ message: 'Movement recorded', product: { ...updated, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate } });
   } catch (error) {
     console.error('Error adding product movement:', error);
+    next(error);
+  }
+};
+exports.updateProductMovement = async (req, res, next) => {
+  try {
+    const productId = Number(req.params.id);
+    const movementId = Number(req.params.movementId);
+    const { type, quantity, price = 0, transaction_date = null } = req.body || {};
+
+    if (!productId || !Number.isFinite(productId)) {
+      return res.status(400).json({ error: 'Invalid product id' });
+    }
+    if (!movementId || !Number.isFinite(movementId)) {
+      return res.status(400).json({ error: 'Invalid movement id' });
+    }
+    if (!type || (type !== 'PURCHASE' && type !== 'SELL')) {
+      return res.status(400).json({ error: 'type must be PURCHASE or SELL' });
+    }
+    const qty = Number(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      return res.status(400).json({ error: 'quantity must be a positive number' });
+    }
+
+    const product = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    await ensureItemTransactionsTable();
+
+    // Get the old movement to calculate delta
+    const oldMovement = await db.get(
+      'SELECT * FROM inventory_item_transactions WHERE id = ? AND item_id = ?',
+      [movementId, productId]
+    );
+
+    if (!oldMovement) {
+      return res.status(404).json({ error: 'Movement not found' });
+    }
+
+    // Calculate old and new deltas
+    const oldDelta = oldMovement.type === 'PURCHASE' ? oldMovement.quantity : -oldMovement.quantity;
+    const newDelta = type === 'PURCHASE' ? qty : -qty;
+    const quantityDifference = newDelta - oldDelta;
+
+    // Update the movement
+    await db.run(
+      `UPDATE inventory_item_transactions 
+       SET type = ?, quantity = ?, price = ?, transaction_date = ?
+       WHERE id = ?`,
+      [type, qty, Number(price), transaction_date || new Date().toISOString(), movementId]
+    );
+
+    // Update product quantity based on the difference
+    await db.run(
+      'UPDATE products SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [quantityDifference, productId]
+    );
+
+    const updated = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
+    const rates = await calculateSeparateRates(productId);
+    res.json({ message: 'Movement updated', product: { ...updated, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate } });
+  } catch (error) {
+    console.error('Error updating product movement:', error);
     next(error);
   }
 };

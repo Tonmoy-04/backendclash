@@ -324,3 +324,114 @@ exports.getSupplierLedger = async (req, res, next) => {
     next(error);
   }
 };
+
+// Update an existing supplier transaction and recalculate balances
+exports.updateSupplierTransaction = async (req, res, next) => {
+  try {
+    const { id, transactionId } = req.params;
+    const { amount, type, description } = req.body;
+    const transactionDate = req.body.transaction_date || null;
+
+    // Validate inputs
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ error: 'Valid positive amount is required' });
+    }
+
+    if (!type || !['payment', 'charge'].includes(type)) {
+      return res.status(400).json({ error: 'Type must be either "payment" or "charge"' });
+    }
+
+    // Ensure supplier exists
+    const supplier = await db.get('SELECT * FROM suppliers WHERE id = ?', [id]);
+    if (!supplier) {
+      return res.status(404).json({ error: 'Supplier not found' });
+    }
+
+    // Ensure transaction exists and belongs to supplier
+    const existingTx = await db.get(
+      'SELECT * FROM supplier_transactions WHERE id = ? AND supplier_id = ?',
+      [transactionId, id]
+    );
+    if (!existingTx) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const updatedTx = {
+      ...existingTx,
+      type,
+      amount: parsedAmount,
+      description: description || null,
+      created_at: transactionDate ? transactionDate : existingTx.created_at,
+    };
+
+    // Gather all other transactions
+    const otherTransactions = await db.all(
+      `SELECT * FROM supplier_transactions 
+       WHERE supplier_id = ? AND id != ?
+       ORDER BY datetime(created_at) ASC, id ASC`,
+      [id, transactionId]
+    );
+
+    // Rebuild ordered list including updated transaction
+    const allTransactions = [...otherTransactions, updatedTx].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      if (dateA === dateB) return (a.id || 0) - (b.id || 0);
+      return dateA - dateB;
+    });
+
+    await db.run('BEGIN TRANSACTION');
+
+    let runningBalance = 0;
+    for (const tx of allTransactions) {
+      const balanceBefore = runningBalance;
+      const balanceAfter = tx.type === 'charge'
+        ? balanceBefore + parseFloat(tx.amount)
+        : balanceBefore - parseFloat(tx.amount);
+
+      if (tx.id === parseInt(transactionId, 10)) {
+        await db.run(
+          `UPDATE supplier_transactions
+             SET type = ?, amount = ?, description = ?, created_at = ?,
+                 balance_before = ?, balance_after = ?
+           WHERE id = ?`,
+          [updatedTx.type, updatedTx.amount, updatedTx.description, updatedTx.created_at, balanceBefore, balanceAfter, tx.id]
+        );
+      } else {
+        await db.run(
+          `UPDATE supplier_transactions
+             SET balance_before = ?, balance_after = ?
+           WHERE id = ?`,
+          [balanceBefore, balanceAfter, tx.id]
+        );
+      }
+
+      runningBalance = balanceAfter;
+    }
+
+    await db.run(
+      'UPDATE suppliers SET balance = ?, updated_at = datetime("now") WHERE id = ?',
+      [runningBalance, id]
+    );
+
+    await db.run('COMMIT');
+
+    const updatedSupplier = await db.get('SELECT * FROM suppliers WHERE id = ?', [id]);
+
+    res.json({
+      ...updatedSupplier,
+      transaction: {
+        id: parseInt(transactionId, 10),
+        type,
+        amount: parsedAmount,
+        description: updatedTx.description,
+        transaction_date: updatedTx.created_at,
+        balanceAfter: runningBalance
+      }
+    });
+  } catch (error) {
+    try { await db.run('ROLLBACK'); } catch (_) {}
+    next(error);
+  }
+};

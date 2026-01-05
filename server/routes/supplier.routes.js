@@ -25,6 +25,9 @@ router.post('/:id/balance', supplierController.updateSupplierBalance);
 // GET supplier transaction history
 router.get('/:id/transactions', supplierController.getSupplierTransactions);
 
+// UPDATE specific supplier transaction
+router.put('/:id/transactions/:transactionId', supplierController.updateSupplierTransaction);
+
 // GET supplier daily ledger (date, deposit, spend, balance, status)
 router.get('/:id/ledger', supplierController.getSupplierLedger);
 

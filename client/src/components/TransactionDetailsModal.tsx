@@ -17,6 +17,7 @@ interface TransactionDetailsModalProps {
   selectedDate: string | null;
   transactions: Transaction[];
   mode: 'customer' | 'supplier'; // 'customer' or 'supplier'
+  onEditTransaction?: (transaction: Transaction) => void;
 }
 
 const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
@@ -24,7 +25,8 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
   onClose,
   selectedDate,
   transactions,
-  mode
+  mode,
+  onEditTransaction
 }) => {
   const { t, language } = useTranslation();
 
@@ -138,7 +140,8 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                     transaction.type === 'charge'
                       ? 'bg-red-50 dark:bg-red-900/20 border-l-red-500'
                       : 'bg-green-50 dark:bg-green-900/20 border-l-green-500'
-                  }`}
+                  } ${onEditTransaction ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+                  onClick={() => onEditTransaction && onEditTransaction(transaction)}
                 >
                   {/* Row with Type and Amount */}
                   <div className="flex items-center justify-between mb-3">

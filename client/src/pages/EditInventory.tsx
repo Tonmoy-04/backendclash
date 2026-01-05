@@ -27,7 +27,7 @@ const EditInventory: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [product, setProduct] = useState<Product | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'buy' | 'sale'>('buy');
+  const [activeTab, setActiveTab] = useState<'details' | 'buy' | 'sale'>('sale');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -238,18 +238,8 @@ const EditInventory: React.FC = () => {
           </h1>
         </div>
 
-        {/* Tab Navigation (Buy, Sell, then Details) */}
+        {/* Tab Navigation (Sell, Buy, then Details) */}
         <div className="flex gap-2 mb-6 bg-white dark:bg-emerald-900 rounded-xl p-2 border border-emerald-200 dark:border-emerald-700 shadow-lg">
-          <button
-            onClick={() => setActiveTab('buy')}
-            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
-              activeTab === 'buy'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
-            }`}
-          >
-            🛒 {t('inventory.buyStock')}
-          </button>
           <button
             onClick={() => setActiveTab('sale')}
             className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
@@ -259,6 +249,16 @@ const EditInventory: React.FC = () => {
             }`}
           >
             💰 {t('inventory.sellStock')}
+          </button>
+          <button
+            onClick={() => setActiveTab('buy')}
+            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
+              activeTab === 'buy'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
+                : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
+            }`}
+          >
+            🛒 {t('inventory.buyStock')}
           </button>
           <button
             onClick={() => setActiveTab('details')}
@@ -284,8 +284,8 @@ const EditInventory: React.FC = () => {
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 px-6 py-4">
             <h2 className="text-2xl font-bold text-white">
               {activeTab === 'details' && `📝 ${t('inventory.editProductDetails')}`}
-              {activeTab === 'buy' && `🛒 ${t('inventory.buyStock')}`}
               {activeTab === 'sale' && `💰 ${t('inventory.sellStock')}`}
+              {activeTab === 'buy' && `🛒 ${t('inventory.buyStock')}`}
             </h2>
           </div>
 
