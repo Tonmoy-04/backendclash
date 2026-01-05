@@ -298,6 +298,14 @@ export const en = {
     printStatement: 'Print Statement',
     close: 'Close'
     ,
+    // Search and Sort
+    searchPlaceholder: 'Search by name, phone, or ID...',
+    sortAlphabetic: '📝 Alphabetic (A-Z)',
+    sortRecent: '🕐 Most Recent',
+    sortDebt: '💰 Most Debt',
+    sortDue: '⚠️ Most Due',
+    noResults: 'No customers found',
+    tryDifferentSearch: 'Try a different search term',
     // Notifications / confirmations
     deletedSuccess: 'Customer deleted successfully.',
     selectToDeleteWarning: 'Please select customers to delete.',
@@ -355,6 +363,15 @@ export const en = {
     manageBalanceAction: 'Manage balance',
     editSupplier: 'Edit supplier',
     deleteSupplier: 'Delete supplier',
+
+    // Search and Sort
+    searchPlaceholder: 'Search by name, contact, phone, or ID...',
+    sortAlphabetic: '📝 Alphabetic (A-Z)',
+    sortRecent: '🕐 Most Recent',
+    sortDebt: '💰 Most Debt',
+    sortDue: '⚠️ Most Due',
+    noResults: 'No suppliers found',
+    tryDifferentSearch: 'Try a different search term',
 
     // Notifications / confirmations
     deletedSuccess: 'Supplier deleted successfully.',

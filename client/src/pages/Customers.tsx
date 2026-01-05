@@ -54,6 +54,10 @@ const Customers: React.FC = () => {
   // Transaction Details Modal state
   const [showTransactionDetails, setShowTransactionDetails] = useState(false);
   const [selectedTransactionDate, setSelectedTransactionDate] = useState<string | null>(null);
+  
+  // Search and Sort State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState<'alphabetic' | 'recent' | 'debt' | 'due'>('alphabetic');
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -83,6 +87,44 @@ const Customers: React.FC = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [balanceFilter]);
 
+  // Filter and sort customers based on search term and sort option
+  const filteredAndSortedCustomers = React.useMemo(() => {
+    // First, filter by search term (case-insensitive search by name, phone, or ID)
+    let filtered = customers.filter(customer => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesName = customer.name?.toLowerCase().includes(searchLower);
+      const matchesPhone = customer.phone?.toLowerCase().includes(searchLower);
+      const matchesId = customer.id?.toString().includes(searchTerm);
+      return matchesName || matchesPhone || matchesId;
+    });
+
+    // Then, sort based on selected option
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortOption) {
+        case 'alphabetic':
+          // Sort by name A-Z
+          return (a.name || '').localeCompare(b.name || '');
+        
+        case 'recent':
+          // Sort by ID descending (assuming higher ID = more recent)
+          return b.id - a.id;
+        
+        case 'debt':
+          // Sort by highest debt first (positive balance = they owe us)
+          return (b.balance || 0) - (a.balance || 0);
+        
+        case 'due':
+          // Sort by highest due amount first (same as debt for customers)
+          return (b.balance || 0) - (a.balance || 0);
+        
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [customers, searchTerm, sortOption]);
+
   const handleDelete = (id: number) => {
     showConfirm({
       title: t('customers.deleteCustomer') || 'Delete Customer',
@@ -106,10 +148,10 @@ const Customers: React.FC = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedCustomers.length === customers.length) {
+    if (selectedCustomers.length === filteredAndSortedCustomers.length) {
       setSelectedCustomers([]);
     } else {
-      setSelectedCustomers(customers.map(c => c.id));
+      setSelectedCustomers(filteredAndSortedCustomers.map(c => c.id));
     }
   };
 
@@ -661,6 +703,34 @@ const Customers: React.FC = () => {
           </div>
         </div>
 
+        {/* Search and Sort Section */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4 animate-fadeInUp" style={{ animationDelay: '0.28s' }}>
+          {/* Search Input */}
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder={t('customers.searchPlaceholder') || 'Search by name, phone, or ID...'}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 border border-emerald-200 dark:border-emerald-700 rounded-xl bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 placeholder-emerald-400 dark:placeholder-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 shadow-sm"
+            />
+          </div>
+
+          {/* Sort Dropdown */}
+          <div className="sm:w-64">
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as any)}
+              className="w-full px-4 py-3 border border-emerald-200 dark:border-emerald-700 rounded-xl bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 shadow-sm cursor-pointer"
+            >
+              <option value="alphabetic">{t('customers.sortAlphabetic') || '📝 Alphabetic (A-Z)'}</option>
+              <option value="recent">{t('customers.sortRecent') || '🕐 Most Recent'}</option>
+              <option value="debt">{t('customers.sortDebt') || '💰 Most Debt'}</option>
+              <option value="due">{t('customers.sortDue') || '⚠️ Most Due'}</option>
+            </select>
+          </div>
+        </div>
+
         {/* Content Card */}
         <div className="bg-gradient-to-br from-white to-emerald-50/30 dark:from-emerald-900 dark:to-teal-900/30 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/30 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
         {loading && (
@@ -675,11 +745,15 @@ const Customers: React.FC = () => {
           </div>
         )}
 
-        {!loading && !error && customers.length === 0 ? (
+        {!loading && !error && filteredAndSortedCustomers.length === 0 ? (
           <div className="p-16 text-center">
             <div className="text-6xl mb-4 opacity-50">👥</div>
-            <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('customers.noCustomersYet')}</p>
-            <p className="text-emerald-600 dark:text-emerald-300">{t('customers.addFirstCustomer')}</p>
+            <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+              {searchTerm ? (t('customers.noResults') || 'No customers found') : (t('customers.noCustomersYet') || 'No customers yet')}
+            </p>
+            <p className="text-emerald-600 dark:text-emerald-300">
+              {searchTerm ? (t('customers.tryDifferentSearch') || 'Try a different search term') : (t('customers.addFirstCustomer') || 'Add your first customer')}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -689,7 +763,7 @@ const Customers: React.FC = () => {
                 <th className="px-6 py-4 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedCustomers.length === customers.length && customers.length > 0}
+                    checked={selectedCustomers.length === filteredAndSortedCustomers.length && filteredAndSortedCustomers.length > 0}
                     onChange={handleSelectAll}
                     className="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
                   />
@@ -711,7 +785,7 @@ const Customers: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white/50 dark:bg-emerald-950/30 divide-y divide-emerald-100 dark:divide-emerald-800/50">
-              {customers.map((customer, index) => (
+              {filteredAndSortedCustomers.map((customer, index) => (
                 <tr key={customer.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-300 animate-fadeIn" style={{ animationDelay: `${0.4 + index * 0.05}s` }} onClick={() => {
                   setSelectedCustomer(customer);
                   setShowPaymentModal(true);
