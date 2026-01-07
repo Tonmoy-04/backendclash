@@ -300,6 +300,9 @@ const Transactions: React.FC = () => {
         await api.post(endpoint, payload);
       }
 
+      // Dispatch event to refresh dashboard
+      window.dispatchEvent(new Event('inventory-data-changed'));
+
       await fetchTransactions();
       setShowAddModal(false);
       setEditingTransaction(null);
@@ -413,6 +416,8 @@ const Transactions: React.FC = () => {
             return api.delete(`${endpoint}/${id}`);
           });
           await Promise.all(deletePromises);
+          // Dispatch event to refresh dashboard
+          window.dispatchEvent(new Event('inventory-data-changed'));
           await fetchTransactions();
           setSelectedTransactions([]);
           showSuccess({ title: t('common.deleted') || 'Deleted', message: t('transactions.bulkDeletedSuccess') || 'Transactions deleted successfully.' });

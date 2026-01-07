@@ -7,14 +7,13 @@ import LowStockCard from '../components/LowStockCard';
 import CashboxModal from '../components/CashboxModal';
 import CashboxTransactions from '../components/CashboxTransactions';
 import {
-  CubeIcon,
   CurrencyDollarIcon,
-  ShoppingCartIcon,
   ExclamationTriangleIcon,
   PencilSquareIcon,
   BanknotesIcon,
   UserGroupIcon,
   TruckIcon,
+  CubeIcon,
   EyeSlashIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
@@ -28,6 +27,7 @@ interface DashboardStats {
   monthSales: { count: number; total: number };
   totalRevenue: number;
   inventoryValue: number;
+  totalProductPrice: number;
   totalCustomersDebt?: number;
   totalSuppliersDebt?: number;
 }
@@ -162,8 +162,16 @@ const Dashboard: React.FC = () => {
       {/* Stats Grid */}
       <div className="stats-grid">
         <StatCard
-          title={t('dashboard.totalProducts')}
-          value={stats?.totalProducts || 0}
+          title={t('dashboard.totalProductPrice') || 'Total Product Price'}
+          value={`৳${fmtMoney(stats?.totalProductPrice || 0)}`}
+          icon={<CurrencyDollarIcon className="h-8 w-8" />}
+          bgColor="bg-emerald-500"
+          clickable={true}
+          onClick={() => navigate('/inventory')}
+        />
+        <StatCard
+          title={t('dashboard.totalProducts') || 'Total Products'}
+          value={fmtMoney(stats?.totalProducts || 0)}
           icon={<CubeIcon className="h-8 w-8" />}
           bgColor="bg-blue-500"
           clickable={true}

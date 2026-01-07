@@ -48,6 +48,16 @@ exports.getDashboardStats = async (req, res, next) => {
        WHERE name NOT LIKE 'Transaction-%'`
     );
 
+    // Total Product Price: sum of accumulated costs for all products
+    // The cost field now tracks the total investment in inventory for each product
+    // When buying: cost increases by purchase amount
+    // When selling: cost decreases proportionally
+    const currentStockCost = await stockDb.get(
+      `SELECT COALESCE(SUM(cost), 0) as value 
+       FROM products 
+       WHERE name NOT LIKE 'Transaction-%'`
+    );
+
     res.json({
       totalProducts: totalProducts.count,
       lowStockCount: lowStock.count,
@@ -60,7 +70,8 @@ exports.getDashboardStats = async (req, res, next) => {
         total: monthSales.total
       },
       totalRevenue: totalRevenue.total,
-      inventoryValue: inventoryValue.value
+      inventoryValue: inventoryValue.value,
+      totalProductPrice: currentStockCost.value
     });
   } catch (error) {
     next(error);

@@ -176,6 +176,9 @@ const EditInventory: React.FC = () => {
         showSuccess({ title: t('inventory.stockSold') || 'Stock sold', message: t('inventory.stockSoldMsg') || 'Stock sold successfully.' });
       }
 
+      // Dispatch event to refresh dashboard
+      window.dispatchEvent(new Event('inventory-data-changed'));
+
       setStockFormData({ quantity: '', totalPrice: '', date: formatDate(new Date()) });
       navigate('/inventory');
     } catch (err: any) {

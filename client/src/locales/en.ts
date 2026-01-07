@@ -56,6 +56,7 @@ export const en = {
     title: 'Dashboard',
     welcomeBack: 'Welcome back',
     totalProducts: 'Total Products',
+    totalProductPrice: 'Total Product Price',
     customersDebt: 'Total Customers Debt',
     suppliersDebt: 'Total Suppliers Debt',
     lowStockItems: 'Low Stock Items',

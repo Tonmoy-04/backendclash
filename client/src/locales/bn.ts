@@ -56,6 +56,7 @@ export const bn = {
     title: 'ড্যাশবোর্ড',
     welcomeBack: 'আবার স্বাগতম',
     totalProducts: 'মোট পণ্য',
+    totalProductPrice: 'মোট পণ্য মূল্য',
     customersDebt: 'গ্রাহক ঋণ',
     suppliersDebt: 'সরবরাহকারী ঋণ',
     lowStockItems: 'কম স্টক আইটেম',

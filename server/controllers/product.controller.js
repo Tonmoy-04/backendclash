@@ -366,7 +366,21 @@ exports.addProductMovement = async (req, res, next) => {
     }
 
     const delta = type === 'PURCHASE' ? qty : -qty;
-    await db.run('UPDATE products SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [delta, productId]);
+    const priceNum = Number(price) || 0;
+    
+    if (type === 'PURCHASE') {
+      // When purchasing: add the total cost to the accumulated cost
+      await db.run(
+        'UPDATE products SET quantity = quantity + ?, cost = COALESCE(cost, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, priceNum, productId]
+      );
+    } else if (type === 'SELL') {
+      // When selling: deduct the specified cost from accumulated cost
+      await db.run(
+        'UPDATE products SET quantity = quantity - ?, cost = COALESCE(cost, 0) - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, priceNum, productId]
+      );
+    }
 
     await ensureItemTransactionsTable();
 
@@ -374,7 +388,7 @@ exports.addProductMovement = async (req, res, next) => {
       item_id: productId,
       type,
       quantity: qty,
-      price: Number(price),
+      price: priceNum,
       transaction_date: transaction_date || new Date().toISOString(),
       reference_type: null,
       reference_id
