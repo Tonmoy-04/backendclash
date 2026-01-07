@@ -7,6 +7,7 @@ import { useNotification } from '../context/NotificationContext';
 import { formatDateTime } from '../utils/numberConverter';
 import DateInput from '../components/DateInput';
 import '../styles/Inventory.css';
+import { formatBDT } from '../utils/currency';
 
 interface Product {
   id: number;
@@ -331,7 +332,7 @@ const Inventory: React.FC = () => {
     if (n === null || n === undefined) return '';
     const num = Number(n);
     if (!Number.isFinite(num)) return '';
-    return `৳${Math.floor(num)}`;
+    return formatBDT(num, { decimals: 0, withSymbol: true });
   };
 
   if (loading) {

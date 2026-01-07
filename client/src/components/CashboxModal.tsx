@@ -4,6 +4,7 @@ import { useTranslation } from '../context/TranslationContext';
 import api from '../services/api';
 import { parseNumericInput, toInputDateFormat, parseDisplayDateToAPI } from '../utils/numberConverter';
 import DateInput from './DateInput';
+import { formatBDT } from '../utils/currency';
 
 interface CashboxModalProps {
   isOpen: boolean;
@@ -204,7 +205,7 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
                     {t('cashbox.currentBalance')}
                   </p>
                   <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-50">
-                    ৳{Math.floor(currentBalance)}
+                    {formatBDT(currentBalance, { decimals: 0 })}
                   </p>
                 </div>
 

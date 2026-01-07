@@ -8,6 +8,7 @@ import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
 import TransactionDetailsModal from '../components/TransactionDetailsModal';
 import '../styles/Customers.css';
+import { formatBDT } from '../utils/currency';
 
 interface Customer {
   id: number;
@@ -603,9 +604,9 @@ const Customers: React.FC = () => {
                 return `
                   <tr>
                     <td>${date}</td>
-                    <td style="color: #16a34a;">৳${data.taken.toFixed(2)}</td>
-                    <td style="color: #dc2626;">৳${data.given.toFixed(2)}</td>
-                    <td style="font-weight: bold; color: ${statusColor};">৳${Math.abs(data.balance).toFixed(2)}</td>
+                    <td style="color: #16a34a;">${formatBDT(data.taken, { decimals: 2 })}</td>
+                    <td style="color: #dc2626;">${formatBDT(data.given, { decimals: 2 })}</td>
+                    <td style="font-weight: bold; color: ${statusColor};">${formatBDT(Math.abs(data.balance), { decimals: 2 })}</td>
                     <td><span style="background-color: ${statusColor}15; color: ${statusColor}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${statusText}</span></td>
                   </tr>
                 `;
@@ -622,15 +623,15 @@ const Customers: React.FC = () => {
           </div>
           <div class="summary-row">
             <span>Total Payments Received:</span>
-            <strong style="color: #16a34a;">৳${totalPayments.toFixed(2)}</strong>
+            <strong style="color: #16a34a;">${formatBDT(totalPayments, { decimals: 2 })}</strong>
           </div>
           <div class="summary-row">
             <span>Total Charges:</span>
-            <strong style="color: #dc2626;">৳${totalCharges.toFixed(2)}</strong>
+            <strong style="color: #dc2626;">${formatBDT(totalCharges, { decimals: 2 })}</strong>
           </div>
           <div class="summary-row" style="border-top: 1px solid #dcfce7; padding-top: 10px; margin-top: 10px;">
             <span style="font-weight: bold;">Current Balance:</span>
-            <strong style="font-size: 14px; color: ${(selectedCustomer.balance || 0) > 0 ? '#16a34a' : (selectedCustomer.balance || 0) < 0 ? '#dc2626' : '#6b7280'};">৳${Math.abs(selectedCustomer.balance || 0).toFixed(2)}</strong>
+            <strong style="font-size: 14px; color: ${(selectedCustomer.balance || 0) > 0 ? '#16a34a' : (selectedCustomer.balance || 0) < 0 ? '#dc2626' : '#6b7280'};">${formatBDT(Math.abs(selectedCustomer.balance || 0), { decimals: 2 })}</strong>
           </div>
         </div>
 
@@ -863,7 +864,7 @@ const Customers: React.FC = () => {
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' 
                           : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300'
                     }`}>
-                      ৳{Math.floor(Math.abs(customer.balance || 0))} {(customer.balance || 0) > 0 ? t('customers.receivable') : (customer.balance || 0) < 0 ? t('customers.credit') : t('customers.clear')}
+                      {formatBDT(Math.abs(customer.balance || 0), { decimals: 0 })} {(customer.balance || 0) > 0 ? t('customers.receivable') : (customer.balance || 0) < 0 ? t('customers.credit') : t('customers.clear')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
@@ -934,7 +935,7 @@ const Customers: React.FC = () => {
                       ? 'text-green-600 dark:text-green-400' 
                       : 'text-gray-600 dark:text-gray-400'
                 }`}>
-                  ৳{Math.floor(Math.abs(selectedCustomer.balance || 0))} {(selectedCustomer.balance || 0) > 0 ? t('customers.receivable') : (selectedCustomer.balance || 0) < 0 ? t('customers.credit') : ''}
+                  {formatBDT(Math.abs(selectedCustomer.balance || 0), { decimals: 0 })} {(selectedCustomer.balance || 0) > 0 ? t('customers.receivable') : (selectedCustomer.balance || 0) < 0 ? t('customers.credit') : ''}
                 </p>
               </div>
 
@@ -1083,7 +1084,7 @@ const Customers: React.FC = () => {
                         ? 'text-green-600 dark:text-green-400' 
                         : 'text-gray-600 dark:text-gray-400'
                   }`}>
-                    ৳{Math.floor(Math.abs(selectedCustomer.balance || 0))} {(selectedCustomer.balance || 0) > 0 ? t('customers.receivable') : (selectedCustomer.balance || 0) < 0 ? t('customers.credit') : t('customers.clear')}
+                    {formatBDT(Math.abs(selectedCustomer.balance || 0), { decimals: 0 })} {(selectedCustomer.balance || 0) > 0 ? t('customers.receivable') : (selectedCustomer.balance || 0) < 0 ? t('customers.credit') : t('customers.clear')}
                   </p>
                 </div>
 

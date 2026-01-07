@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ArrowUpIcon, ArrowDownIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from '../context/TranslationContext';
 import { formatDate as formatDateDMY } from '../utils/numberConverter';
+import { formatBDT } from '../utils/currency';
 
 interface Transaction {
   id: number;
@@ -166,13 +167,13 @@ const CashboxTransactions: React.FC<CashboxTransactionsProps> = ({
                   <td className="py-3 px-4 text-center">
                     <span className="inline-flex items-center justify-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm font-semibold">
                       <ArrowUpIcon className="h-4 w-4 mr-1" />
-                      ৳{Math.floor(group.totalDeposits)}
+                      ৳{formatBDT(group.totalDeposits, { decimals: 0, withSymbol: false })}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-center">
                     <span className="inline-flex items-center justify-center px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-semibold">
                       <ArrowDownIcon className="h-4 w-4 mr-1" />
-                      ৳{Math.floor(group.totalWithdrawals)}
+                      ৳{formatBDT(group.totalWithdrawals, { decimals: 0, withSymbol: false })}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -181,12 +182,12 @@ const CashboxTransactions: React.FC<CashboxTransactionsProps> = ({
                         ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
                         : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
                     }`}>
-                      {group.netChange >= 0 ? '+' : ''}৳{Math.floor(group.netChange)}
+                      {group.netChange >= 0 ? '+' : ''}৳{formatBDT(group.netChange, { decimals: 0, withSymbol: false })}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right">
                     <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                      ৳{Math.floor(group.lastBalance)}
+                      ৳{formatBDT(group.lastBalance, { decimals: 0, withSymbol: false })}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -239,12 +240,12 @@ const CashboxTransactions: React.FC<CashboxTransactionsProps> = ({
                           ? 'text-green-700 dark:text-green-300'
                           : 'text-red-700 dark:text-red-300'
                       }`}>
-                        {transaction.type === 'deposit' ? '+' : '-'}৳{Math.floor(transaction.amount)}
+                        {transaction.type === 'deposit' ? '+' : '-'}{formatBDT(transaction.amount, { decimals: 0 })}
                       </span>
                     </td>
                     <td className="py-2 px-4 text-right">
                       <span className="text-xs text-emerald-600 dark:text-emerald-300">
-                        ৳{Math.floor(transaction.balance_after)}
+                        {formatBDT(transaction.balance_after, { decimals: 0 })}
                       </span>
                     </td>
                     <td colSpan={1} className="py-2 px-4">

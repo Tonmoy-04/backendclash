@@ -19,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import '../styles/Dashboard.css';
+import { formatNumberIndian } from '../utils/currency';
 
 interface DashboardStats {
   totalProducts: number;
@@ -137,7 +138,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const fmtMoney = (n?: number) => Math.floor(Number(n || 0)).toString();
+  const fmtMoney = (n?: number) => formatNumberIndian(Number(n || 0), 0);
   const fmtCashbox = (n?: number) => (showCashboxAmounts ? `৳${fmtMoney(n)}` : '****');
 
   const todayKey = formatDate(new Date());

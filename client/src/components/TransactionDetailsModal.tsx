@@ -2,6 +2,7 @@ import React from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { formatDate } from '../utils/numberConverter';
 import { useTranslation } from '../context/TranslationContext';
+import { formatBDT } from '../utils/currency';
 
 interface Transaction {
   id: number;
@@ -162,7 +163,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                           ? 'text-red-600 dark:text-red-400'
                           : 'text-green-600 dark:text-green-400'
                       }`}>
-                        ৳{transaction.amount.toFixed(2)}
+                        {formatBDT(transaction.amount, { decimals: 2 })}
                       </p>
                     </div>
                   </div>
@@ -190,7 +191,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                         {mode === 'customer' ? labels.totalDeposits : labels.totalReceived}
                       </p>
                       <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                        ৳{totalDeposits.toFixed(2)}
+                        {formatBDT(totalDeposits, { decimals: 2 })}
                       </p>
                     </div>
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-700">
@@ -198,7 +199,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                         {mode === 'customer' ? labels.totalWithdrawals : labels.totalPayments}
                       </p>
                       <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                        ৳{totalWithdrawals.toFixed(2)}
+                        {formatBDT(totalWithdrawals, { decimals: 2 })}
                       </p>
                     </div>
                   </div>

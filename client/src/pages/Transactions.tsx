@@ -7,6 +7,7 @@ import { parseNumericInput, toInputDateFormat } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
 import '../styles/Transactions.css';
+import { formatBDT } from '../utils/currency';
 
 interface Transaction {
   id: number;
@@ -612,7 +613,7 @@ const Transactions: React.FC = () => {
                     {transaction.customer_name || transaction.supplier_name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-900 dark:text-emerald-100">
-                      ৳{Math.floor(Number(transaction.total ?? 0))}
+                      {formatBDT(Number(transaction.total ?? 0), { decimals: 2 })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 dark:text-emerald-300 capitalize">
                       {transaction.payment_method || '-'}
@@ -886,33 +887,29 @@ const Transactions: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('transactions.subtotal')}</span>
                     <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      ৳{
-                        formData.lineItems.reduce((sum, item) => {
+                      {formatBDT(formData.lineItems.reduce((sum, item) => {
                           const qty = typeof item.quantity === 'number' ? item.quantity : 0;
                           const price = typeof item.price === 'number' ? item.price : 0;
                           return sum + qty * price;
-                        }, 0).toFixed(2)
-                      }
+                        }, 0), { decimals: 2 })}
                     </span>
                   </div>
                   
                   {formData.discount !== '' && formData.discount !== 0 && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">{t('transactions.discount')}</span>
-                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">-৳{Number(formData.discount).toFixed(2)}</span>
+                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">-{formatBDT(Number(formData.discount), { decimals: 2 })}</span>
                     </div>
                   )}
                   
                   <div className="flex items-center justify-between pt-3 px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800">
                     <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('transactions.total')}</span>
                     <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                      ৳{
-                        (formData.lineItems.reduce((sum, item) => {
+                      {formatBDT((formData.lineItems.reduce((sum, item) => {
                           const qty = typeof item.quantity === 'number' ? item.quantity : 0;
                           const price = typeof item.price === 'number' ? item.price : 0;
                           return sum + qty * price;
-                        }, 0) - (formData.discount ? Number(formData.discount) : 0)).toFixed(2)
-                      }
+                        }, 0) - (formData.discount ? Number(formData.discount) : 0)), { decimals: 2 })}
                     </span>
                   </div>
                 </div>
