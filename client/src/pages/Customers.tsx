@@ -824,7 +824,7 @@ const Customers: React.FC = () => {
                   setSelectedCustomer(customer);
                   setShowPaymentModal(true);
                   setPaymentAmount('');
-                  setPaymentType('payment');
+                  setPaymentType('charge');
                   setPaymentDescription('');
                 }}>
                   <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
@@ -950,11 +950,11 @@ const Customers: React.FC = () => {
                       onClick={() => setPaymentType('charge')}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                         paymentType === 'charge'
-                          ? 'bg-red-600 text-white'
+                          ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-md'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      বিক্রি
+                      {t('customers.givenDebit')}
                     </button>
                     <button
                       type="button"
@@ -965,7 +965,7 @@ const Customers: React.FC = () => {
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      জমা
+                      {t('customers.takenCredit')}
                     </button>
                   </div>
                 </div>
