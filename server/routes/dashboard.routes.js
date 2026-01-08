@@ -13,6 +13,7 @@ router.get('/top-products', dashboardController.getTopProducts);
 router.get('/sales-chart', dashboardController.getSalesChartData);
 router.get('/low-stock-alerts', dashboardController.getLowStockAlerts);
 router.get('/customers-debt', dashboardController.getCustomersDebt);
+router.get('/customers-debt-alerts', dashboardController.getCustomersDebtAlerts);
 router.get('/suppliers-debt', dashboardController.getSuppliersDebt);
 
 module.exports = router;

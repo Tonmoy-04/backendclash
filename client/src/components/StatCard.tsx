@@ -31,9 +31,13 @@ const StatCard: React.FC<StatCardProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-emerald-600 dark:text-emerald-300 mb-1">{title}</p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">{value}</p>
-            {subtitle && subtitle.length > 0 && <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">{subtitle}</span>}
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-100 leading-tight">{value}</p>
+            {subtitle && subtitle.length > 0 && (
+              <span className="text-xs sm:text-sm font-semibold text-orange-600 dark:text-orange-400">
+                {subtitle}
+              </span>
+            )}
           </div>
           {change && (
             <p className={`text-sm mt-2 ${changeType === 'increase' ? 'text-green-600 dark:text-green-400' : changeType === 'decrease' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
@@ -42,7 +46,7 @@ const StatCard: React.FC<StatCardProps> = ({
           )}
         </div>
         
-        <div className={`${bgColor} rounded-full p-4 text-white shadow-lg`}>
+        <div className={`${bgColor} rounded-full p-4 text-white shadow-lg flex items-center justify-center` }>
           {icon}
         </div>
       </div>

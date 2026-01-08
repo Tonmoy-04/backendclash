@@ -163,6 +163,27 @@ exports.getCustomersDebt = async (req, res, next) => {
   }
 };
 
+exports.getCustomersDebtAlerts = async (req, res, next) => {
+  try {
+    const threshold = Number(req.query.threshold) || 100000;
+    const customers = await db.all(
+      `SELECT id, name, phone, balance 
+       FROM customers 
+       WHERE balance > ? 
+       ORDER BY balance DESC 
+       LIMIT 50`,
+      [threshold]
+    );
+    res.json(customers);
+  } catch (error) {
+    const msg = String(error?.message || error);
+    if (msg.includes('no such column: balance')) {
+      return res.json([]);
+    }
+    next(error);
+  }
+};
+
 exports.getSuppliersDebt = async (req, res, next) => {
   try {
     // Total amount owed to/by suppliers (positive = we owe them, negative = they owe us/advance)
