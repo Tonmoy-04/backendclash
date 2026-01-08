@@ -126,7 +126,7 @@ function formatCurrency(amount, symbol = '') {
   return symbol ? `${symbol}${val.toFixed(2)}` : `${val.toFixed(2)}`;
 }
 
-function generateBill({ type, transaction, items, currencySymbol, adjustment = 0 }) {
+function generateBill({ type, transaction, items, currencySymbol, adjustment = 0, transport_fee = 0, labour_fee = 0 }) {
   const home = os.homedir();
   const billsDir = path.join(home, 'Documents', 'InventoryApp', 'Bills');
   ensureDir(billsDir);
@@ -370,11 +370,21 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   const tax = Number.isFinite(Number(transaction.tax)) ? Number(transaction.tax) : 0;
   const grossTotal = Number.isFinite(Number(transaction.total)) ? Number(transaction.total) : (subtotal + tax);
   const adj = Number.isFinite(Number(adjustment)) ? Number(adjustment) : 0;
-  const netTotal = grossTotal - adj;
+  const transportVal = Number.isFinite(Number(transport_fee)) ? Number(transport_fee) : 0;
+  const labourVal = Number.isFinite(Number(labour_fee)) ? Number(labour_fee) : 0;
+  // Final total = Subtotal + Transport Fee + Labour Fee - Discount
+  const netTotal = grossTotal + transportVal + labourVal - adj;
 
   const summaryBoxX = tableLeft + usableWidth - 180;
   const summaryBoxW = 180;
-  const summaryBoxH = 85;
+  // Calculate dynamic height based on number of lines
+  // Base: Subtotal (12) + Final Total (12) + padding (10)
+  // Add 12 for each conditional line: Tax, Transport, Labour, Discount
+  let summaryBoxH = 34; // base
+  if (type === 'sale' && tax > 0) summaryBoxH += 12;
+  if (transportVal > 0) summaryBoxH += 12;
+  if (labourVal > 0) summaryBoxH += 12;
+  if (adj > 0) summaryBoxH += 12;
 
   // Summary box background
   doc.rect(summaryBoxX, y, summaryBoxW, summaryBoxH).fill('#f0fdf4');
@@ -412,8 +422,34 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     summaryY += 12;
   }
 
-  // Discount
-  if (adj !== 0) {
+  // Transport Fee - shown only if > 0
+  if (transportVal > 0) {
+    doc.text('Transport:', summaryBoxX + 10, summaryY);
+    if (symbolIsNonAscii && fontInfo.loaded) {
+      doc.font('unicode');
+      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 100, summaryY, { width: 70, align: 'right' });
+      doc.font('Helvetica');
+    } else {
+      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 100, summaryY, { width: 70, align: 'right' });
+    }
+    summaryY += 12;
+  }
+
+  // Labour Fee - shown only if > 0
+  if (labourVal > 0) {
+    doc.text('Labour:', summaryBoxX + 10, summaryY);
+    if (symbolIsNonAscii && fontInfo.loaded) {
+      doc.font('unicode');
+      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 100, summaryY, { width: 70, align: 'right' });
+      doc.font('Helvetica');
+    } else {
+      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 100, summaryY, { width: 70, align: 'right' });
+    }
+    summaryY += 12;
+  }
+
+  // Discount - shown only if > 0
+  if (adj > 0) {
     doc.text('Discount:', summaryBoxX + 10, summaryY);
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
@@ -422,7 +458,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     } else {
       doc.text(formatCurrency(-adj, displaySymbol), summaryBoxX + 100, summaryY, { width: 70, align: 'right' });
     }
-    summaryY += 10;
+    summaryY += 12;
   }
 
   // Total (highlighted)

@@ -8,7 +8,7 @@ const { generateBill } = require('../utils/billGenerator');
 // Generate a temporary bill without touching the database
 router.post('/temporary', async (req, res, next) => {
   try {
-    const { party = 'N/A', date, payment_method = 'N/A', items = [], currencySymbol, adjustment = 0 } = req.body || {};
+    const { party = 'N/A', date, payment_method = 'N/A', items = [], currencySymbol, adjustment = 0, transport_fee = 0, labour_fee = 0 } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'At least one item is required' });
@@ -43,7 +43,7 @@ router.post('/temporary', async (req, res, next) => {
       total
     };
 
-    const filePath = await generateBill({ type: 'sale', transaction, items: normalized, currencySymbol, adjustment });
+    const filePath = await generateBill({ type: 'sale', transaction, items: normalized, currencySymbol, adjustment, transport_fee: Number(transport_fee) || 0, labour_fee: Number(labour_fee) || 0 });
     return res.json({ message: 'Temporary bill generated', path: filePath });
   } catch (error) {
     next(error);

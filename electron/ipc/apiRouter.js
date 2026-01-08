@@ -210,7 +210,7 @@ const routes = [
 
   // Bill
   { method: 'POST', path: '/bill/temporary', auth: 'optional', handler: async (req, res) => {
-      const { party = 'N/A', date, payment_method = 'N/A', items = [], currencySymbol, adjustment = 0 } = req.body || {};
+      const { party = 'N/A', date, payment_method = 'N/A', items = [], currencySymbol, adjustment = 0, transport_fee = 0, labour_fee = 0 } = req.body || {};
       if (!Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: 'At least one item is required' });
       }
@@ -226,7 +226,7 @@ const routes = [
       const tax = 0;
       const total = subtotal + tax;
       const transaction = { id: 0, date: date || new Date().toISOString(), party, payment_method, subtotal, tax, total };
-      const filePath = await generateBill({ type: 'sale', transaction, items: normalized, currencySymbol, adjustment });
+      const filePath = await generateBill({ type: 'sale', transaction, items: normalized, currencySymbol, adjustment, transport_fee: Number(transport_fee) || 0, labour_fee: Number(labour_fee) || 0 });
       return res.json({ message: 'Temporary bill generated', path: filePath });
     }
   },

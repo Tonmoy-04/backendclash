@@ -16,6 +16,9 @@ interface Transaction {
   supplier_name?: string;
   payment_method?: string;
   total?: number;
+  discount?: number;
+  transport_fee?: number;
+  labour_fee?: number;
   created_at?: string;
   sale_date?: string;
   purchase_date?: string;
@@ -44,15 +47,22 @@ const Transactions: React.FC = () => {
     paymentMethod: string;
     supplierId: number | '';
     transaction_date: string;
+    transport_fee: number | '';
+    labour_fee: number | '';
     discount: number | '';
   }>({
     customer: '',
     type: 'Sale',
     itemsNote: '',
-    lineItems: [{ product_name: '', quantity: 1, price: 0 }],
+    lineItems: [
+      { product_name: '', quantity: 1, price: 0 },
+      { product_name: '', quantity: 1, price: 0 }
+    ],
     paymentMethod: 'due',
     supplierId: '',
     transaction_date: new Date().toISOString().split('T')[0],
+    transport_fee: '',
+    labour_fee: '',
     discount: '',
   });
 
@@ -186,10 +196,15 @@ const Transactions: React.FC = () => {
       customer: '',
       type: 'Sale',
       itemsNote: '',
-      lineItems: [{ product_name: '', quantity: 1, price: 0 }],
+      lineItems: [
+        { product_name: '', quantity: 1, price: 0 },
+        { product_name: '', quantity: 1, price: 0 }
+      ],
       paymentMethod: 'due',
       supplierId: '',
       transaction_date: new Date().toISOString().split('T')[0],
+      transport_fee: '',
+      labour_fee: '',
       discount: '',
     });
   };
@@ -218,8 +233,11 @@ const Transactions: React.FC = () => {
     }
 
     const subtotal = sanitizedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    const transportFee = typeof formData.transport_fee === 'number' ? formData.transport_fee : 0;
+    const labourFee = typeof formData.labour_fee === 'number' ? formData.labour_fee : 0;
     const discount = typeof formData.discount === 'number' ? formData.discount : 0;
-    const totalAmount = subtotal - discount;
+    // Final Total = Subtotal + Transport Fee + Labour Fee - Discount
+    const totalAmount = subtotal + transportFee + labourFee - discount;
 
     try {
       const endpoint = formData.type === 'Sale' ? '/sales' : '/purchases';
@@ -231,6 +249,8 @@ const Transactions: React.FC = () => {
           notes: formData.itemsNote || '',
           total: totalAmount,
           discount: discount > 0 ? discount : null,
+          transport_fee: transportFee > 0 ? transportFee : null,
+          labour_fee: labourFee > 0 ? labourFee : null,
           items: sanitizedItems.map(item =>
             formData.type === 'Sale'
               ? { product_name: item.product_name, quantity: item.quantity, price: item.price }
@@ -252,6 +272,14 @@ const Transactions: React.FC = () => {
           notes: formData.itemsNote || '',
           total: totalAmount,
         };
+
+        if (transportFee > 0) {
+          payload.transport_fee = transportFee;
+        }
+
+        if (labourFee > 0) {
+          payload.labour_fee = labourFee;
+        }
 
         if (discount > 0) {
           payload.discount = discount;
@@ -346,7 +374,9 @@ const Transactions: React.FC = () => {
         paymentMethod: normalizePaymentMethod(transaction.payment_method || 'due'),
         supplierId: '',
         transaction_date: fullTransaction.sale_date || fullTransaction.purchase_date || new Date().toISOString().split('T')[0],
-        discount: '',
+        transport_fee: fullTransaction.transport_fee || '',
+        labour_fee: fullTransaction.labour_fee || '',
+        discount: fullTransaction.discount || '',
       });
       setShowAddModal(true);
     } catch (error) {
@@ -360,7 +390,9 @@ const Transactions: React.FC = () => {
         paymentMethod: normalizePaymentMethod(transaction.payment_method || 'due'),
         supplierId: '',
         transaction_date: new Date().toISOString().split('T')[0],
-        discount: '',
+        transport_fee: transaction.transport_fee || '',
+        labour_fee: transaction.labour_fee || '',
+        discount: transaction.discount || '',
       });
       setShowAddModal(true);
     }
@@ -895,6 +927,20 @@ const Transactions: React.FC = () => {
                     </span>
                   </div>
                   
+                  {formData.transport_fee !== '' && formData.transport_fee !== 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('billGenerator.transportFeeOptional')}</span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">+{formatBDT(Number(formData.transport_fee), { decimals: 2 })}</span>
+                    </div>
+                  )}
+
+                  {formData.labour_fee !== '' && formData.labour_fee !== 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('billGenerator.labourFeeOptional')}</span>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">+{formatBDT(Number(formData.labour_fee), { decimals: 2 })}</span>
+                    </div>
+                  )}
+                  
                   {formData.discount !== '' && formData.discount !== 0 && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">{t('transactions.discount')}</span>
@@ -909,7 +955,7 @@ const Transactions: React.FC = () => {
                           const qty = typeof item.quantity === 'number' ? item.quantity : 0;
                           const price = typeof item.price === 'number' ? item.price : 0;
                           return sum + qty * price;
-                        }, 0) - (formData.discount ? Number(formData.discount) : 0)), { decimals: 2 })}
+                        }, 0) + (typeof formData.transport_fee === 'number' ? formData.transport_fee : 0) + (typeof formData.labour_fee === 'number' ? formData.labour_fee : 0) - (formData.discount ? Number(formData.discount) : 0)), { decimals: 2 })}
                     </span>
                   </div>
                 </div>
@@ -938,6 +984,36 @@ const Transactions: React.FC = () => {
                       value={formData.transaction_date}
                       onChange={(value) => setFormData({ ...formData, transaction_date: value })}
                       className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
+                      {t('billGenerator.transportFeeOptional')}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.transport_fee}
+                      onChange={(e) => setFormData({ ...formData, transport_fee: e.target.value === '' ? '' : parseNumericInput(e.target.value) })}
+                      placeholder="0"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
+                      {t('billGenerator.labourFeeOptional')}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.labour_fee}
+                      onChange={(e) => setFormData({ ...formData, labour_fee: e.target.value === '' ? '' : parseNumericInput(e.target.value) })}
+                      placeholder="0"
+                      className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
                     />
                   </div>
 

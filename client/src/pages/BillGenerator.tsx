@@ -10,12 +10,17 @@ const BillGenerator: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>('');
   const [filePath, setFilePath] = useState<string>('');
+  const [transportFee, setTransportFee] = useState<string>('');
+  const [labourFee, setLabourFee] = useState<string>('');
   const [adjustment, setAdjustment] = useState<string>('');
 
   // Temporary bill state
   const [party, setParty] = useState<string>('');
   const [payment, setPayment] = useState<string>('cash');
+  const [tempTransportFee, setTempTransportFee] = useState<string>('');
+  const [tempLabourFee, setTempLabourFee] = useState<string>('');
   const [tempItems, setTempItems] = useState<Array<{ product_name: string; quantity: number; price: number }>>([
+    { product_name: '', quantity: 1, price: 0 },
     { product_name: '', quantity: 1, price: 0 }
   ]);
   const [tempAdjustment, setTempAdjustment] = useState<string>('');
@@ -54,8 +59,7 @@ const BillGenerator: React.FC = () => {
     setLoading(true);
     try {
       const endpoint = type === 'sale' ? `/sales/${trimmed}/generate-bill` : `/purchases/${trimmed}/generate-bill`;
-      const adjVal = Number(adjustment) || 0;
-      const res = await api.post(endpoint, { adjustment: adjVal });
+      const res = await api.post(endpoint, {});
       setMessage(t('billGenerator.success'));
       setFilePath(res.data?.path || '');
     } catch (err: any) {
@@ -81,14 +85,17 @@ const BillGenerator: React.FC = () => {
   const handleGenerateTemporary = async () => {
     setTempMessage('');
     setTempFilePath('');
-    // Basic validation
-    if (tempItems.length === 0) {
+    // Filter out empty items - only keep items with product_name or price
+    const filteredItems = tempItems.filter(it => it.product_name.trim() || Number(it.price) > 0);
+    
+    // Validation: must have at least one item with data
+    if (filteredItems.length === 0) {
       setTempMessage('Please add at least one item');
       return;
     }
-    const prepared = tempItems.map((it) => ({
+    const prepared = filteredItems.map((it) => ({
       product_name: it.product_name || 'Item',
-      quantity: Number(it.quantity) || 0,
+      quantity: Number(it.quantity) || 1,
       price: Number(it.price) || 0,
     }));
     setTempLoading(true);
@@ -97,6 +104,8 @@ const BillGenerator: React.FC = () => {
         party: party || 'N/A',
         payment_method: payment || 'N/A',
         items: prepared,
+        transport_fee: Number(tempTransportFee) || 0,
+        labour_fee: Number(tempLabourFee) || 0,
         adjustment: Number(tempAdjustment) || 0,
       });
       setTempMessage('Temporary bill generated successfully');
@@ -297,24 +306,8 @@ const BillGenerator: React.FC = () => {
                 <option value="cash">Cash</option>
                 <option value="card">Card</option>
                 <option value="bank">Bank</option>
-                <option value="upi">UPI</option>
+                <option value="due">Due</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {t('Discount')}
-              </label>
-              <input
-                type="number"
-                value={tempAdjustment}
-                onChange={(e) => setTempAdjustment(e.target.value)}
-                placeholder="0"
-                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
-              />
             </div>
           </div>
 
@@ -384,10 +377,58 @@ const BillGenerator: React.FC = () => {
             {t('billGenerator.addItem')}
           </button>
 
+          <div className="space-y-4 mt-6">
+            <div>
+              <label className="block text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2">
+                {t('billGenerator.transportFeeOptional')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={tempTransportFee}
+                onChange={(e) => setTempTransportFee(e.target.value)}
+                placeholder="0"
+                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2">
+                {t('billGenerator.labourFeeOptional')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={tempLabourFee}
+                onChange={(e) => setTempLabourFee(e.target.value)}
+                placeholder="0"
+                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t('billGenerator.discountOptional')}
+              </label>
+              <input
+                type="number"
+                value={tempAdjustment}
+                onChange={(e) => setTempAdjustment(e.target.value)}
+                placeholder="0"
+                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
           <button
             onClick={handleGenerateTemporary}
             disabled={tempLoading}
-            className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full mt-6 inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

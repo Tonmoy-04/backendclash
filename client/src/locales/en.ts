@@ -519,6 +519,8 @@ export const en = {
     party: 'Party',
     paymentMethod: 'Payment Method',
     discountOptional: 'Discount (Optional)',
+    transportFeeOptional: 'Transport Fee (Optional)',
+    labourFeeOptional: 'Labour Fee (Optional)',
     itemName: 'Item Name',
     quantity: 'Quantity',
     rate: 'Rate',

@@ -66,7 +66,7 @@ exports.getPurchaseById = async (req, res, next) => {
 
 exports.createPurchase = async (req, res, next) => {
   try {
-    const { supplier_id = null, supplier_name, items, payment_method = 'due', notes = '' } = req.body;
+    const { supplier_id = null, supplier_name, items, payment_method = 'due', notes = '', discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Creating purchase with payload:', JSON.stringify(req.body, null, 2));
 
@@ -104,15 +104,17 @@ exports.createPurchase = async (req, res, next) => {
 
     // Use provided date or default to now
     const purchaseDate = req.body.purchase_date || new Date().toISOString();
-    const discount = req.body.discount || 0;
-    const finalTotal = req.body.total || (total - discount);
+    const discountVal = Number(discount) || 0;
+    const transportVal = Number(transport_fee) || 0;
+    const labourVal = Number(labour_fee) || 0;
+    const finalTotal = req.body.total || (total - discountVal);
 
     // Create purchase with minimal required data
     const userId = req.user?.id || 1;
     const purchaseResult = await db.run(
-      `INSERT INTO purchases (supplier_id, supplier_name, payment_method, notes, discount, total, purchase_date, user_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [supplier_id || null, supplier_name || null, payment_method, notes, discount, finalTotal, purchaseDate, userId]
+      `INSERT INTO purchases (supplier_id, supplier_name, payment_method, notes, discount, transport_fee, labour_fee, total, purchase_date, user_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [supplier_id || null, supplier_name || null, payment_method, notes, discountVal, transportVal, labourVal, finalTotal, purchaseDate, userId]
     );
 
     const purchaseId = purchaseResult.lastID;
@@ -167,6 +169,8 @@ exports.createPurchase = async (req, res, next) => {
       [id]
     );
     const adjustment = Number(req.body?.adjustment ?? req.query?.adjustment ?? purchase.discount ?? 0) || 0;
+    const transportFee = Number(req.body?.transport_fee ?? purchase.transport_fee ?? 0) || 0;
+    const labourFee = Number(req.body?.labour_fee ?? purchase.labour_fee ?? 0) || 0;
     
     // Calculate subtotal from items
     const itemsSubtotal = items.reduce((sum, item) => {
@@ -184,7 +188,7 @@ exports.createPurchase = async (req, res, next) => {
       tax: 0,
       total: itemsSubtotal,
     };
-    const filePath = await generateBill({ type: 'purchase', transaction: billTx, items, adjustment });
+    const filePath = await generateBill({ type: 'purchase', transaction: billTx, items, adjustment, transport_fee: transportFee, labour_fee: labourFee });
     res.json({ message: 'Bill generated', path: filePath });
   } catch (error) {
     next(error);
@@ -193,7 +197,7 @@ exports.createPurchase = async (req, res, next) => {
 
 exports.updatePurchase = async (req, res, next) => {
   try {
-    const { supplier_name, payment_method, notes, status, total, items } = req.body;
+    const { supplier_name, payment_method, notes, status, total, items, discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Updating purchase with payload:', JSON.stringify(req.body, null, 2));
 
@@ -209,13 +213,15 @@ exports.updatePurchase = async (req, res, next) => {
       calculatedTotal = Number(total) || 0;
     }
 
-    const discount = req.body.discount || 0;
+    const discountVal = Number(discount) || 0;
+    const transportVal = Number(transport_fee) || 0;
+    const labourVal = Number(labour_fee) || 0;
     const finalTotal = req.body.total || calculatedTotal;
 
     // Update purchase header
     await db.run(
-      'UPDATE purchases SET supplier_name = ?, payment_method = ?, notes = ?, discount = ?, status = ?, total = ? WHERE id = ?',
-      [supplier_name || null, payment_method, notes || '', discount, status || 'completed', finalTotal, req.params.id]
+      'UPDATE purchases SET supplier_name = ?, payment_method = ?, notes = ?, discount = ?, transport_fee = ?, labour_fee = ?, status = ?, total = ? WHERE id = ?',
+      [supplier_name || null, payment_method, notes || '', discountVal, transportVal, labourVal, status || 'completed', finalTotal, req.params.id]
     );
 
     // If items are provided, update them

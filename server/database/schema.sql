@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS sales (
   subtotal DECIMAL(10, 2) DEFAULT 0,
   discount DECIMAL(10, 2) DEFAULT 0,
   tax DECIMAL(10, 2) DEFAULT 0,
+  transport_fee DECIMAL(10, 2) DEFAULT 0,
+  labour_fee DECIMAL(10, 2) DEFAULT 0,
   total DECIMAL(10, 2) NOT NULL,
   payment_method TEXT DEFAULT 'cash',
   notes TEXT,
@@ -100,13 +102,15 @@ CREATE TABLE IF NOT EXISTS purchases (
   payment_method TEXT DEFAULT 'cash',
   notes TEXT,
   discount DECIMAL(10, 2) DEFAULT 0,
+  transport_fee DECIMAL(10, 2) DEFAULT 0,
+  labour_fee DECIMAL(10, 2) DEFAULT 0,
   total DECIMAL(10, 2) DEFAULT 0,
   purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_id INTEGER,
   status TEXT DEFAULT 'completed',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL
+  FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 

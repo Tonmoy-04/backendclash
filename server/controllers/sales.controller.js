@@ -86,7 +86,7 @@ exports.getSaleById = async (req, res, next) => {
 
 exports.createSale = async (req, res, next) => {
   try {
-    const { customer_name, items, payment_method = 'due', notes = '' } = req.body;
+    const { customer_name, items, payment_method = 'due', notes = '', discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Creating sale with payload:', JSON.stringify(req.body, null, 2));
 
@@ -130,8 +130,10 @@ exports.createSale = async (req, res, next) => {
     // Respect client-entered totals (we derive unit price client-side)
     // No automatic tax so that total matches input
     const tax = 0;
-    const discount = req.body.discount || 0;
-    const total = req.body.total || (subtotal - discount);
+    const discountVal = Number(discount) || 0;
+    const transportVal = Number(transport_fee) || 0;
+    const labourVal = Number(labour_fee) || 0;
+    const total = req.body.total || (subtotal - discountVal);
 
     // Create sale with minimal required data
     const userId = req.user?.id || 1;
@@ -139,8 +141,8 @@ exports.createSale = async (req, res, next) => {
     const hasTotal = salesCols.has('total');
     const hasTotalAmount = salesCols.has('total_amount');
 
-    const fields = ['customer_name', 'payment_method', 'notes', 'subtotal', 'discount', 'tax'];
-    const values = [customer_name.trim(), payment_method, notes, subtotal, discount, tax];
+    const fields = ['customer_name', 'payment_method', 'notes', 'subtotal', 'discount', 'tax', 'transport_fee', 'labour_fee'];
+    const values = [customer_name.trim(), payment_method, notes, subtotal, discountVal, tax, transportVal, labourVal];
     if (hasTotal) {
       fields.push('total');
       values.push(total);
@@ -204,6 +206,8 @@ exports.generateSaleBill = async (req, res, next) => {
       [id]
     );
     const adjustment = Number(req.body?.adjustment ?? req.query?.adjustment ?? sale.discount ?? 0) || 0;
+    const transportFee = Number(req.body?.transport_fee ?? sale.transport_fee ?? 0) || 0;
+    const labourFee = Number(req.body?.labour_fee ?? sale.labour_fee ?? 0) || 0;
     const billTx = {
       id: sale.id,
       date: sale.sale_date || sale.created_at,
@@ -213,7 +217,7 @@ exports.generateSaleBill = async (req, res, next) => {
       tax: sale.tax,
       total: sale.subtotal, // Use subtotal here so bill generator can apply discount correctly
     };
-    const filePath = await generateBill({ type: 'sale', transaction: billTx, items, adjustment });
+    const filePath = await generateBill({ type: 'sale', transaction: billTx, items, adjustment, transport_fee: transportFee, labour_fee: labourFee });
     res.json({ message: 'Bill generated', path: filePath });
   } catch (error) {
     next(error);
@@ -222,7 +226,7 @@ exports.generateSaleBill = async (req, res, next) => {
 
 exports.updateSale = async (req, res, next) => {
   try {
-    const { customer_name, customer_phone, payment_method, notes, total, items } = req.body;
+    const { customer_name, customer_phone, payment_method, notes, total, items, discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Updating sale with payload:', JSON.stringify(req.body, null, 2));
 
@@ -239,15 +243,17 @@ exports.updateSale = async (req, res, next) => {
     }
 
     const finalTotal = req.body.total || calculatedTotal;
-    const discount = req.body.discount || 0;
+    const discountVal = Number(discount) || 0;
+    const transportVal = Number(transport_fee) || 0;
+    const labourVal = Number(labour_fee) || 0;
     const tax = 0;
 
     // Update sale header
     await db.run(
       `UPDATE sales 
-       SET customer_name = ?, customer_phone = ?, payment_method = ?, notes = ?, subtotal = ?, discount = ?, tax = ?, total = ?
+       SET customer_name = ?, customer_phone = ?, payment_method = ?, notes = ?, subtotal = ?, discount = ?, tax = ?, transport_fee = ?, labour_fee = ?, total = ?
        WHERE id = ?`,
-      [customer_name, customer_phone || null, payment_method, notes || '', calculatedTotal, discount, tax, finalTotal, req.params.id]
+      [customer_name, customer_phone || null, payment_method, notes || '', calculatedTotal, discountVal, tax, transportVal, labourVal, finalTotal, req.params.id]
     );
 
     // If items are provided, update them

@@ -521,6 +521,8 @@ export const bn = {
     party: 'পক্ষ',
     paymentMethod: 'পেমেন্ট পদ্ধতি',
     discountOptional: 'ছাড় (ঐচ্ছিক)',
+    transportFeeOptional: 'পরিবহন খরচ (ঐচ্ছিক)',
+    labourFeeOptional: 'শ্রম খরচ (ঐচ্ছিক)',
     itemName: 'পণ্যের নাম',
     quantity: 'পরিমাণ',
     rate: 'দর',
