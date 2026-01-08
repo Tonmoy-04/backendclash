@@ -19,6 +19,8 @@ interface Product {
   min_stock: number;
   purchase_rate?: number;
   selling_rate?: number;
+  updated_at?: string;
+  created_at?: string;
 }
 
 interface ProductMovement {
@@ -42,6 +44,7 @@ const Inventory: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState<'alphabetic' | 'recent'>('recent');
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [movementProduct, setMovementProduct] = useState<Product | null>(null);
@@ -84,13 +87,28 @@ const Inventory: React.FC = () => {
     }
   };
 
-  const filteredProducts = products.filter(
-    (product) => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLowStock = !filterLowStock || product.quantity <= product.min_stock;
-      return matchesSearch && matchesLowStock;
-    }
-  );
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLowStock = !filterLowStock || product.quantity <= product.min_stock;
+    return matchesSearch && matchesLowStock;
+  });
+
+  const filteredAndSortedProducts = React.useMemo(() => {
+    const arr = [...filteredProducts];
+    return arr.sort((a, b) => {
+      switch (sortOption) {
+        case 'alphabetic':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'recent':
+        default: {
+          const aTime = a.updated_at ? new Date(a.updated_at).getTime() : (a.created_at ? new Date(a.created_at).getTime() : 0);
+          const bTime = b.updated_at ? new Date(b.updated_at).getTime() : (b.created_at ? new Date(b.created_at).getTime() : 0);
+          if (bTime !== aTime) return bTime - aTime;
+          return (b.id || 0) - (a.id || 0);
+        }
+      }
+    });
+  }, [filteredProducts, sortOption]);
 
   const handleDelete = (product: Product) => {
     showConfirm({
@@ -111,10 +129,10 @@ const Inventory: React.FC = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedProducts.length === filteredProducts.length) {
+    if (selectedProducts.length === filteredAndSortedProducts.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(filteredProducts.map(p => p.id));
+      setSelectedProducts(filteredAndSortedProducts.map(p => p.id));
     }
   };
 
@@ -373,15 +391,27 @@ const Inventory: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-          <input
-            type="text"
-            placeholder={t('inventory.searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 border border-emerald-200 dark:border-emerald-700 rounded-lg bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400"
-          />
+        {/* Search and Sort */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder={t('inventory.searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 border border-emerald-200 dark:border-emerald-700 rounded-lg bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400"
+            />
+          </div>
+          <div className="sm:w-64">
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as any)}
+              className="w-full px-4 py-3 border border-emerald-200 dark:border-emerald-700 rounded-xl bg-white dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 shadow-sm cursor-pointer"
+            >
+              <option value="alphabetic">{t('customers.sortAlphabetic') || '📝 Alphabetic (A-Z)'}</option>
+              <option value="recent">{t('customers.sortRecent') || '🕐 Most Recent'}</option>
+            </select>
+          </div>
         </div>
 
         {/* Filter Status */}
@@ -401,7 +431,7 @@ const Inventory: React.FC = () => {
 
         {/* Products Table */}
         <div className="bg-gradient-to-br from-white to-emerald-50/30 dark:from-emerald-900 dark:to-teal-900/30 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm border border-emerald-200/50 dark:border-emerald-700/30 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
-        {filteredProducts.length === 0 ? (
+        {filteredAndSortedProducts.length === 0 ? (
           <div className="p-16 text-center">
             <div className="text-6xl mb-4 opacity-50">📦</div>
             <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.noProducts')}</p>
@@ -417,7 +447,7 @@ const Inventory: React.FC = () => {
                 <th className="px-4 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">
                   <input
                     type="checkbox"
-                    checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+                    checked={selectedProducts.length === filteredAndSortedProducts.length && filteredAndSortedProducts.length > 0}
                     onChange={handleSelectAll}
                   />
                 </th>
@@ -429,7 +459,7 @@ const Inventory: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white/50 dark:bg-emerald-950/30 divide-y divide-emerald-100 dark:divide-emerald-800/50">
-              {filteredProducts.map((product, index) => {
+              {filteredAndSortedProducts.map((product, index) => {
                 const status = getStockStatus(product.quantity, product.min_stock);
                 return (
                   <tr key={product.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-200 animate-fadeIn" style={{ animationDelay: `${0.5 + index * 0.05}s` }} onClick={() => navigate(`/inventory/edit/${product.id}`)}>

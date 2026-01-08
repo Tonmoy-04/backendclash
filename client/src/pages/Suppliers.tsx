@@ -123,8 +123,8 @@ const Suppliers: React.FC = () => {
           return (b.balance || 0) - (a.balance || 0);
         
         case 'due':
-          // Sort by highest due amount first (same as debt for suppliers)
-          return (b.balance || 0) - (a.balance || 0);
+          // Reverse of Most Debt: lowest balance first (most negative/least)
+          return (a.balance || 0) - (b.balance || 0);
         
         default:
           return 0;
