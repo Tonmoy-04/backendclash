@@ -94,7 +94,7 @@ const NotificationPortal: React.FC<{ item: NotificationItem | null; onClose: (co
         </div>
         <div className="notify-content">
           <h3>{item.title}</h3>
-          <p>{item.message}</p>
+          <div className="notify-message" dangerouslySetInnerHTML={{ __html: item.message }} />
         </div>
         <div className="notify-actions">
           {item.type === 'confirm' ? (

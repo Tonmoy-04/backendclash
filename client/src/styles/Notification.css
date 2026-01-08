@@ -66,6 +66,37 @@
   color: #334155;
 }
 
+.notify-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.9;
+  color: #334155;
+}
+
+.notify-card.dark .notify-message {
+  color: #cbd5e1;
+}
+
+.notify-message strong {
+  color: #0f766e;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.notify-card.dark .notify-message strong {
+  color: #5eead4;
+}
+
+.notify-message em {
+  color: #64748b;
+  font-style: normal;
+  opacity: 0.9;
+}
+
+.notify-card.dark .notify-message em {
+  color: #94a3b8;
+}
+
 .notify-actions {
   grid-column: 1 / -1;
   display: flex;

@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../context/TranslationContext';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
-import { parseNumericInput, toInputDateFormat } from '../utils/numberConverter';
+import { parseNumericInput } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
+import { buildTransactionSummary } from '../utils/notificationSummary';
 import '../styles/Transactions.css';
 import { formatBDT } from '../utils/currency';
 
@@ -27,7 +28,7 @@ interface Transaction {
 const Transactions: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { showConfirm, showSuccess, showError, showWarning, showInfo } = useNotification();
+  const { showConfirm, showSuccess, showError, showWarning } = useNotification();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -336,7 +337,19 @@ const Transactions: React.FC = () => {
       setShowAddModal(false);
       setEditingTransaction(null);
       resetForm();
-      showSuccess({ title: t('transactions.saved') || 'Saved', message: t('transactions.saveSuccess') || 'Transaction saved successfully.' });
+      
+      // Show dynamic summary notification
+      const transactionType = formData.type === 'Sale' ? 'Sale' : 'Purchase';
+      const customerOrSupplier = formData.customer;
+      
+      const summary = buildTransactionSummary(
+        transactionType,
+        customerOrSupplier,
+        totalAmount,
+        formData.itemsNote || undefined,
+        formatBDT
+      );
+      showSuccess({ title: t('transactions.saved') || 'Saved', message: summary });
     } catch (error: any) {
       console.error('Error saving transaction:', error);
       console.error('Error response:', error.response?.data);

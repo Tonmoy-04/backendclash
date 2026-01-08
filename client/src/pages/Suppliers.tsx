@@ -7,6 +7,7 @@ import { parseNumericInput, formatDate, formatDateTime, toInputDateFormat } from
 import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
 import TransactionDetailsModal from '../components/TransactionDetailsModal';
+import { buildSupplierBalanceSummary } from '../utils/notificationSummary';
 import '../styles/Suppliers.css';
 import { formatBDT } from '../utils/currency';
 
@@ -220,6 +221,20 @@ const Suppliers: React.FC = () => {
       if (showHistoryModal && selectedSupplier) {
         await handleViewHistory(selectedSupplier);
       }
+
+      // Show dynamic summary notification
+      const actionType = paymentType === 'payment' ? 'Deposit' : 'Charge';
+      const summary = buildSupplierBalanceSummary(
+        selectedSupplier.name,
+        actionType,
+        parseFloat(paymentAmount),
+        paymentDescription || undefined,
+        formatBDT
+      );
+      showSuccess({ 
+        title: editingTransactionId ? t('common.updated') || 'Updated' : t('common.saved') || 'Saved', 
+        message: summary 
+      });
 
       setShowPaymentModal(false);
       setSelectedSupplier(null);

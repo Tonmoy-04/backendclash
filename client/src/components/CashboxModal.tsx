@@ -4,6 +4,8 @@ import { useTranslation } from '../context/TranslationContext';
 import api from '../services/api';
 import { parseNumericInput, toInputDateFormat, parseDisplayDateToAPI } from '../utils/numberConverter';
 import DateInput from './DateInput';
+import { useNotification } from '../context/NotificationContext';
+import { buildCashboxSummary } from '../utils/notificationSummary';
 import { formatBDT } from '../utils/currency';
 
 interface CashboxModalProps {
@@ -22,6 +24,7 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
   isInitialized 
 }) => {
   const { t } = useTranslation();
+  const { showSuccess } = useNotification();
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdrawal'>('deposit');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(toInputDateFormat(new Date()));
@@ -95,6 +98,19 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
         amount: amountValue,
         date: convertedDate,
         note: note
+      });
+
+      // Show dynamic summary notification
+      const actionType = activeTab === 'deposit' ? 'Deposit' : 'Withdraw';
+      const summary = buildCashboxSummary(
+        actionType,
+        amountValue,
+        note || undefined,
+        formatBDT
+      );
+      showSuccess({ 
+        title: t('common.success') || 'Success', 
+        message: summary 
       });
 
       onSuccess();

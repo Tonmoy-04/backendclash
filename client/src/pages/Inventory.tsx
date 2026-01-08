@@ -6,6 +6,7 @@ import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { formatDateTime } from '../utils/numberConverter';
 import DateInput from '../components/DateInput';
+import { buildStockMovementSummary } from '../utils/notificationSummary';
 import '../styles/Inventory.css';
 import { formatBDT } from '../utils/currency';
 
@@ -321,7 +322,19 @@ const Inventory: React.FC = () => {
       setEditMovementQty('');
       setEditMovementPrice('');
       setEditMovementType('PURCHASE');
-      showSuccess({ title: t('common.success') || 'Success', message: 'Movement updated successfully.' });
+      
+      // Show dynamic summary notification
+      const actionType = editMovementType === 'PURCHASE' ? 'Purchase' : 'Sale';
+      const quantity = parseFloat(editMovementQty);
+      const price = parseFloat(editMovementPrice) || 0;
+      const summary = buildStockMovementSummary(
+        movementProduct.name,
+        actionType,
+        quantity,
+        price > 0 ? price : undefined,
+        formatBDT
+      );
+      showSuccess({ title: t('common.success') || 'Success', message: summary });
     } catch (error: any) {
       const message = error.response?.data?.error || 'Failed to update movement';
       showError({ title: t('common.error') || 'Error', message });

@@ -6,6 +6,8 @@ import api from '../services/api';
 import { parseNumericInput, formatDate, parseDisplayDateToAPI, formatAPIDateToDisplay } from '../utils/numberConverter';
 import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
+import { buildInventorySummary, buildStockMovementSummary } from '../utils/notificationSummary';
+import { formatBDT } from '../utils/currency';
 
 interface Product {
   id: number;
@@ -109,7 +111,11 @@ const EditInventory: React.FC = () => {
       };
 
       await api.put(`/products/${product.id}`, updatePayload);
-      showSuccess({ title: t('common.updated') || 'Updated', message: t('inventory.updateSuccessMsg') || 'Product details updated successfully.' });
+      
+      // Show dynamic summary notification
+      const summary = buildInventorySummary(formData.name.trim(), 'Update', formatBDT);
+      showSuccess({ title: t('common.updated') || 'Updated', message: summary });
+      
       navigate('/inventory');
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update product';
@@ -164,7 +170,16 @@ const EditInventory: React.FC = () => {
           reference_id: null,
           transaction_date: apiDate,
         });
-        showSuccess({ title: t('inventory.stockPurchased') || 'Stock purchased', message: t('inventory.stockPurchasedMsg') || 'Stock purchased successfully.' });
+        
+        // Show dynamic summary notification
+        const summary = buildStockMovementSummary(
+          product.name,
+          'Purchase',
+          quantity,
+          totalPrice > 0 ? totalPrice : undefined,
+          formatBDT
+        );
+        showSuccess({ title: t('inventory.stockPurchased') || 'Stock purchased', message: summary });
       } else if (activeTab === 'sale') {
         await api.post(`/products/${product.id}/movements`, {
           type: 'SELL',
@@ -173,7 +188,16 @@ const EditInventory: React.FC = () => {
           reference_id: null,
           transaction_date: apiDate,
         });
-        showSuccess({ title: t('inventory.stockSold') || 'Stock sold', message: t('inventory.stockSoldMsg') || 'Stock sold successfully.' });
+        
+        // Show dynamic summary notification
+        const summary = buildStockMovementSummary(
+          product.name,
+          'Sale',
+          quantity,
+          totalPrice > 0 ? totalPrice : undefined,
+          formatBDT
+        );
+        showSuccess({ title: t('inventory.stockSold') || 'Stock sold', message: summary });
       }
 
       // Dispatch event to refresh dashboard

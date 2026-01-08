@@ -4,11 +4,15 @@ import { useTranslation } from '../context/TranslationContext';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../services/api';
 import { parseNumericInput } from '../utils/numberConverter';
+import { useNotification } from '../context/NotificationContext';
+import { buildInventorySummary } from '../utils/notificationSummary';
+import { formatBDT } from '../utils/currency';
 import '../styles/AddInventory.css';
 
 const AddInventory: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -54,9 +58,19 @@ const AddInventory: React.FC = () => {
       };
 
       await api.post('/products', payload);
+      
+      // Show dynamic summary notification
+      const summary = buildInventorySummary(name, 'Add', formatBDT);
+      showSuccess({ 
+        title: t('common.success') || 'Success', 
+        message: summary 
+      });
+      
       navigate('/inventory');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to add product');
+      const message = err.response?.data?.error || 'Failed to add product';
+      setError(message);
+      showError({ title: t('common.error') || 'Error', message });
     } finally {
       setLoading(false);
     }

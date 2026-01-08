@@ -7,6 +7,7 @@ import { parseNumericInput, formatDate, formatDateTime, toInputDateFormat } from
 import { useNotification } from '../context/NotificationContext';
 import DateInput from '../components/DateInput';
 import TransactionDetailsModal from '../components/TransactionDetailsModal';
+import { buildCustomerBalanceSummary } from '../utils/notificationSummary';
 import '../styles/Customers.css';
 import { formatBDT } from '../utils/currency';
 
@@ -35,7 +36,7 @@ interface Transaction {
 const Customers: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { showConfirm, showSuccess, showError, showWarning, showInfo } = useNotification();
+  const { showConfirm, showSuccess, showError, showWarning } = useNotification();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -218,6 +219,20 @@ const Customers: React.FC = () => {
       if (showHistoryModal && selectedCustomer) {
         await handleViewHistory(selectedCustomer);
       }
+
+      // Show dynamic summary notification
+      const actionType = paymentType === 'payment' ? 'Payment' : 'Charge';
+      const summary = buildCustomerBalanceSummary(
+        selectedCustomer.name,
+        actionType,
+        parseFloat(paymentAmount),
+        paymentDescription || undefined,
+        formatBDT
+      );
+      showSuccess({ 
+        title: editingTransactionId ? t('common.updated') || 'Updated' : t('common.saved') || 'Saved', 
+        message: summary 
+      });
 
       setShowPaymentModal(false);
       setSelectedCustomer(null);
