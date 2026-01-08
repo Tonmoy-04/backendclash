@@ -206,18 +206,30 @@ exports.getTransactions = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const offset = (page - 1) * limit;
+    const dateFilter = req.query.date; // Format: YYYY-MM-DD
+
+    // Build query
+    let query = 'SELECT * FROM cashbox_transactions';
+    const params = [];
+
+    if (dateFilter) {
+      query += ` WHERE DATE(date) = ?`;
+      params.push(dateFilter);
+    }
 
     // Get total count
-    const countResult = await db.get('SELECT COUNT(*) as total FROM cashbox_transactions');
+    let countQuery = 'SELECT COUNT(*) as total FROM cashbox_transactions';
+    if (dateFilter) {
+      countQuery += ` WHERE DATE(date) = ?`;
+    }
+    const countResult = await db.get(countQuery, dateFilter ? [dateFilter] : []);
     const total = countResult.total;
 
     // Get transactions
-    const transactions = await db.all(
-      `SELECT * FROM cashbox_transactions 
-       ORDER BY date DESC, created_at DESC 
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
+    query += ` ORDER BY date DESC, created_at DESC LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+
+    const transactions = await db.all(query, params);
 
     res.json({
       transactions,

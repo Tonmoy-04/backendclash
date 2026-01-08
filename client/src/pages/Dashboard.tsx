@@ -114,7 +114,7 @@ const Dashboard: React.FC = () => {
     try {
       const [cashboxRes, transactionsRes] = await Promise.all([
         api.get('/cashbox'),
-        api.get('/cashbox/transactions?limit=10')
+        api.get('/cashbox/transactions?limit=10000')
       ]);
 
       setCashboxData(cashboxRes.data);
