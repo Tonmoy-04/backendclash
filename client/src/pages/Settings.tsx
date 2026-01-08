@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { formatDateTime } from '../utils/numberConverter';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import {
   Cog6ToothIcon,
   ShieldCheckIcon,
@@ -35,6 +36,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { showConfirm, showSuccess, showError, showWarning, showInfo } = useNotification();
   const [activeTab, setActiveTab] = useState('general');
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [settings, setSettings] = useState<SettingsData>({
     companyName: 'My Business',
     companyEmail: 'contact@mybusiness.com',
@@ -306,6 +308,17 @@ const Settings: React.FC = () => {
                       <option value="en">{t('settings.english')}</option>
                       <option value="bn">{t('settings.bengali')}</option>
                     </select>
+                  </div>
+                  
+                  {/* Security Section */}
+                  <div className="pt-4 border-t border-emerald-200 dark:border-emerald-700">
+                    <h3 className="text-lg font-semibold text-emerald-900 dark:text-emerald-100 mb-4">{t('settings.backupSecurity')}</h3>
+                    <button
+                      onClick={() => setIsChangePasswordOpen(true)}
+                      className="px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-600 dark:to-orange-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300"
+                    >
+                      🔐 {t('auth.changePassword')}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -597,6 +610,17 @@ const Settings: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <ChangePasswordModal
+          isOpen={isChangePasswordOpen}
+          onClose={() => setIsChangePasswordOpen(false)}
+          onSuccess={(message) => {
+            showSuccess({ title: t('common.success') || 'Success', message });
+          }}
+          onError={(message) => {
+            showError({ title: t('common.error') || 'Error', message });
+          }}
+        />
       </div>
     </div>
   );

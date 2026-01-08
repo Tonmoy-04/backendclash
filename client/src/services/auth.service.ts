@@ -34,6 +34,12 @@ class AuthService {
     return response.data;
   }
 
+  async changePassword(currentPassword: string, newPassword: string) {
+    // Change password feature - requires authentication token
+    const response = await api.put('/auth/change-password', { currentPassword, newPassword });
+    return response.data;
+  }
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

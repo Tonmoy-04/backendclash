@@ -420,7 +420,18 @@ export const bn = {
 
   // Auth
   auth: {
-    logout: 'লগ আউট'
+    logout: 'লগ আউট',
+    changePassword: 'পাসওয়ার্ড পরিবর্তন করুন',
+    oldPassword: 'বর্তমান পাসওয়ার্ড',
+    newPassword: 'নতুন পাসওয়ার্ড',
+    confirmPassword: 'পাসওয়ার্ড নিশ্চিত করুন',
+    changePasswordSuccess: 'পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে',
+    currentPasswordIncorrect: 'বর্তমান পাসওয়ার্ড ভুল',
+    passwordsDoNotMatch: 'নতুন পাসওয়ার্ডগুলি মিলছে না',
+    passwordChangeError: 'পাসওয়ার্ড পরিবর্তন ব্যর্থ হয়েছে',
+    oldPasswordRequired: 'বর্তমান পাসওয়ার্ড প্রয়োজন',
+    newPasswordRequired: 'নতুন পাসওয়ার্ড প্রয়োজন',
+    confirmPasswordRequired: 'পাসওয়ার্ড নিশ্চিতকরণ প্রয়োজন'
   },
 
   // Topbar

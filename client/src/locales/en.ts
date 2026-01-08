@@ -419,7 +419,18 @@ export const en = {
 
   // Auth
   auth: {
-    logout: 'Log out'
+    logout: 'Log out',
+    changePassword: 'Change Password',
+    oldPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm Password',
+    changePasswordSuccess: 'Password changed successfully',
+    currentPasswordIncorrect: 'Current password is incorrect',
+    passwordsDoNotMatch: 'New passwords do not match',
+    passwordChangeError: 'Failed to change password',
+    oldPasswordRequired: 'Current password is required',
+    newPasswordRequired: 'New password is required',
+    confirmPasswordRequired: 'Password confirmation is required'
   },
 
   // Topbar

