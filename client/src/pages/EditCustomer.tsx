@@ -120,7 +120,7 @@ const EditCustomer: React.FC = () => {
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Full name"
+                    placeholder={t('customers.namePlaceholder')}
                     required
                   />
                 </div>
@@ -135,7 +135,7 @@ const EditCustomer: React.FC = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Phone number"
+                    placeholder={t('customers.phonePlaceholder')}
                   />
                 </div>
               </div>
@@ -151,7 +151,7 @@ const EditCustomer: React.FC = () => {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Email address"
+                    placeholder={t('customers.emailPlaceholder')}
                   />
                 </div>
               </div>
@@ -165,7 +165,7 @@ const EditCustomer: React.FC = () => {
                   value={formData.address}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all resize-none"
-                  placeholder="Street address"
+                  placeholder={t('customers.addressPlaceholder')}
                   rows={3}
                 />
               </div>

@@ -17,6 +17,8 @@ interface Customer {
   email?: string;
   address?: string;
   balance?: number;
+  updated_at?: string;
+  created_at?: string;
 }
 
 interface Transaction {
@@ -59,7 +61,7 @@ const Customers: React.FC = () => {
   
   // Search and Sort State
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOption, setSortOption] = useState<'alphabetic' | 'recent' | 'debt' | 'due'>('alphabetic');
+  const [sortOption, setSortOption] = useState<'alphabetic' | 'recent' | 'debt' | 'due'>('recent');
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -108,7 +110,10 @@ const Customers: React.FC = () => {
           return (a.name || '').localeCompare(b.name || '');
         
         case 'recent':
-          // Sort by ID descending (assuming higher ID = more recent)
+          // Sort by last activity (updated_at), fallback to created_at, then id
+          const aTime = a.updated_at ? new Date(a.updated_at).getTime() : (a.created_at ? new Date(a.created_at).getTime() : 0);
+          const bTime = b.updated_at ? new Date(b.updated_at).getTime() : (b.created_at ? new Date(b.created_at).getTime() : 0);
+          if (bTime !== aTime) return bTime - aTime;
           return b.id - a.id;
         
         case 'debt':

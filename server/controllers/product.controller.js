@@ -68,7 +68,7 @@ async function calculateSeparateRates(productId) {
 exports.getAllProducts = async (req, res, next) => {
   try {
     const products = await db.all(
-      `SELECT * FROM products ORDER BY created_at DESC`
+      `SELECT * FROM products ORDER BY updated_at DESC, created_at DESC`
     );
 
     // Add separate purchase and selling rates to each product
@@ -219,7 +219,7 @@ exports.updateProduct = async (req, res, next) => {
 
     await db.run(
       `UPDATE products
-       SET name = ?, description = ?, price = ?, cost = ?, quantity = ?, min_stock = ?
+       SET name = ?, description = ?, price = ?, cost = ?, quantity = ?, min_stock = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       [
         name ?? existing.name,

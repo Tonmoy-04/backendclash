@@ -2,6 +2,7 @@ const db = require('../database/db');
 const stockDb = require('../database/stockDb');
 const { generateBill } = require('../utils/billGenerator');
 const { ensureItemTransactionsTable, insertItemTransaction } = require('../utils/itemTransactions');
+const { touchSupplier, touchProduct } = require('../utils/activity');
 
 exports.getAllPurchases = async (req, res, next) => {
   try {
@@ -134,6 +135,15 @@ exports.createPurchase = async (req, res, next) => {
       );
 
       // Stock updates disabled - transactions and inventory are completely separated
+      // Mark product as recently active
+      if (item.product_id) {
+        await touchProduct(item.product_id);
+      }
+    }
+
+    // Mark supplier as recently active if linked
+    if (supplier_id) {
+      await touchSupplier(supplier_id);
     }
 
     // Note: Bill generation is now manual via the bill generator endpoint
@@ -242,6 +252,11 @@ exports.updatePurchase = async (req, res, next) => {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [req.params.id, productId, productName, quantity, unitCost, itemSubtotal, unitCost, itemSubtotal]
         );
+
+        // Touch product last activity for updated purchases
+        if (productId) {
+          await touchProduct(productId);
+        }
       }
     }
 

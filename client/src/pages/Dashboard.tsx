@@ -166,9 +166,9 @@ const Dashboard: React.FC = () => {
   const fmtCashbox = (n?: number) => (showCashboxAmounts ? `৳${fmtMoney(n)}` : '****');
   const highDebtCount = customerDebtAlerts.length;
   const customersDebtSubtitleParts: string[] = [];
-  customersDebtSubtitleParts.push(`${highDebtCount} high-debt`);
+  customersDebtSubtitleParts.push(`${highDebtCount} ${t('dashboard.highDebtCount')}`);
   if ((stats?.totalCustomersDebt ?? 0) < 0) {
-    customersDebtSubtitleParts.push('Advance');
+    customersDebtSubtitleParts.push(t('dashboard.advance'));
   }
 
   const todayKey = formatDate(new Date());
@@ -218,8 +218,8 @@ const Dashboard: React.FC = () => {
           subtitle={customersDebtSubtitleParts.join(' • ')}
           change={
             customerDebtAlerts.length > 0
-              ? `${customerDebtAlerts.length} high-debt customers`
-              : 'No high-debt customers'
+              ? `${customerDebtAlerts.length} ${t('dashboard.highDebtCustomers')}`
+              : t('dashboard.noHighDebtCustomers')
           }
         />
         <StatCard
@@ -229,7 +229,7 @@ const Dashboard: React.FC = () => {
           bgColor="bg-red-500"
           clickable={true}
           onClick={() => navigate('/suppliers')}
-          subtitle={(stats?.totalSuppliersDebt ?? 0) < 0 ? 'Advance' : ''}
+          subtitle={(stats?.totalSuppliersDebt ?? 0) < 0 ? t('dashboard.advance') : ''}
         />
         <StatCard
           title={t('dashboard.lowStockItems')}
@@ -266,7 +266,7 @@ const Dashboard: React.FC = () => {
                       : 'bg-white/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-100 border-emerald-200 dark:border-emerald-700 hover:bg-white/80 dark:hover:bg-emerald-800/60'
                   }`}
                 >
-                  Summary
+                  {t('cashbox.summary')}
                 </button>
                 <button
                   onClick={(e) => {
@@ -280,7 +280,7 @@ const Dashboard: React.FC = () => {
                       : 'bg-white/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-100 border-emerald-200 dark:border-emerald-700 hover:bg-white/80 dark:hover:bg-emerald-800/60'
                   }`}
                 >
-                  History
+                  {t('cashbox.history')}
                 </button>
                 <button
                   onClick={(e) => {

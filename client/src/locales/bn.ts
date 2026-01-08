@@ -70,7 +70,11 @@ export const bn = {
     depositedToday: 'জমা (আজ)',
     withdrawnToday: 'উত্তোলন (আজ)',
     enablePrivacy: 'গোপনীয়তা সক্ষম করুন (পরিমাণ লুকান)',
-    disablePrivacy: 'গোপনীয়তা অক্ষম করুন (পরিমাণ দেখান)'
+    disablePrivacy: 'গোপনীয়তা অক্ষম করুন (পরিমাণ দেখান)',
+    highDebtCount: 'উচ্চ ঋণী',
+    highDebtCustomers: 'উচ্চ ঋণী গ্রাহক',
+    noHighDebtCustomers: 'কোনো উচ্চ ঋণী গ্রাহক নেই',
+    advance: 'অগ্রিম'
   },
 
   // Cashbox
@@ -93,7 +97,11 @@ export const bn = {
     addWithdrawal: 'উত্তোলন যোগ করুন',
     type: 'ধরন',
     balanceAfter: 'পরবর্তী ব্যালেন্স',
+    summary: 'সারসংক্ষেপ',
+    history: 'ইতিহাস',
     transactionHistory: 'লেনদেনের ইতিহাস',
+    historyHidden: 'ক্যাশবক্সের ইতিহাস লুকানো আছে',
+    historyHiddenHint: 'ব্যালেন্স এবং ইতিহাস প্রকাশ করতে চোখের আইকনে ট্যাপ করুন।',
     transactions: 'লেনদেন',
     noTransactions: 'এখনও কোনো লেনদেন নেই',
     startByAdding: 'একটি জমা বা উত্তোলন যোগ করে শুরু করুন',

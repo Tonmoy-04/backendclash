@@ -70,7 +70,11 @@ export const en = {
     depositedToday: 'Deposited (Today)',
     withdrawnToday: 'Withdrawn (Today)',
     enablePrivacy: 'Enable privacy (hide amounts)',
-    disablePrivacy: 'Disable privacy (show amounts)'
+    disablePrivacy: 'Disable privacy (show amounts)',
+    highDebtCount: 'high-debt',
+    highDebtCustomers: 'high-debt customers',
+    noHighDebtCustomers: 'No high-debt customers',
+    advance: 'Advance'
   },
 
   // Cashbox
@@ -93,7 +97,11 @@ export const en = {
     addWithdrawal: 'Add Withdrawal',
     type: 'Type',
     balanceAfter: 'Balance After',
+    summary: 'Summary',
+    history: 'History',
     transactionHistory: 'Transaction History',
+    historyHidden: 'Cashbox history is hidden',
+    historyHiddenHint: 'Tap the eye icon to show balance and history.',
     transactions: 'Transactions',
     noTransactions: 'No transactions yet',
     startByAdding: 'Start by adding a deposit or withdrawal',

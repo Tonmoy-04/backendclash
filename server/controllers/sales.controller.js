@@ -2,6 +2,7 @@ const db = require('../database/db');
 const stockDb = require('../database/stockDb');
 const { generateBill } = require('../utils/billGenerator');
 const { ensureItemTransactionsTable, insertItemTransaction } = require('../utils/itemTransactions');
+const { touchProduct, touchCustomer } = require('../utils/activity');
 
 async function getSalesColumnSet() {
   try {
@@ -177,6 +178,15 @@ exports.createSale = async (req, res, next) => {
       );
 
       // Stock updates disabled - transactions and inventory are completely separated
+      // Mark product as recently active
+      if (item.product_id) {
+        await touchProduct(item.product_id);
+      }
+    }
+
+    // If a customer_id is ever provided, mark it as active (non-breaking, optional)
+    if (req.body?.customer_id) {
+      await touchCustomer(req.body.customer_id);
     }
 
     // Note: Bill generation is now manual via the bill generator endpoint
@@ -274,6 +284,11 @@ exports.updateSale = async (req, res, next) => {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [req.params.id, productId, productName, quantity, unitPrice, itemSubtotal, unitPrice, itemSubtotal]
         );
+
+        // Touch product last activity for updated sales
+        if (productId) {
+          await touchProduct(productId);
+        }
       }
     }
 

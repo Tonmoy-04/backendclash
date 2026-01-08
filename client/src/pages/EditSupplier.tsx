@@ -122,7 +122,7 @@ const EditSupplier: React.FC = () => {
                   value={formData.contact_person}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                  placeholder="Contact person name"
+                  placeholder={t('suppliers.contactPersonPlaceholder')}
                   required
                 />
               </div>
@@ -138,7 +138,7 @@ const EditSupplier: React.FC = () => {
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Company name"
+                    placeholder={t('suppliers.companyPlaceholder')}
                   />
                 </div>
 
@@ -152,35 +152,38 @@ const EditSupplier: React.FC = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    placeholder="Phone number"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
-                  {t('suppliers.email')}
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                  placeholder="Email address"
+                    placeholder={t('suppliers.phonePlaceholder')}
                 />
               </div>
 
+              {/* Close grid container */}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+                {t('suppliers.email')}
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
+                placeholder={t('suppliers.emailPlaceholder')}
+              />
+            </div>
+
               <div>
                 <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">
-                  Address
+                  {t('suppliers.address')}
                 </label>
                 <textarea
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all resize-none"
-                  placeholder="Street address"
+                  placeholder={t('suppliers.addressPlaceholder')}
                   rows={3}
                 />
               </div>
