@@ -4,6 +4,9 @@ const os = require('os');
 const logger = require('./logger');
 const AdmZip = require('adm-zip');
 
+// Current backup format version - increment when schema changes
+const BACKUP_VERSION = '2.0.0';
+
 class BackupManager {
   constructor() {
     const isElectronEnv = process.env.APP_ENV === 'electron' || String(__dirname).includes('resources');
@@ -187,18 +190,43 @@ class BackupManager {
         }
       }
 
+      // Add metadata file with version and backup information
+      const metadata = {
+        backupVersion: BACKUP_VERSION,
+        timestamp: new Date().toISOString(),
+        created: new Date().toISOString(),
+        databases: {
+          inventory: fs.existsSync(this.dbPath),
+          stock: fs.existsSync(this.stockDbPath)
+        },
+        features: {
+          cashbox: true,
+          customerTransactions: true,
+          supplierTransactions: true,
+          stockHistory: true,
+          separatedDatabases: true
+        },
+        schemaVersion: {
+          inventory: '2.0',  // Updated schema with cashbox, transactions
+          stock: '1.0'       // Stock schema
+        }
+      };
+
+      zip.addFile('backup-metadata.json', Buffer.from(JSON.stringify(metadata, null, 2), 'utf-8'));
+
       zip.writeZip(backupPath);
 
       // Re-open DB connections after backup so the app continues working.
       await this.reloadDatabases();
 
-      logger.info(`Backup created: ${backupFileName}`);
+      logger.info(`Backup created: ${backupFileName} (version ${BACKUP_VERSION})`);
 
       return {
         success: true,
         fileName: backupFileName,
         path: backupPath,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        version: BACKUP_VERSION
       };
     } catch (error) {
       logger.error(`Backup creation failed: ${error.message}`);
@@ -254,8 +282,25 @@ class BackupManager {
         } catch {}
       }
 
+      let backupVersion = '1.0.0'; // Default for old backups without version
+      let metadata = null;
+
       if (normalizedFileName.toLowerCase().endsWith('.zip')) {
         const zip = new AdmZip(backupPath);
+
+        // Try to read metadata to detect backup version
+        try {
+          const metadataEntry = zip.getEntry('backup-metadata.json');
+          if (metadataEntry) {
+            metadata = JSON.parse(metadataEntry.getData().toString('utf8'));
+            backupVersion = metadata.backupVersion || '1.0.0';
+            logger.info(`[RESTORE] Detected backup version: ${backupVersion}`);
+          } else {
+            logger.info(`[RESTORE] No metadata found - treating as legacy backup (v1.0.0)`);
+          }
+        } catch (err) {
+          logger.warn(`[RESTORE] Could not read metadata: ${err.message}`);
+        }
 
         const inventoryEntry = zip.getEntry('inventory.db');
         if (!inventoryEntry) {
@@ -263,18 +308,22 @@ class BackupManager {
         }
 
         fs.writeFileSync(this.dbPath, inventoryEntry.getData());
+        logger.info('[RESTORE] Inventory database restored from archive');
 
         const stockEntry = zip.getEntry('stock.db');
         if (stockEntry) {
           try {
             fs.writeFileSync(this.stockDbPath, stockEntry.getData());
-            logger.info('Stock database restored from archive');
+            logger.info('[RESTORE] Stock database restored from archive');
           } catch (err) {
             logger.warn(`Failed to restore stock database from archive: ${err.message}`);
           }
+        } else {
+          logger.warn('[RESTORE] Stock database not found in backup - may be legacy backup');
         }
       } else if (normalizedFileName.toLowerCase().endsWith('.db')) {
         // Legacy restore path (.db + optional backup_stock_*.db)
+        logger.info('[RESTORE] Restoring from legacy .db backup format');
         fs.copyFileSync(backupPath, this.dbPath);
 
         const stockBackupFileName = normalizedFileName.replace(/^backup_/, 'backup_stock_');
@@ -291,14 +340,19 @@ class BackupManager {
         throw new Error('Unsupported backup file type');
       }
 
+      // Apply migrations for backward compatibility
+      await this.applyBackwardCompatibilityMigrations(backupVersion);
+
       // Reload DB modules so the app continues working without manual restart
       await this.reloadDatabases();
 
-      logger.info(`Database restored from: ${normalizedFileName}`);
+      logger.info(`Database restored from: ${normalizedFileName} (version: ${backupVersion})`);
       
       return {
         success: true,
-        message: 'Database restored successfully'
+        message: 'Database restored successfully',
+        backupVersion: backupVersion,
+        currentVersion: BACKUP_VERSION
       };
     } catch (error) {
       logger.error(`Backup restoration failed: ${error.message}`);
@@ -357,6 +411,303 @@ class BackupManager {
 
     await reopenOne('../database/db');
     await reopenOne('../database/stockDb');
+  }
+
+  /**
+   * Apply migrations to ensure old backups work with current schema
+   * This handles backward compatibility when restoring older backups
+   */
+  async applyBackwardCompatibilityMigrations(backupVersion) {
+    try {
+      logger.info(`[MIGRATION] Applying backward compatibility migrations for backup version ${backupVersion}`);
+
+      const db = require('../database/db');
+      const stockDb = require('../database/stockDb');
+
+      // Parse version numbers for comparison
+      const [major, minor] = backupVersion.split('.').map(Number);
+
+      // Migrations for backups older than v2.0.0 (before cashbox and transaction tracking)
+      if (major < 2) {
+        logger.info('[MIGRATION] Backup is from v1.x - applying v2.0 migrations');
+
+        // Ensure cashbox tables exist (these are new in v2.0)
+        await this.ensureCashboxTablesExist(db);
+
+        // Ensure customer/supplier transaction tables exist (new in v2.0)
+        await this.ensureTransactionTablesExist(db);
+
+        // Ensure sale_items has all new columns
+        await this.ensureSaleItemsColumns(db);
+
+        // Ensure purchase_items has all new columns
+        await this.ensurePurchaseItemsColumns(db);
+
+        // Ensure sales table has new columns
+        await this.ensureSalesColumns(db);
+
+        // Ensure purchases table has new columns
+        await this.ensurePurchasesColumns(db);
+
+        // Ensure suppliers table has balance column
+        await this.ensureSuppliersColumns(db);
+
+        // Ensure customers table has balance column
+        await this.ensureCustomersColumns(db);
+
+        // Ensure stock_history table exists in stock.db
+        await this.ensureStockHistoryTable(stockDb);
+      }
+
+      logger.info('[MIGRATION] Backward compatibility migrations completed successfully');
+    } catch (error) {
+      logger.error(`[MIGRATION] Error during backward compatibility migrations: ${error.message}`);
+      // Don't throw - allow restore to continue even if some migrations fail
+    }
+  }
+
+  /**
+   * Ensure cashbox tables exist for old backups
+   */
+  async ensureCashboxTablesExist(db) {
+    try {
+      await db.run(`CREATE TABLE IF NOT EXISTS cashbox (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        opening_balance DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        current_balance DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        is_initialized INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+
+      await db.run(`CREATE TABLE IF NOT EXISTS cashbox_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cashbox_id INTEGER NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('deposit', 'withdrawal')),
+        amount DECIMAL(10, 2) NOT NULL,
+        date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        note TEXT,
+        balance_after DECIMAL(10, 2) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cashbox_id) REFERENCES cashbox(id) ON DELETE CASCADE
+      )`);
+
+      logger.info('[MIGRATION] ✓ Cashbox tables ensured');
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring cashbox tables: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure customer and supplier transaction tables exist
+   */
+  async ensureTransactionTablesExist(db) {
+    try {
+      await db.run(`CREATE TABLE IF NOT EXISTS customer_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_id INTEGER NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('payment', 'charge')),
+        amount DECIMAL(10, 2) NOT NULL,
+        balance_before DECIMAL(10, 2) NOT NULL,
+        balance_after DECIMAL(10, 2) NOT NULL,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+      )`);
+
+      await db.run(`CREATE TABLE IF NOT EXISTS supplier_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        supplier_id INTEGER NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('payment', 'charge')),
+        amount DECIMAL(10, 2) NOT NULL,
+        balance_before DECIMAL(10, 2) NOT NULL,
+        balance_after DECIMAL(10, 2) NOT NULL,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE CASCADE
+      )`);
+
+      logger.info('[MIGRATION] ✓ Transaction tables ensured');
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring transaction tables: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure sale_items has all required columns
+   */
+  async ensureSaleItemsColumns(db) {
+    try {
+      const columns = await db.all("PRAGMA table_info('sale_items')");
+      const columnNames = new Set(columns.map(c => c.name));
+
+      if (!columnNames.has('product_name')) {
+        await db.run('ALTER TABLE sale_items ADD COLUMN product_name TEXT');
+        logger.info('[MIGRATION] ✓ Added product_name to sale_items');
+      }
+
+      if (!columnNames.has('unit_price')) {
+        await db.run('ALTER TABLE sale_items ADD COLUMN unit_price DECIMAL(10, 2)');
+        // Backfill from price if available
+        await db.run('UPDATE sale_items SET unit_price = COALESCE(unit_price, price) WHERE unit_price IS NULL');
+        logger.info('[MIGRATION] ✓ Added unit_price to sale_items');
+      }
+
+      if (!columnNames.has('total_price')) {
+        await db.run('ALTER TABLE sale_items ADD COLUMN total_price DECIMAL(10, 2)');
+        // Backfill from subtotal if available
+        await db.run('UPDATE sale_items SET total_price = COALESCE(total_price, subtotal, quantity * unit_price) WHERE total_price IS NULL');
+        logger.info('[MIGRATION] ✓ Added total_price to sale_items');
+      }
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring sale_items columns: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure purchase_items has all required columns
+   */
+  async ensurePurchaseItemsColumns(db) {
+    try {
+      const columns = await db.all("PRAGMA table_info('purchase_items')");
+      const columnNames = new Set(columns.map(c => c.name));
+
+      if (!columnNames.has('product_name')) {
+        await db.run('ALTER TABLE purchase_items ADD COLUMN product_name TEXT');
+        logger.info('[MIGRATION] ✓ Added product_name to purchase_items');
+      }
+
+      if (!columnNames.has('unit_price')) {
+        await db.run('ALTER TABLE purchase_items ADD COLUMN unit_price DECIMAL(10, 2)');
+        await db.run('UPDATE purchase_items SET unit_price = COALESCE(unit_price, cost) WHERE unit_price IS NULL');
+        logger.info('[MIGRATION] ✓ Added unit_price to purchase_items');
+      }
+
+      if (!columnNames.has('total_price')) {
+        await db.run('ALTER TABLE purchase_items ADD COLUMN total_price DECIMAL(10, 2)');
+        await db.run('UPDATE purchase_items SET total_price = COALESCE(total_price, subtotal, quantity * unit_price) WHERE total_price IS NULL');
+        logger.info('[MIGRATION] ✓ Added total_price to purchase_items');
+      }
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring purchase_items columns: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure sales table has all required columns
+   */
+  async ensureSalesColumns(db) {
+    try {
+      const columns = await db.all("PRAGMA table_info('sales')");
+      const columnNames = new Set(columns.map(c => c.name));
+
+      if (!columnNames.has('customer_phone')) {
+        await db.run('ALTER TABLE sales ADD COLUMN customer_phone TEXT');
+        logger.info('[MIGRATION] ✓ Added customer_phone to sales');
+      }
+
+      if (!columnNames.has('user_id')) {
+        await db.run('ALTER TABLE sales ADD COLUMN user_id INTEGER');
+        logger.info('[MIGRATION] ✓ Added user_id to sales');
+      }
+
+      if (!columnNames.has('status')) {
+        await db.run("ALTER TABLE sales ADD COLUMN status TEXT DEFAULT 'completed'");
+        logger.info('[MIGRATION] ✓ Added status to sales');
+      }
+
+      if (!columnNames.has('customer_id')) {
+        await db.run('ALTER TABLE sales ADD COLUMN customer_id INTEGER');
+        logger.info('[MIGRATION] ✓ Added customer_id to sales');
+      }
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring sales columns: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure purchases table has all required columns
+   */
+  async ensurePurchasesColumns(db) {
+    try {
+      const columns = await db.all("PRAGMA table_info('purchases')");
+      const columnNames = new Set(columns.map(c => c.name));
+
+      if (!columnNames.has('user_id')) {
+        await db.run('ALTER TABLE purchases ADD COLUMN user_id INTEGER');
+        logger.info('[MIGRATION] ✓ Added user_id to purchases');
+      }
+
+      if (!columnNames.has('status')) {
+        await db.run("ALTER TABLE purchases ADD COLUMN status TEXT DEFAULT 'completed'");
+        logger.info('[MIGRATION] ✓ Added status to purchases');
+      }
+
+      if (!columnNames.has('supplier_name')) {
+        await db.run('ALTER TABLE purchases ADD COLUMN supplier_name TEXT');
+        logger.info('[MIGRATION] ✓ Added supplier_name to purchases');
+      }
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring purchases columns: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure suppliers table has balance column
+   */
+  async ensureSuppliersColumns(db) {
+    try {
+      const columns = await db.all("PRAGMA table_info('suppliers')");
+      const columnNames = new Set(columns.map(c => c.name));
+
+      if (!columnNames.has('balance')) {
+        await db.run('ALTER TABLE suppliers ADD COLUMN balance DECIMAL(10, 2) DEFAULT 0');
+        logger.info('[MIGRATION] ✓ Added balance to suppliers');
+      }
+
+      if (!columnNames.has('contact_person')) {
+        await db.run('ALTER TABLE suppliers ADD COLUMN contact_person TEXT');
+        logger.info('[MIGRATION] ✓ Added contact_person to suppliers');
+      }
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring suppliers columns: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure customers table has balance column
+   */
+  async ensureCustomersColumns(db) {
+    try {
+      const columns = await db.all("PRAGMA table_info('customers')");
+      const columnNames = new Set(columns.map(c => c.name));
+
+      if (!columnNames.has('balance')) {
+        await db.run('ALTER TABLE customers ADD COLUMN balance DECIMAL(10, 2) DEFAULT 0');
+        logger.info('[MIGRATION] ✓ Added balance to customers');
+      }
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring customers columns: ${err.message}`);
+    }
+  }
+
+  /**
+   * Ensure stock_history table exists in stock database
+   */
+  async ensureStockHistoryTable(stockDb) {
+    try {
+      await stockDb.run(`CREATE TABLE IF NOT EXISTS stock_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        change INTEGER NOT NULL,
+        reason TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(product_id) REFERENCES products(id)
+      )`);
+      logger.info('[MIGRATION] ✓ Stock history table ensured');
+    } catch (err) {
+      logger.warn(`[MIGRATION] Warning ensuring stock_history table: ${err.message}`);
+    }
   }
 
   // List all available backups

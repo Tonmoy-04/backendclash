@@ -362,7 +362,11 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     y += 18;
   });
 
-  y += 70;
+  // Add separator line after table
+  y += 10;
+  doc.strokeColor(borderGray).lineWidth(1);
+  doc.moveTo(tableLeft, y).lineTo(tableLeft + usableWidth, y).stroke();
+  y += 20;
 
   // Totals section with modern styling
   const subtotalCalc = (items || []).reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0);
@@ -375,19 +379,24 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   // Final total = Subtotal + Transport Fee + Labour Fee - Discount
   const netTotal = grossTotal + transportVal + labourVal - adj;
 
-  const summaryBoxX = tableLeft + usableWidth - 210;
-  const summaryBoxW = 210;
+  const summaryBoxX = tableLeft + usableWidth - 220;
+  const summaryBoxW = 220;
+  const lineHeight = 16;
+  const topPadding = 12;
+  const bottomPadding = 12;
+  const totalLineHeight = 20;
+  
   // Calculate dynamic height based on number of lines
-  // Base: Subtotal (14) + Final Total (14) + padding (15)
-  // Add 14 for each conditional line: Tax, Transport, Labour, Discount
-  let summaryBoxH = 43; // base
-  if (type === 'sale' && tax > 0) summaryBoxH += 14;
-  if (transportVal > 0) summaryBoxH += 14;
-  if (labourVal > 0) summaryBoxH += 14;
-  if (adj > 0) summaryBoxH += 14;
+  let lineCount = 1; // Subtotal always shown
+  if (type === 'sale' && tax > 0) lineCount++;
+  if (transportVal > 0) lineCount++;
+  if (labourVal > 0) lineCount++;
+  if (adj > 0) lineCount++;
+  
+  const summaryBoxH = topPadding + (lineCount * lineHeight) + totalLineHeight + bottomPadding;
 
-  // Summary box background
-  doc.rect(summaryBoxX, y, summaryBoxW, summaryBoxH).fill('#f0fdf4');
+  // Draw summary box background with rounded corners
+  doc.rect(summaryBoxX, y, summaryBoxW, summaryBoxH).fill(veryLightGreen);
   doc.strokeColor(appleGreen).lineWidth(2.5);
   if (typeof doc.roundedRect === 'function') {
     doc.roundedRect(summaryBoxX, y, summaryBoxW, summaryBoxH, 5).stroke();
@@ -395,82 +404,130 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     doc.rect(summaryBoxX, y, summaryBoxW, summaryBoxH).stroke();
   }
 
+  // Starting Y position inside the box
+  let summaryY = y + topPadding;
   doc.font('Helvetica').fontSize(10).fillColor(darkGray);
-  let summaryY = y + 15;
 
   // Subtotal
-  doc.text('Subtotal:', summaryBoxX + 12, summaryY);
+  doc.text('Subtotal:', summaryBoxX + 12, summaryY, { continued: false });
   if (symbolIsNonAscii && fontInfo.loaded) {
     doc.font('unicode');
-    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     doc.font('Helvetica');
   } else {
-    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
   }
-  summaryY += 14;
+  summaryY += lineHeight;
 
   // Tax
   if (type === 'sale' && tax > 0) {
-    doc.text('Tax:', summaryBoxX + 12, summaryY);
+    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
+    doc.text('Tax:', summaryBoxX + 12, summaryY, { continued: false });
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
-      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
       doc.font('Helvetica');
     } else {
-      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     }
-    summaryY += 14;
+    summaryY += lineHeight;
   }
 
-  // Transport Fee - shown only if > 0
+  // Transport Fee
   if (transportVal > 0) {
-    doc.text('Transport:', summaryBoxX + 12, summaryY);
+    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
+    doc.text('Transport:', summaryBoxX + 12, summaryY, { continued: false });
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
-      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
       doc.font('Helvetica');
     } else {
-      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     }
-    summaryY += 14;
+    summaryY += lineHeight;
   }
 
-  // Labour Fee - shown only if > 0
+  // Labour Fee
   if (labourVal > 0) {
-    doc.text('Labour:', summaryBoxX + 12, summaryY);
+    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
+    doc.text('Labour:', summaryBoxX + 12, summaryY, { continued: false });
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
-      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
       doc.font('Helvetica');
     } else {
-      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     }
-    summaryY += 14;
+    summaryY += lineHeight;
   }
 
-  // Discount - shown only if > 0
+  // Discount
   if (adj > 0) {
-    doc.text('Discount:', summaryBoxX + 12, summaryY);
+    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
+    doc.text('Discount:', summaryBoxX + 12, summaryY, { continued: false });
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
-      doc.text(formatCurrency(-adj, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(-adj, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
       doc.font('Helvetica');
     } else {
-      doc.text(formatCurrency(-adj, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+      doc.text(formatCurrency(-adj, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     }
-    summaryY += 14;
+    summaryY += lineHeight;
   }
 
-  // Total (highlighted)
-  doc.fontSize(13).font('Helvetica-Bold').fillColor(appleGreen);
-  doc.text('Total:', summaryBoxX + 12, summaryY);
+  // Separator line before total
+  summaryY += 2;
+  doc.strokeColor(appleGreen).lineWidth(1);
+  doc.moveTo(summaryBoxX + 12, summaryY).lineTo(summaryBoxX + summaryBoxW - 12, summaryY).stroke();
+  summaryY += 6;
+
+  // Total (bold and highlighted)
+  doc.font('Helvetica-Bold').fontSize(12).fillColor(appleGreen);
+  doc.text('Total:', summaryBoxX + 12, summaryY, { continued: false });
   if (symbolIsNonAscii && fontInfo.loaded) {
     doc.font('unicode');
-    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     doc.font('Helvetica');
   } else {
-    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
+    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
   }
+
+  // Add "Paid" or "Unpaid" stamp based on payment method
+  const paymentMethod = transaction.payment_method ? String(transaction.payment_method).toLowerCase().trim() : '';
+  const isDue = paymentMethod === 'due' || paymentMethod === 'বাকি';
+  const stampText = isDue ? 'UNPAID' : 'PAID';
+  const stampColor = isDue ? '#EF4444' : '#10B981'; // Red for unpaid, green for paid
+  
+  // Position stamp at bottom right area
+  const stampX = doc.page.margins.left + usableWidth - 140;
+  const stampY = y + summaryBoxH + 30;
+  const stampW = 120;
+  const stampH = 50;
+  
+  // Draw stamp border (rotated slightly for stamp effect)
+  doc.save();
+  doc.translate(stampX + stampW / 2, stampY + stampH / 2);
+  doc.rotate(-10); // Slight rotation for stamp effect
+  
+  // Semi-transparent background
+  doc.opacity(0.15);
+  doc.rect(-stampW / 2, -stampH / 2, stampW, stampH).fill(stampColor);
+  doc.opacity(1);
+  
+  // Double border for stamp effect
+  doc.lineWidth(3).strokeColor(stampColor);
+  doc.rect(-stampW / 2, -stampH / 2, stampW, stampH).stroke();
+  doc.lineWidth(1.5);
+  doc.rect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8).stroke();
+  
+  // Stamp text
+  doc.font('Helvetica-Bold').fontSize(24).fillColor(stampColor);
+  doc.text(stampText, -stampW / 2, -stampH / 2 + 10, {
+    width: stampW,
+    align: 'center'
+  });
+  
+  doc.restore();
 
   doc.end();
 
