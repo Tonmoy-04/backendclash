@@ -211,7 +211,19 @@ exports.updatePurchase = async (req, res, next) => {
 
     console.log('Updating purchase with payload:', JSON.stringify(req.body, null, 2));
 
-    // Calculate total from items if items array is provided
+    // ===== STEP 1: Fetch OLD purchase data to reverse effects =====
+    const oldPurchase = await db.get('SELECT * FROM purchases WHERE id = ?', [req.params.id]);
+    
+    if (!oldPurchase) {
+      return res.status(404).json({ error: 'Purchase not found' });
+    }
+
+    const oldItems = await db.all(
+      'SELECT * FROM purchase_items WHERE purchase_id = ?',
+      [req.params.id]
+    );
+
+    // ===== STEP 2: Calculate NEW purchase totals =====
     let calculatedTotal = 0;
     if (items && Array.isArray(items) && items.length > 0) {
       for (const item of items) {
@@ -228,39 +240,63 @@ exports.updatePurchase = async (req, res, next) => {
     const labourVal = Number(labour_fee) || 0;
     const finalTotal = req.body.total || calculatedTotal;
 
-    // Update purchase header
-    await db.run(
-      'UPDATE purchases SET supplier_name = ?, payment_method = ?, notes = ?, discount = ?, transport_fee = ?, labour_fee = ?, status = ?, total = ? WHERE id = ?',
-      [supplier_name || null, payment_method, notes || '', discountVal, transportVal, labourVal, status || 'completed', finalTotal, req.params.id]
-    );
+    // ===== STEP 3: Begin transaction to ensure atomicity =====
+    await db.run('BEGIN TRANSACTION');
 
-    // If items are provided, update them
-    if (items && Array.isArray(items) && items.length > 0) {
-      // Delete existing purchase items
-      await db.run('DELETE FROM purchase_items WHERE purchase_id = ?', [req.params.id]);
+    try {
+      // ===== STEP 4: Reverse OLD purchase effects =====
+      // Note: Currently sales/purchases don't auto-update inventory or supplier balances
+      // They only update when explicitly creating supplier_transactions or inventory adjustments
+      // This matches the current architecture where transactions and inventory are separated
+      // If future implementation adds auto-balance updates, reverse logic would go here
 
-      // Insert new items
-      for (const item of items) {
-        const productId = item.product_id || null;
-        const productName = item.product_name && item.product_name.trim() ? item.product_name.trim() : null;
-        const quantity = item.quantity || 1;
-        const unitCost = (item.cost !== undefined && item.cost !== null) ? Number(item.cost) : 0;
-        const itemSubtotal = quantity * unitCost;
+      // ===== STEP 5: Update purchase header with NEW values =====
+      await db.run(
+        'UPDATE purchases SET supplier_name = ?, payment_method = ?, notes = ?, discount = ?, transport_fee = ?, labour_fee = ?, status = ?, total = ?, updated_at = datetime(\'now\') WHERE id = ?',
+        [supplier_name || null, payment_method, notes || '', discountVal, transportVal, labourVal, status || 'completed', finalTotal, req.params.id]
+      );
 
-        await db.run(
-          `INSERT INTO purchase_items (purchase_id, product_id, product_name, quantity, cost, subtotal, unit_price, total_price)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [req.params.id, productId, productName, quantity, unitCost, itemSubtotal, unitCost, itemSubtotal]
-        );
+      // ===== STEP 6: Update purchase items (delete old + insert new) =====
+      if (items && Array.isArray(items) && items.length > 0) {
+        // Delete existing purchase items
+        await db.run('DELETE FROM purchase_items WHERE purchase_id = ?', [req.params.id]);
 
-        // Touch product last activity for updated purchases
-        if (productId) {
-          await touchProduct(productId);
+        // Insert new items
+        for (const item of items) {
+          const productId = item.product_id || null;
+          const productName = item.product_name && item.product_name.trim() ? item.product_name.trim() : null;
+          const quantity = item.quantity || 1;
+          const unitCost = (item.cost !== undefined && item.cost !== null) ? Number(item.cost) : 0;
+          const itemSubtotal = quantity * unitCost;
+
+          await db.run(
+            `INSERT INTO purchase_items (purchase_id, product_id, product_name, quantity, cost, subtotal, unit_price, total_price)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [req.params.id, productId, productName, quantity, unitCost, itemSubtotal, unitCost, itemSubtotal]
+          );
+
+          // Touch product last activity for updated purchases
+          if (productId) {
+            await touchProduct(productId);
+          }
         }
       }
-    }
 
-    res.json({ message: 'Purchase updated successfully' });
+      // ===== STEP 7: Apply NEW purchase effects =====
+      // Note: Currently sales/purchases don't auto-update inventory or supplier balances
+      // They only update when explicitly creating supplier_transactions or inventory adjustments
+      // This matches the current architecture where transactions and inventory are separated
+      // If future implementation adds auto-balance updates, apply logic would go here
+
+      // ===== STEP 8: Commit transaction =====
+      await db.run('COMMIT');
+
+      res.json({ message: 'Purchase updated successfully' });
+    } catch (error) {
+      // Rollback on any error
+      await db.run('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
     console.error('Error updating purchase:', error);
     next(error);

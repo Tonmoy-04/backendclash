@@ -354,6 +354,16 @@ async function ensureSalesTables() {
       console.log('Migrated: added sales.discount');
     }
 
+    if (!salesNames.has('transport_fee')) {
+      await dbRun("ALTER TABLE sales ADD COLUMN transport_fee DECIMAL(10, 2) DEFAULT 0");
+      console.log('Migrated: added sales.transport_fee');
+    }
+
+    if (!salesNames.has('labour_fee')) {
+      await dbRun("ALTER TABLE sales ADD COLUMN labour_fee DECIMAL(10, 2) DEFAULT 0");
+      console.log('Migrated: added sales.labour_fee');
+    }
+
     console.log('Sales tables migrated successfully');
   } catch (err) {
     console.error('Error ensuring sales tables:', err);
@@ -610,6 +620,17 @@ async function ensurePurchasesTables() {
     if (!purchasesNames.has('discount')) {
       await dbRun("ALTER TABLE purchases ADD COLUMN discount DECIMAL(10, 2) DEFAULT 0");
       console.log('Migrated: added purchases.discount');
+    }
+
+    // New fee columns for transport and labour (keep defaults for backward compatibility)
+    if (!purchasesNames.has('transport_fee')) {
+      await dbRun("ALTER TABLE purchases ADD COLUMN transport_fee DECIMAL(10, 2) DEFAULT 0");
+      console.log('Migrated: added purchases.transport_fee');
+    }
+
+    if (!purchasesNames.has('labour_fee')) {
+      await dbRun("ALTER TABLE purchases ADD COLUMN labour_fee DECIMAL(10, 2) DEFAULT 0");
+      console.log('Migrated: added purchases.labour_fee');
     }
 
     // Check purchase_items table

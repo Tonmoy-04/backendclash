@@ -137,21 +137,48 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   const filePath = path.join(billsDir, fileName);
 
   // 3:4 portrait ratio size (450 x 600 points = 6.25 x 8.33 inches)
-  // Maintains clean 3:4 aspect ratio for optimal readability and printing
   const size = [450, 600];
   const margin = 22;
-  const doc = new PDFDocument({ size, margin, layout: 'portrait' });
+  const doc = new PDFDocument({ size, margin, layout: 'portrait', bufferPages: true });
   const stream = fs.createWriteStream(filePath);
   doc.pipe(stream);
 
+  // ===== CONSTANTS & CONFIGURATION =====
   const usableWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
   const appleGreen = '#34C759';
   const darkGray = '#333333';
   const lightGray = '#f3f4f6';
   const veryLightGreen = '#f0fdf4';
   const borderGray = '#e5e7eb';
-  const lightGreen = '#dcfce7';
+  
+  const marginLeft = doc.page.margins.left;
+  const marginRight = doc.page.margins.right;
+  const marginTop = doc.page.margins.top;
+  const marginBottom = doc.page.margins.bottom;
+  const pageHeight = doc.page.height;
+  const pageWidth = doc.page.width;
 
+  // Table dimensions
+  const tableLeft = marginLeft;
+  const colWidths = {
+    no: 25,
+    item: usableWidth - 25 - 40 - 55,
+    qty: 40,
+    amount: 55
+  };
+
+  const tableHeaderHeight = 23;
+  const tableRowHeight = 18;
+  const footerHeight = 50; // Space reserved for footer
+
+  // Summary box dimensions
+  const summaryBoxW = 220;
+  const summaryBoxTopPadding = 12;
+  const summaryBoxBottomPadding = 12;
+  const summaryLineHeight = 16;
+  const summaryTotalLineHeight = 20;
+
+  // ===== FONT SETUP (Once at start) =====
   let symbol = currencySymbol || getCurrencySymbol();
   const fontInfo = selectUnicodeFont(doc);
   if (!fontInfo.loaded) {
@@ -161,6 +188,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
       symbol = 'Tk';
     }
   }
+
   const shopNameRaw = getShopName();
   const shopName = fontInfo.loaded ? shopNameRaw : sanitizeForAscii(shopNameRaw, 'M/S Didar Trading');
   const displaySymbol = fontInfo.loaded ? symbol : (/[^\u0000-\u007F]/.test(symbol) ? 'Tk' : symbol);
@@ -173,100 +201,137 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     return `${date}, ${time}`;
   };
 
-  let y = doc.page.margins.top;
+  // ===== HELPER: Draw header (for first page and page breaks) =====
+  function drawHeader(yPos) {
+    const headerX = marginLeft;
+    const headerW = usableWidth;
+    const headerH = 115;
 
-  // Modern header with green border and company details - FIXED POSITIONING to prevent font corruption
-  const headerX = doc.page.margins.left;
-  const headerY = y;
-  const headerW = usableWidth;
-  const headerH = 115; // Increased height for padding after first line
+    // Header border
+    doc.lineWidth(3).strokeColor(appleGreen);
+    if (typeof doc.roundedRect === 'function') {
+      doc.roundedRect(headerX, yPos, headerW, headerH, 8).stroke();
+    } else {
+      doc.rect(headerX, yPos, headerW, headerH).stroke();
+    }
 
-  // Header border
-  doc.lineWidth(3).strokeColor(appleGreen);
-  if (typeof doc.roundedRect === 'function') {
-    doc.roundedRect(headerX, headerY, headerW, headerH, 8).stroke();
-  } else {
-    doc.rect(headerX, headerY, headerW, headerH).stroke();
+    // Set font for header text
+    if (fontInfo.loaded) {
+      doc.font('unicode');
+    } else {
+      doc.font('Helvetica');
+    }
+
+    const headerPadX = 10;
+    const line1Y = yPos + 10;
+    const line2Y = yPos + 40;
+    const line3Y = yPos + 50;
+    const line4Y = yPos + 63;
+    const line5Y = yPos + 78;
+
+    // Line 1: Company name (Bengali bold)
+    doc.font(fontInfo.loaded && fontInfo.boldLoaded ? 'unicode-bold' : (fontInfo.loaded ? 'unicode' : 'Helvetica-Bold'));
+    doc.fillColor(appleGreen).fontSize(18);
+    doc.text('মেসার্স দিদার ট্রেডিং', headerX + headerPadX, line1Y, { width: headerW - headerPadX * 2, align: 'center' });
+
+    // Switch to regular font for remaining lines
+    if (fontInfo.loaded) {
+      doc.font('unicode');
+    } else {
+      doc.font('Helvetica');
+    }
+    doc.fillColor(darkGray);
+
+    // Line 2: Product line (Bengali)
+    doc.fontSize(10);
+    doc.text('এলাচি,দারচিনি, জিরা, লবঙ্গ, কিসমিস,জাফরান,সোডা,বার্লি,বেনেতী পসারী', headerX + headerPadX, line2Y, { width: headerW - headerPadX * 2, align: 'center' });
+
+    // Line 3: Tagline (Bengali)
+    doc.fontSize(11);
+    doc.text('পাইকারী ও খুচরা বিক্রেতা', headerX + headerPadX, line3Y, { width: headerW - headerPadX * 2, align: 'center' });
+
+    // Line 4: Mobile (Bengali)
+    doc.fontSize(10);
+    doc.text('মোবাইল: ০১৭৮৩-৩৫৬৭৮৫, ০১৯২১-৯৯৩১৫৬', headerX + headerPadX, line4Y, { width: headerW - headerPadX * 2, align: 'center' });
+
+    // Line 5: Address (Bengali)
+    doc.fontSize(10);
+    doc.text('ঠিকানা: ৭৮ মৌলভীবাজার, ট্রেড সেন্টার, ঢাকা-১২১১', headerX + headerPadX, line5Y, { width: headerW - headerPadX * 2, align: 'center' });
+
+    // Reset font to Helvetica after header
+    doc.font('Helvetica').fillColor(darkGray);
+
+    return yPos + headerH + 20;
   }
 
-  // HEADER SECTION - Copied from customer statement for consistency
-  // Green bordered box with company details (Bengali text as provided by user)
-  const headerPadX = 10;
-  
-  // Draw header box with green border
-  doc.lineWidth(3).strokeColor(appleGreen);
-  if (typeof doc.roundedRect === 'function') {
-    doc.roundedRect(headerX, headerY, headerW, headerH, 8).stroke();
-  } else {
-    doc.rect(headerX, headerY, headerW, headerH).stroke();
-  }
-  
-  // Set font for header text
-  if (fontInfo.loaded) {
-    doc.font('unicode');
-  } else {
-    doc.font('Helvetica');
-  }
-  
-  // Fixed Y positions for each line (constant to prevent corruption)
-  const line1Y = headerY + 10;
-  const line2Y = headerY + 40; // Added padding after first line
-  const line3Y = headerY + 50;
-  const line4Y = headerY + 63;
-  const line5Y = headerY + 78;
-  const line6Y = headerY + 88;
-  
-  // Line 1: Company name (Bengali bold)
-  doc.font(fontInfo.loaded && fontInfo.boldLoaded ? 'unicode-bold' : (fontInfo.loaded ? 'unicode' : 'Helvetica-Bold'));
-  doc.fillColor(appleGreen).fontSize(18);
-  doc.text('মেসার্স দিদার ট্রেডিং', headerX + headerPadX, line1Y, { width: headerW - headerPadX * 2, align: 'center' });
-  
-  // Switch to regular font for remaining lines
-  if (fontInfo.loaded) {
-    doc.font('unicode');
-  } else {
-    doc.font('Helvetica');
-  }
-  doc.fillColor(darkGray);
-  
-  // Line 2: Product line (Bengali)
-  doc.fontSize(10);
-  doc.text('এলাচি,দারচিনি, জিরা, লবঙ্গ, কিসমিস,জাফরান,সোডা,বার্লি,বেনেতী পসারী', headerX + headerPadX, line2Y, { width: headerW - headerPadX * 2, align: 'center' });
-  
-  // Line 3: Tagline (Bengali)
-  doc.fontSize(11);
-  doc.text('পাইকারী ও খুচরা বিক্রেতা', headerX + headerPadX, line3Y, { width: headerW - headerPadX * 2, align: 'center' });
-  
-  // Line 4: Mobile (Bengali)
-  doc.fontSize(10);
-  doc.text('মোবাইল: ০১৭৮৩-৩৫৬৭৮৫, ০১৯২১-৯৯৩১৫৬', headerX + headerPadX, line4Y, { width: headerW - headerPadX * 2, align: 'center' });
-  
-  // Line 5: Address (Bengali)
-  doc.fontSize(10);
-  doc.text('ঠিকানা: ৭৮ মৌলভীবাজার, ট্রেড সেন্টার, ঢাকা-১২১১', headerX + headerPadX, line5Y, { width: headerW - headerPadX * 2, align: 'center' });
-  
-  // Reset font to Helvetica after header
-  doc.font('Helvetica').fillColor(darkGray);
+  // ===== HELPER: Draw table header =====
+  function drawTableHeader(yPos) {
+    doc.rect(tableLeft, yPos, usableWidth, tableHeaderHeight).fill(lightGray);
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(appleGreen);
 
-  y = headerY + headerH + 20;
+    doc.text('#', tableLeft + 6, yPos + 6, { width: colWidths.no - 6, align: 'left' });
+    doc.text('Item', tableLeft + colWidths.no + 6, yPos + 6, { width: colWidths.item - 6, align: 'left' });
+    doc.text('Qty', tableLeft + colWidths.no + colWidths.item + 4, yPos + 6, { width: colWidths.qty - 4, align: 'right' });
+    doc.text('Amount', tableLeft + colWidths.no + colWidths.item + colWidths.qty + 4, yPos + 6, { width: colWidths.amount - 4, align: 'right' });
+
+    return yPos + tableHeaderHeight;
+  }
+
+  // ===== HELPER: Draw footer =====
+  function drawFooter(yPos, pageNum, totalPages) {
+    doc.font('Helvetica').fontSize(9).fillColor(darkGray);
+    const footerText = `Page ${pageNum} of ${totalPages}`;
+    const footerX = marginLeft + usableWidth - doc.widthOfString(footerText) - 10;
+    doc.text(footerText, footerX, pageHeight - marginBottom + 10, { align: 'right' });
+  }
+
+  // ===== HELPER: Calculate summary box height =====
+  function calculateSummaryHeight() {
+    let lineCount = 1; // Subtotal
+    const tax = Number.isFinite(Number(transaction.tax)) ? Number(transaction.tax) : 0;
+    const transportVal = Number.isFinite(Number(transport_fee)) ? Number(transport_fee) : 0;
+    const labourVal = Number.isFinite(Number(labour_fee)) ? Number(labour_fee) : 0;
+    const adj = Number.isFinite(Number(adjustment)) ? Number(adjustment) : 0;
+
+    if (type === 'sale' && tax > 0) lineCount++;
+    if (transportVal > 0) lineCount++;
+    if (labourVal > 0) lineCount++;
+    if (adj > 0) lineCount++;
+
+    return summaryBoxTopPadding + (lineCount * summaryLineHeight) + summaryTotalLineHeight + summaryBoxBottomPadding;
+  }
+
+  // ===== HELPER: Check if Y position is near page end & trigger new page =====
+  function ensureSpace(requiredHeight) {
+    const currentY = doc.y;
+    const availableSpace = pageHeight - marginBottom - footerHeight - currentY;
+    if (availableSpace < requiredHeight) {
+      doc.addPage();
+      const newY = drawHeader(marginTop);
+      drawTableHeader(newY + 20);
+      return newY + tableHeaderHeight + 43; // Return Y after new header and table header
+    }
+    return currentY;
+  }
+
+  // ===== MAIN LAYOUT =====
+  // Page 1: Header + Customer Details + Table Header
+  let y = drawHeader(marginTop);
 
   // Invoice/Purchase details section
   doc.font('Helvetica').fontSize(12).fillColor(darkGray);
   const billType = type === 'sale' ? 'Invoice' : 'Purchase Order';
-  doc.text(`${billType}: ${memoNumber}`, doc.page.margins.left, y);
+  doc.text(`${billType}: ${memoNumber}`, marginLeft, y);
   y = doc.y + 5;
-  doc.text(`Date: ${formatDate(transaction.date || Date.now())}`, doc.page.margins.left, y);
+  doc.text(`Date: ${formatDate(transaction.date || Date.now())}`, marginLeft, y);
   y = doc.y + 13;
 
-  // Customer/Party details box - matching statement style
+  // Customer/Party details box
   const customerBoxHeight = 65;
-  const customerBoxX = doc.page.margins.left;
+  const customerBoxX = marginLeft;
   const customerBoxY = y;
-  
-  // Light green background for customer info
+
   doc.rect(customerBoxX, customerBoxY, usableWidth, customerBoxHeight).fill(veryLightGreen);
-  
-  // Green left border
   doc.lineWidth(3).strokeColor(appleGreen);
   doc.moveTo(customerBoxX, customerBoxY).lineTo(customerBoxX, customerBoxY + customerBoxHeight).stroke();
 
@@ -275,58 +340,47 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
 
   const customerPadX = 15;
   let customerY = customerBoxY + 13;
-  
-  // Customer info title
+
   doc.font('Helvetica-Bold').fontSize(12).fillColor(appleGreen);
   doc.text('Customer Details', customerBoxX + customerPadX, customerY);
-  
+
   customerY = doc.y + 7;
-  
-  // Name field - matching statement approach
+
   doc.font('Helvetica').fontSize(12).fillColor(darkGray);
-  const nameX = customerBoxX + customerPadX;
-  const nameLabelWidth = doc.widthOfString('Name: ');
-  doc.text('Name: ', nameX, customerY, { continued: true });
-  
+  doc.text('Name: ', customerBoxX + customerPadX, customerY, { continued: true });
+
   if (fontInfo.loaded && containsBengaliText(party)) {
-    // Bengali name
     doc.font('unicode').fontSize(12).fillColor(darkGray);
     doc.text(party, { continued: false });
   } else {
-    // English name
     doc.font('Helvetica').fontSize(12).fillColor(darkGray);
     doc.text(party, { continued: false });
   }
 
   y = customerBoxY + customerBoxHeight + 15;
 
-  // Table header with green background
-  const tableLeft = doc.page.margins.left;
-  const colWidths = {
-    no: 25,
-    item: usableWidth - 25 - 40 - 55,
-    qty: 40,
-    amount: 55
-  };
-
+  // Draw table header
   const tableHeaderY = y;
-  doc.rect(tableLeft, tableHeaderY, usableWidth, 23).fill(lightGray);
+  doc.rect(tableLeft, tableHeaderY, usableWidth, tableHeaderHeight).fill(lightGray);
   doc.font('Helvetica-Bold').fontSize(10).fillColor(appleGreen);
-  
+
   doc.text('#', tableLeft + 6, tableHeaderY + 6, { width: colWidths.no - 6, align: 'left' });
   doc.text('Item', tableLeft + colWidths.no + 6, tableHeaderY + 6, { width: colWidths.item - 6, align: 'left' });
   doc.text('Qty', tableLeft + colWidths.no + colWidths.item + 4, tableHeaderY + 6, { width: colWidths.qty - 4, align: 'right' });
   doc.text('Amount', tableLeft + colWidths.no + colWidths.item + colWidths.qty + 4, tableHeaderY + 6, { width: colWidths.amount - 4, align: 'right' });
 
-  y = tableHeaderY + 28;
+  y = tableHeaderY + tableHeaderHeight;
 
-  // Table rows
+  // ===== RENDER TABLE ROWS WITH PAGE BREAK DETECTION =====
   const safeItems = Array.isArray(items) && items.length ? items : [];
-  safeItems.forEach((it, idx) => {
+  let itemIndex = 0;
+
+  while (itemIndex < safeItems.length) {
+    const it = safeItems[itemIndex];
     const name = it?.product_name && String(it.product_name).trim() ? String(it.product_name).trim() : 'N/A';
     const qtyNum = Number(it?.quantity);
     const qty = Number.isFinite(qtyNum) && qtyNum > 0 ? String(qtyNum) : '';
-    
+
     const subRaw = Number(it?.subtotal);
     const unitRaw = it?.price ?? it?.cost;
     const unitVal = Number(unitRaw);
@@ -335,22 +389,37 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     const subVal = Number.isFinite(subRaw) ? subRaw : computedSub;
     const amount = Number.isFinite(subVal) ? formatCurrency(subVal, displaySymbol) : '';
 
-    // Alternate row background
-    if (idx % 2 === 0) {
-      doc.rect(tableLeft, y - 2, usableWidth, 18).fill('#fafafa');
+    // Check if space is available for this row PLUS summary section
+    const summaryHeight = calculateSummaryHeight();
+    const spaceNeeded = tableRowHeight + 10 + summaryHeight + 50; // Row + gap + summary + stamp
+    const currentY = doc.y;
+    const availableSpace = pageHeight - marginBottom - footerHeight - currentY;
+
+    if (availableSpace < spaceNeeded) {
+      // Not enough space: create new page
+      doc.addPage();
+      y = drawHeader(marginTop);
+      y = drawTableHeader(y + 20) + 2; // Redraw table header on new page
+    } else {
+      y = currentY;
+    }
+
+    // Render the row
+    if (itemIndex % 2 === 0) {
+      doc.rect(tableLeft, y - 2, usableWidth, tableRowHeight).fill('#fafafa');
     }
 
     doc.font('Helvetica').fontSize(10).fillColor(darkGray);
-    doc.text(String(idx + 1), tableLeft + 6, y, { width: colWidths.no - 6, align: 'left' });
-    
+    doc.text(String(itemIndex + 1), tableLeft + 6, y, { width: colWidths.no - 6, align: 'left' });
+
     if (fontInfo.loaded && containsBengaliText(name)) {
       doc.font('unicode');
     }
     doc.text(name, tableLeft + colWidths.no + 6, y, { width: colWidths.item - 6, align: 'left' });
     doc.font('Helvetica');
-    
+
     doc.text(qty, tableLeft + colWidths.no + colWidths.item + 4, y, { width: colWidths.qty - 4, align: 'right' });
-    
+
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
       doc.text(amount, tableLeft + colWidths.no + colWidths.item + colWidths.qty + 4, y, { width: colWidths.amount - 4, align: 'right' });
@@ -359,8 +428,9 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
       doc.text(amount, tableLeft + colWidths.no + colWidths.item + colWidths.qty + 4, y, { width: colWidths.amount - 4, align: 'right' });
     }
 
-    y += 18;
-  });
+    y += tableRowHeight;
+    itemIndex++;
+  }
 
   // Add separator line after table
   y += 10;
@@ -368,7 +438,21 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   doc.moveTo(tableLeft, y).lineTo(tableLeft + usableWidth, y).stroke();
   y += 20;
 
-  // Totals section with modern styling
+  // ===== SUMMARY SECTION: Ensure it doesn't split =====
+  const summaryBoxH = calculateSummaryHeight();
+  const summaryBoxX = tableLeft + usableWidth - summaryBoxW;
+
+  // Check if summary fits on current page
+  const availableSpaceSummary = pageHeight - marginBottom - footerHeight - y;
+  if (availableSpaceSummary < summaryBoxH + 50) {
+    // Not enough space for summary on this page: move to new page
+    doc.addPage();
+    y = drawHeader(marginTop);
+    y = drawTableHeader(y + 20) + 2;
+    y += 20; // Gap
+  }
+
+  // Calculate totals
   const subtotalCalc = (items || []).reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0);
   const subtotal = Number.isFinite(Number(transaction.subtotal)) ? Number(transaction.subtotal) : subtotalCalc;
   const tax = Number.isFinite(Number(transaction.tax)) ? Number(transaction.tax) : 0;
@@ -376,26 +460,9 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   const adj = Number.isFinite(Number(adjustment)) ? Number(adjustment) : 0;
   const transportVal = Number.isFinite(Number(transport_fee)) ? Number(transport_fee) : 0;
   const labourVal = Number.isFinite(Number(labour_fee)) ? Number(labour_fee) : 0;
-  // Final total = Subtotal + Transport Fee + Labour Fee - Discount
   const netTotal = grossTotal + transportVal + labourVal - adj;
 
-  const summaryBoxX = tableLeft + usableWidth - 220;
-  const summaryBoxW = 220;
-  const lineHeight = 16;
-  const topPadding = 12;
-  const bottomPadding = 12;
-  const totalLineHeight = 20;
-  
-  // Calculate dynamic height based on number of lines
-  let lineCount = 1; // Subtotal always shown
-  if (type === 'sale' && tax > 0) lineCount++;
-  if (transportVal > 0) lineCount++;
-  if (labourVal > 0) lineCount++;
-  if (adj > 0) lineCount++;
-  
-  const summaryBoxH = topPadding + (lineCount * lineHeight) + totalLineHeight + bottomPadding;
-
-  // Draw summary box background with rounded corners
+  // Draw summary box
   doc.rect(summaryBoxX, y, summaryBoxW, summaryBoxH).fill(veryLightGreen);
   doc.strokeColor(appleGreen).lineWidth(2.5);
   if (typeof doc.roundedRect === 'function') {
@@ -404,8 +471,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     doc.rect(summaryBoxX, y, summaryBoxW, summaryBoxH).stroke();
   }
 
-  // Starting Y position inside the box
-  let summaryY = y + topPadding;
+  let summaryY = y + summaryBoxTopPadding;
   doc.font('Helvetica').fontSize(10).fillColor(darkGray);
 
   // Subtotal
@@ -417,7 +483,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   } else {
     doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
   }
-  summaryY += lineHeight;
+  summaryY += summaryLineHeight;
 
   // Tax
   if (type === 'sale' && tax > 0) {
@@ -430,7 +496,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     } else {
       doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     }
-    summaryY += lineHeight;
+    summaryY += summaryLineHeight;
   }
 
   // Transport Fee
@@ -444,7 +510,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     } else {
       doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     }
-    summaryY += lineHeight;
+    summaryY += summaryLineHeight;
   }
 
   // Labour Fee
@@ -458,22 +524,10 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     } else {
       doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
     }
-    summaryY += lineHeight;
+    summaryY += summaryLineHeight;
   }
 
-  // Discount
-  if (adj > 0) {
-    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
-    doc.text('Discount:', summaryBoxX + 12, summaryY, { continued: false });
-    if (symbolIsNonAscii && fontInfo.loaded) {
-      doc.font('unicode');
-      doc.text(formatCurrency(-adj, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
-      doc.font('Helvetica');
-    } else {
-      doc.text(formatCurrency(-adj, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
-    }
-    summaryY += lineHeight;
-  }
+  // Discount removed from summary display
 
   // Separator line before total
   summaryY += 2;
@@ -496,38 +550,40 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   const paymentMethod = transaction.payment_method ? String(transaction.payment_method).toLowerCase().trim() : '';
   const isDue = paymentMethod === 'due' || paymentMethod === 'বাকি';
   const stampText = isDue ? 'UNPAID' : 'PAID';
-  const stampColor = isDue ? '#EF4444' : '#10B981'; // Red for unpaid, green for paid
-  
-  // Position stamp at bottom right area
-  const stampX = doc.page.margins.left + usableWidth - 140;
+  const stampColor = isDue ? '#EF4444' : '#10B981';
+
+  const stampX = marginLeft + usableWidth - 140;
   const stampY = y + summaryBoxH + 30;
   const stampW = 120;
   const stampH = 50;
-  
-  // Draw stamp border (rotated slightly for stamp effect)
+
   doc.save();
   doc.translate(stampX + stampW / 2, stampY + stampH / 2);
-  doc.rotate(-10); // Slight rotation for stamp effect
-  
-  // Semi-transparent background
+  doc.rotate(-10);
+
   doc.opacity(0.15);
   doc.rect(-stampW / 2, -stampH / 2, stampW, stampH).fill(stampColor);
   doc.opacity(1);
-  
-  // Double border for stamp effect
+
   doc.lineWidth(3).strokeColor(stampColor);
   doc.rect(-stampW / 2, -stampH / 2, stampW, stampH).stroke();
   doc.lineWidth(1.5);
   doc.rect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8).stroke();
-  
-  // Stamp text
+
   doc.font('Helvetica-Bold').fontSize(24).fillColor(stampColor);
   doc.text(stampText, -stampW / 2, -stampH / 2 + 10, {
     width: stampW,
     align: 'center'
   });
-  
+
   doc.restore();
+
+  // ===== Add page numbers to all pages =====
+  const pageCount = doc.bufferedPageRange().count;
+  for (let i = 0; i < pageCount; i++) {
+    doc.switchToPage(i);
+    drawFooter(doc.y, i + 1, pageCount);
+  }
 
   doc.end();
 

@@ -5,7 +5,7 @@
   "scripts": {
     "start": "ts-node app.ts",
     "dev": "nodemon --exec ts-node app.ts",
-    "build": "tsc && if not exist dist\\database mkdir dist\\database & xcopy /Y /I database\\*.sql dist\\database\\ & xcopy /Y /I database\\*.js dist\\database\\ & if exist dist\\database\\*.db del /Q dist\\database\\*.db & if not exist dist\\controllers mkdir dist\\controllers & xcopy /Y /E /I controllers dist\\controllers & xcopy /Y /I controllers\\cashbox.controller.js dist\\controllers\\cashbox.controller.js & if not exist dist\\routes mkdir dist\\routes & xcopy /Y /E /I routes dist\\routes & if not exist dist\\middlewares mkdir dist\\middlewares & xcopy /Y /E /I middlewares dist\\middlewares & if not exist dist\\utils mkdir dist\\utils & xcopy /Y /E /I utils dist\\utils & xcopy /Y /I utils\\backup.js dist\\utils\\backup.js & xcopy /Y /I database\\db.js dist\\database\\db.js & xcopy /Y /I database\\stockDb.js dist\\database\\stockDb.js & if not exist dist\\config\\fonts mkdir dist\\config\\fonts & xcopy /Y /E /I config\\fonts dist\\config\\fonts & xcopy /Y backup.config.json dist\\backup.config.json",
+    "build": "node scripts/build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

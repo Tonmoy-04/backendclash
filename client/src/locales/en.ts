@@ -537,7 +537,7 @@ export const en = {
     generateWithoutSaving: 'Generate bills without saving',
     party: 'Party',
     paymentMethod: 'Payment Method',
-    discountOptional: 'Discount (Optional)',
+    discountOptional: '',
     transportFeeOptional: 'Transport Fee (Optional)',
     labourFeeOptional: 'Labour Fee (Optional)',
     itemName: 'Item Name',

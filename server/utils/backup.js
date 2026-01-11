@@ -237,13 +237,200 @@ class BackupManager {
     }
   }
 
-  // Restore database from backup
-  async restoreBackup(backupFileName) {
+  /**
+   * Safe temp extraction with validation (prevents zip-slip)
+   */
+  async extractBackupToTemp(zipPath) {
+    const tempDir = path.join(os.tmpdir(), `backup-extract-${Date.now()}`);
+    
     try {
+      fs.mkdirSync(tempDir, { recursive: true });
+      
+      const zip = new AdmZip(zipPath);
+      const entries = zip.getEntries();
+      
+      // Validate all entries before extracting (prevent zip-slip)
+      for (const entry of entries) {
+        const entryPath = path.resolve(tempDir, entry.entryName);
+        if (!entryPath.startsWith(path.resolve(tempDir))) {
+          throw new Error(`Zip-slip detected: ${entry.entryName}`);
+        }
+      }
+      
+      // Extract safely
+      zip.extractAllTo(tempDir, true);
+      
+      logger.info(`[BACKUP] Extracted ZIP to temp: ${tempDir}`);
+      return tempDir;
+    } catch (error) {
+      try {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      } catch {}
+      throw error;
+    }
+  }
+
+  /**
+   * Clean up temp extraction directory
+   */
+  cleanupTempDir(tempDir) {
+    try {
+      if (tempDir && fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        logger.info(`[BACKUP] Cleaned up temp directory: ${tempDir}`);
+      }
+    } catch (error) {
+      logger.warn(`[BACKUP] Failed to cleanup temp directory: ${error.message}`);
+    }
+  }
+
+  /**
+   * Unified restore pipeline - handles ZIP, legacy .db, and uploaded files
+   * Atomic restore: either both DBs restored or restore aborted
+   * Returns detailed info about what was restored
+   */
+  async unifiedRestore(sourcePath) {
+    let tempDir = null;
+    
+    try {
+      logger.info(`[RESTORE] Starting unified restore from: ${sourcePath}`);
+      
       const s = String(this.dbPath || '').toLowerCase();
       if (s.includes('app.asar') || s.includes(`${path.sep}resources${path.sep}`)) {
         throw new Error(`Refusing to restore into bundled path: ${this.dbPath}`);
       }
+
+      // Validate source file exists
+      if (!fs.existsSync(sourcePath)) {
+        throw new Error(`Source file not found: ${sourcePath}`);
+      }
+
+      // Create safety backup before any restore
+      await this.createBackup();
+
+      // Close all database connections
+      await this.closeDatabases();
+
+      // Remove WAL/SHM sidecars
+      const sidecars = [
+        `${this.dbPath}-wal`,
+        `${this.dbPath}-shm`,
+        `${this.stockDbPath}-wal`,
+        `${this.stockDbPath}-shm`
+      ];
+      for (const f of sidecars) {
+        try {
+          if (fs.existsSync(f)) fs.unlinkSync(f);
+        } catch {}
+      }
+
+      let backupVersion = '1.0.0';
+      let metadata = null;
+      const restoredFiles = [];
+      
+      const isZip = sourcePath.toLowerCase().endsWith('.zip');
+      const isDb = sourcePath.toLowerCase().endsWith('.db');
+
+      if (isZip) {
+        // ZIP restore path with temp extraction
+        logger.info('[RESTORE] Processing ZIP backup format');
+        
+        tempDir = await this.extractBackupToTemp(sourcePath);
+        
+        // Try to read metadata
+        try {
+          const metadataPath = path.join(tempDir, 'backup-metadata.json');
+          if (fs.existsSync(metadataPath)) {
+            metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+            backupVersion = metadata.backupVersion || '1.0.0';
+            logger.info(`[RESTORE] Detected backup version from metadata: ${backupVersion}`);
+          }
+        } catch (err) {
+          logger.warn(`[RESTORE] Could not read metadata: ${err.message}`);
+        }
+
+        // Restore inventory.db (required)
+        const inventoryPath = path.join(tempDir, 'inventory.db');
+        if (!fs.existsSync(inventoryPath)) {
+          throw new Error('Invalid backup: inventory.db missing from ZIP');
+        }
+        
+        fs.copyFileSync(inventoryPath, this.dbPath);
+        restoredFiles.push('inventory.db');
+        logger.info('[RESTORE] ✓ Inventory database restored from ZIP');
+
+        // Restore stock.db (optional)
+        const stockPath = path.join(tempDir, 'stock.db');
+        if (fs.existsSync(stockPath)) {
+          fs.copyFileSync(stockPath, this.stockDbPath);
+          restoredFiles.push('stock.db');
+          logger.info('[RESTORE] ✓ Stock database restored from ZIP');
+        } else {
+          logger.info('[RESTORE] ℹ Stock database not in ZIP - keeping existing stock.db');
+        }
+
+      } else if (isDb) {
+        // Legacy .db restore path
+        logger.info('[RESTORE] Processing legacy .db backup format');
+        
+        // Restore the DB file
+        fs.copyFileSync(sourcePath, this.dbPath);
+        restoredFiles.push('inventory.db');
+        logger.info('[RESTORE] ✓ Inventory database restored from .db file');
+
+        // Check for paired stock backup (legacy naming: backup_stock_*.db)
+        const stockBackupPath = sourcePath.replace(/^backup_/, 'backup_stock_');
+        if (stockBackupPath !== sourcePath && fs.existsSync(stockBackupPath)) {
+          try {
+            fs.copyFileSync(stockBackupPath, this.stockDbPath);
+            restoredFiles.push('stock.db');
+            logger.info('[RESTORE] ✓ Stock database restored from paired backup');
+          } catch (err) {
+            logger.warn(`[RESTORE] Could not restore stock DB from paired file: ${err.message}`);
+            logger.warn('[RESTORE] Keeping existing stock database');
+          }
+        } else {
+          logger.info('[RESTORE] ℹ No paired stock backup found - keeping existing stock.db');
+        }
+
+      } else {
+        throw new Error('Unsupported backup file type (must be .zip or .db)');
+      }
+
+      // Apply backward compatibility migrations
+      await this.applyBackwardCompatibilityMigrations(backupVersion);
+
+      // Reload database connections
+      await this.reloadDatabases();
+
+      logger.info(`[RESTORE] ✓ Restore completed successfully`);
+      
+      return {
+        success: true,
+        message: 'Database restored successfully',
+        restored: restoredFiles,
+        backupVersion: backupVersion,
+        currentVersion: BACKUP_VERSION,
+        migrationsApplied: backupVersion !== BACKUP_VERSION
+      };
+
+    } catch (error) {
+      logger.error(`[RESTORE] Restore failed: ${error.message}`);
+      try {
+        await this.reloadDatabases();
+      } catch {}
+      throw error;
+    } finally {
+      // Always cleanup temp directory
+      if (tempDir) {
+        this.cleanupTempDir(tempDir);
+      }
+    }
+  }
+
+  // Restore database from backup (wrapper using unified pipeline)
+  async restoreBackup(backupFileName) {
+    try {
       if (!backupFileName || typeof backupFileName !== 'string') {
         throw new Error('fileName is required');
       }
@@ -263,96 +450,16 @@ class BackupManager {
       logger.info(`[RESTORE] Requested restore file: ${normalizedFileName}`);
       logger.info(`[RESTORE] Target inventory DB: ${this.dbPath}`);
 
-      // Create a backup of current database before restoring
-      await this.createBackup();
-
-      // Close sqlite connections to avoid file locks on Windows
-      await this.closeDatabases();
-
-      // Remove any WAL/SHM sidecars to avoid mixing old/new states.
-      const sidecars = [
-        `${this.dbPath}-wal`,
-        `${this.dbPath}-shm`,
-        `${this.stockDbPath}-wal`,
-        `${this.stockDbPath}-shm`
-      ];
-      for (const f of sidecars) {
-        try {
-          if (fs.existsSync(f)) fs.unlinkSync(f);
-        } catch {}
-      }
-
-      let backupVersion = '1.0.0'; // Default for old backups without version
-      let metadata = null;
-
-      if (normalizedFileName.toLowerCase().endsWith('.zip')) {
-        const zip = new AdmZip(backupPath);
-
-        // Try to read metadata to detect backup version
-        try {
-          const metadataEntry = zip.getEntry('backup-metadata.json');
-          if (metadataEntry) {
-            metadata = JSON.parse(metadataEntry.getData().toString('utf8'));
-            backupVersion = metadata.backupVersion || '1.0.0';
-            logger.info(`[RESTORE] Detected backup version: ${backupVersion}`);
-          } else {
-            logger.info(`[RESTORE] No metadata found - treating as legacy backup (v1.0.0)`);
-          }
-        } catch (err) {
-          logger.warn(`[RESTORE] Could not read metadata: ${err.message}`);
-        }
-
-        const inventoryEntry = zip.getEntry('inventory.db');
-        if (!inventoryEntry) {
-          throw new Error('Invalid backup archive: inventory.db missing');
-        }
-
-        fs.writeFileSync(this.dbPath, inventoryEntry.getData());
-        logger.info('[RESTORE] Inventory database restored from archive');
-
-        const stockEntry = zip.getEntry('stock.db');
-        if (stockEntry) {
-          try {
-            fs.writeFileSync(this.stockDbPath, stockEntry.getData());
-            logger.info('[RESTORE] Stock database restored from archive');
-          } catch (err) {
-            logger.warn(`Failed to restore stock database from archive: ${err.message}`);
-          }
-        } else {
-          logger.warn('[RESTORE] Stock database not found in backup - may be legacy backup');
-        }
-      } else if (normalizedFileName.toLowerCase().endsWith('.db')) {
-        // Legacy restore path (.db + optional backup_stock_*.db)
-        logger.info('[RESTORE] Restoring from legacy .db backup format');
-        fs.copyFileSync(backupPath, this.dbPath);
-
-        const stockBackupFileName = normalizedFileName.replace(/^backup_/, 'backup_stock_');
-        const stockBackupPath = path.join(this.backupDir, stockBackupFileName);
-        if (fs.existsSync(stockBackupPath)) {
-          try {
-            fs.copyFileSync(stockBackupPath, this.stockDbPath);
-            logger.info(`Stock database restored from: ${stockBackupFileName}`);
-          } catch (err) {
-            logger.warn(`Failed to restore stock database from legacy backup: ${err.message}`);
-          }
-        }
-      } else {
-        throw new Error('Unsupported backup file type');
-      }
-
-      // Apply migrations for backward compatibility
-      await this.applyBackwardCompatibilityMigrations(backupVersion);
-
-      // Reload DB modules so the app continues working without manual restart
-      await this.reloadDatabases();
-
-      logger.info(`Database restored from: ${normalizedFileName} (version: ${backupVersion})`);
+      // Use unified restore pipeline
+      const result = await this.unifiedRestore(backupPath);
       
       return {
         success: true,
         message: 'Database restored successfully',
-        backupVersion: backupVersion,
-        currentVersion: BACKUP_VERSION
+        restored: result.restored,
+        backupVersion: result.backupVersion,
+        currentVersion: BACKUP_VERSION,
+        migrationsApplied: result.migrationsApplied
       };
     } catch (error) {
       logger.error(`Backup restoration failed: ${error.message}`);

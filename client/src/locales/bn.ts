@@ -539,7 +539,7 @@ export const bn = {
     generateWithoutSaving: 'সংরক্ষণ ছাড়াই বিল তৈরি করুন',
     party: 'পক্ষ',
     paymentMethod: 'পেমেন্ট পদ্ধতি',
-    discountOptional: 'ছাড় (ঐচ্ছিক)',
+    discountOptional: '',
     transportFeeOptional: 'পরিবহন খরচ (ঐচ্ছিক)',
     labourFeeOptional: 'শ্রম খরচ (ঐচ্ছিক)',
     itemName: 'পণ্যের নাম',

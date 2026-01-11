@@ -10,9 +10,7 @@ const BillGenerator: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>('');
   const [filePath, setFilePath] = useState<string>('');
-  const [transportFee, setTransportFee] = useState<string>('');
-  const [labourFee, setLabourFee] = useState<string>('');
-  const [adjustment, setAdjustment] = useState<string>('');
+  // Transport/labour/discount fields removed from the transaction generator UI
 
   // Temporary bill state
   const [party, setParty] = useState<string>('');
@@ -23,29 +21,13 @@ const BillGenerator: React.FC = () => {
     { product_name: '', quantity: 1, price: 0 },
     { product_name: '', quantity: 1, price: 0 }
   ]);
-  const [tempAdjustment, setTempAdjustment] = useState<string>('');
   const [tempLoading, setTempLoading] = useState(false);
   const [tempMessage, setTempMessage] = useState('');
   const [tempFilePath, setTempFilePath] = useState('');
   // Removed PDF preview state; no embedded preview pane
 
-  // Fetch transaction to get saved discount
-  const handleIdChange = async (newId: string) => {
+  const handleIdChange = (newId: string) => {
     setId(newId);
-    const trimmed = newId.trim();
-    if (!trimmed || trimmed.length < 1) {
-      setAdjustment('');
-      return;
-    }
-    try {
-      const endpoint = type === 'sale' ? `/sales/${trimmed}` : `/purchases/${trimmed}`;
-      const res = await api.get(endpoint);
-      const discount = Number(res.data?.discount ?? 0) || 0;
-      setAdjustment(String(discount));
-    } catch (err: any) {
-      // Silently fail, user will see error when generating
-      setAdjustment('');
-    }
   };
 
   const handleGenerate = async () => {
@@ -106,7 +88,6 @@ const BillGenerator: React.FC = () => {
         items: prepared,
         transport_fee: Number(tempTransportFee) || 0,
         labour_fee: Number(tempLabourFee) || 0,
-        adjustment: Number(tempAdjustment) || 0,
       });
       setTempMessage('Temporary bill generated successfully');
       setTempFilePath(res.data?.path || '');
@@ -408,21 +389,6 @@ const BillGenerator: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {t('billGenerator.discountOptional')}
-              </label>
-              <input
-                type="number"
-                value={tempAdjustment}
-                onChange={(e) => setTempAdjustment(e.target.value)}
-                placeholder="0"
-                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
-              />
-            </div>
           </div>
 
           <button

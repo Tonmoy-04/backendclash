@@ -148,17 +148,47 @@ router.get('/list', async (req, res, next) => {
   }
 });
 
-// Download a specific backup
+// Download a specific backup with proper streaming and headers
 router.get('/download/:fileName', async (req, res, next) => {
   try {
     const { fileName } = req.params;
+    
+    // Prevent path traversal
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      return res.status(400).json({ error: 'Invalid file name' });
+    }
+    
     const backupPath = path.join(backupManager.backupDir, fileName);
+    
+    // Verify the resolved path is within backupDir
+    const resolved = path.resolve(backupPath);
+    const backupDirResolved = path.resolve(backupManager.backupDir);
+    if (!resolved.startsWith(backupDirResolved)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     
     if (!fs.existsSync(backupPath)) {
       return res.status(404).json({ error: 'Backup file not found' });
     }
 
-    res.download(backupPath, fileName);
+    const stats = fs.statSync(backupPath);
+    
+    // Set proper headers for download
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Length', stats.size);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    // Stream the file
+    const stream = fs.createReadStream(backupPath);
+    stream.pipe(res);
+    
+    stream.on('error', (error) => {
+      logger.error(`Stream error during download: ${error.message}`);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Download failed' });
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -171,6 +201,48 @@ router.post('/restore', async (req, res, next) => {
     const result = await backupManager.restoreBackup(fileName);
     res.json(result);
   } catch (error) {
+    next(error);
+  }
+});
+
+// Import backup from uploaded file (ZIP or .db)
+// Accepts file upload, validates, and restores
+router.post('/import', upload.single('backup'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const uploadedFilePath = req.file.path;
+    const fileName = req.file.filename;
+    
+    logger.info(`[IMPORT] Received backup upload: ${fileName}`);
+
+    // Restore using the unified pipeline
+    const result = await backupManager.unifiedRestore(uploadedFilePath);
+    
+    // Clean up uploaded file after successful restore
+    try {
+      fs.unlinkSync(uploadedFilePath);
+    } catch (err) {
+      logger.warn(`[IMPORT] Could not delete temp upload: ${err.message}`);
+    }
+
+    res.json({
+      success: true,
+      message: 'Backup imported and restored successfully',
+      restored: result.restored,
+      backupVersion: result.backupVersion,
+      currentVersion: result.currentVersion,
+      migrationsApplied: result.migrationsApplied
+    });
+  } catch (error) {
+    // Clean up temp file on error
+    if (req.file && req.file.path) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch {}
+    }
     next(error);
   }
 });
@@ -192,35 +264,6 @@ router.post('/delete', (req, res, next) => {
     const { fileName } = req.body;
     const result = backupManager.deleteBackup(fileName);
     res.json(result);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Upload and restore backup
-router.post('/upload', upload.single('backup'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const uploadedFileName = req.file.filename;
-    
-    // Optionally auto-restore after upload
-    const autoRestore = req.body.autoRestore === 'true';
-    
-    if (autoRestore) {
-      await backupManager.restoreBackup(uploadedFileName);
-      res.json({ 
-        message: 'Backup uploaded and restored successfully',
-        fileName: uploadedFileName
-      });
-    } else {
-      res.json({ 
-        message: 'Backup uploaded successfully',
-        fileName: uploadedFileName
-      });
-    }
   } catch (error) {
     next(error);
   }
