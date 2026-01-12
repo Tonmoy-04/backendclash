@@ -439,12 +439,20 @@ exports.updateProductMovement = async (req, res, next) => {
       return res.status(404).json({ error: 'Movement not found' });
     }
 
-    // Calculate old and new deltas
-    const oldDelta = oldMovement.type === 'PURCHASE' ? oldMovement.quantity : -oldMovement.quantity;
-    const newDelta = type === 'PURCHASE' ? qty : -qty;
-    const quantityDifference = newDelta - oldDelta;
+    // STEP 1: Reverse OLD movement effects
+    // Reverse quantity change
+    const oldQuantityDelta = oldMovement.type === 'PURCHASE' ? -oldMovement.quantity : oldMovement.quantity;
+    // Reverse cost change
+    const oldPrice = Number(oldMovement.price) || 0;
+    const oldCostDelta = oldMovement.type === 'PURCHASE' ? -oldPrice : oldPrice;
+    
+    // STEP 2: Apply reversal to product
+    await db.run(
+      'UPDATE products SET quantity = quantity + ?, cost = COALESCE(cost, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [oldQuantityDelta, oldCostDelta, productId]
+    );
 
-    // Update the movement
+    // STEP 3: Update the movement record
     await db.run(
       `UPDATE inventory_item_transactions 
        SET type = ?, quantity = ?, price = ?, transaction_date = ?
@@ -452,11 +460,21 @@ exports.updateProductMovement = async (req, res, next) => {
       [type, qty, Number(price), transaction_date || new Date().toISOString(), movementId]
     );
 
-    // Update product quantity based on the difference
-    await db.run(
-      'UPDATE products SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [quantityDifference, productId]
-    );
+    // STEP 4: Apply NEW movement effects
+    const newPrice = Number(price) || 0;
+    if (type === 'PURCHASE') {
+      // Add quantity and cost
+      await db.run(
+        'UPDATE products SET quantity = quantity + ?, cost = COALESCE(cost, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, newPrice, productId]
+      );
+    } else if (type === 'SELL') {
+      // Subtract quantity and cost
+      await db.run(
+        'UPDATE products SET quantity = quantity - ?, cost = COALESCE(cost, 0) - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, newPrice, productId]
+      );
+    }
 
     const updated = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
     const rates = await calculateSeparateRates(productId);
