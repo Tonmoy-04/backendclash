@@ -87,7 +87,7 @@ exports.getSaleById = async (req, res, next) => {
 
 exports.createSale = async (req, res, next) => {
   try {
-    const { customer_name, items, payment_method = 'due', notes = '', discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
+    const { customer_name, customer_address, description, items, payment_method = 'due', notes = '', discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Creating sale with payload:', JSON.stringify(req.body, null, 2));
 
@@ -142,8 +142,8 @@ exports.createSale = async (req, res, next) => {
     const hasTotal = salesCols.has('total');
     const hasTotalAmount = salesCols.has('total_amount');
 
-    const fields = ['customer_name', 'payment_method', 'notes', 'subtotal', 'discount', 'tax', 'transport_fee', 'labour_fee'];
-    const values = [customer_name.trim(), payment_method, notes, subtotal, discountVal, tax, transportVal, labourVal];
+    const fields = ['customer_name', 'customer_address', 'description', 'payment_method', 'notes', 'subtotal', 'discount', 'tax', 'transport_fee', 'labour_fee'];
+    const values = [customer_name.trim(), customer_address || '', description || '', payment_method, notes, subtotal, discountVal, tax, transportVal, labourVal];
     if (hasTotal) {
       fields.push('total');
       values.push(total);
@@ -227,7 +227,9 @@ exports.generateSaleBill = async (req, res, next) => {
       tax: sale.tax,
       total: sale.subtotal, // Use subtotal here so bill generator can apply discount correctly
     };
-    const filePath = await generateBill({ type: 'sale', transaction: billTx, items, adjustment, transport_fee: transportFee, labour_fee: labourFee });
+    const address = sale.customer_address || '';
+    const description = sale.description || '';
+    const filePath = await generateBill({ type: 'sale', transaction: billTx, items, adjustment, transport_fee: transportFee, labour_fee: labourFee, address, description });
     res.json({ message: 'Bill generated', path: filePath });
   } catch (error) {
     next(error);
@@ -236,7 +238,7 @@ exports.generateSaleBill = async (req, res, next) => {
 
 exports.updateSale = async (req, res, next) => {
   try {
-    const { customer_name, customer_phone, payment_method, notes, total, items, discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
+    const { customer_name, customer_phone, customer_address, description, payment_method, notes, total, items, discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Updating sale with payload:', JSON.stringify(req.body, null, 2));
 
@@ -287,8 +289,8 @@ exports.updateSale = async (req, res, next) => {
       const hasTotalAmount = salesCols.has('total_amount');
 
       let updateQuery = `UPDATE sales 
-         SET customer_name = ?, customer_phone = ?, payment_method = ?, notes = ?, subtotal = ?, discount = ?, tax = ?, transport_fee = ?, labour_fee = ?`;
-      let updateParams = [customer_name, customer_phone || null, payment_method, notes || '', calculatedTotal, discountVal, tax, transportVal, labourVal];
+         SET customer_name = ?, customer_phone = ?, customer_address = ?, description = ?, payment_method = ?, notes = ?, subtotal = ?, discount = ?, tax = ?, transport_fee = ?, labour_fee = ?`;
+      let updateParams = [customer_name, customer_phone || null, customer_address || '', description || '', payment_method, notes || '', calculatedTotal, discountVal, tax, transportVal, labourVal];
       
       if (hasTotal) {
         updateQuery += `, total = ?`;

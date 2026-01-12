@@ -67,7 +67,7 @@ exports.getPurchaseById = async (req, res, next) => {
 
 exports.createPurchase = async (req, res, next) => {
   try {
-    const { supplier_id = null, supplier_name, items, payment_method = 'due', notes = '', discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
+    const { supplier_id = null, supplier_name, supplier_address, description, items, payment_method = 'due', notes = '', discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Creating purchase with payload:', JSON.stringify(req.body, null, 2));
 
@@ -113,9 +113,9 @@ exports.createPurchase = async (req, res, next) => {
     // Create purchase with minimal required data
     const userId = req.user?.id || 1;
     const purchaseResult = await db.run(
-      `INSERT INTO purchases (supplier_id, supplier_name, payment_method, notes, discount, transport_fee, labour_fee, total, purchase_date, user_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [supplier_id || null, supplier_name || null, payment_method, notes, discountVal, transportVal, labourVal, finalTotal, purchaseDate, userId]
+      `INSERT INTO purchases (supplier_id, supplier_name, supplier_address, description, payment_method, notes, discount, transport_fee, labour_fee, total, purchase_date, user_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [supplier_id || null, supplier_name || null, supplier_address || '', description || '', payment_method, notes, discountVal, transportVal, labourVal, finalTotal, purchaseDate, userId]
     );
 
     const purchaseId = purchaseResult.lastID;
@@ -163,10 +163,7 @@ exports.createPurchase = async (req, res, next) => {
   try {
     const id = req.params.id;
     const purchase = await db.get(
-      `SELECT p.*, s.name as supplier_name
-       FROM purchases p
-       LEFT JOIN suppliers s ON p.supplier_id = s.id
-       WHERE p.id = ?`,
+      `SELECT * FROM purchases WHERE id = ?`,
       [id]
     );
     if (!purchase) return res.status(404).json({ error: 'Purchase not found' });
@@ -198,7 +195,9 @@ exports.createPurchase = async (req, res, next) => {
       tax: 0,
       total: itemsSubtotal,
     };
-    const filePath = await generateBill({ type: 'purchase', transaction: billTx, items, adjustment, transport_fee: transportFee, labour_fee: labourFee });
+    const address = purchase.supplier_address || '';
+    const description = purchase.description || '';
+    const filePath = await generateBill({ type: 'purchase', transaction: billTx, items, adjustment, transport_fee: transportFee, labour_fee: labourFee, address, description });
     res.json({ message: 'Bill generated', path: filePath });
   } catch (error) {
     next(error);
@@ -207,7 +206,7 @@ exports.createPurchase = async (req, res, next) => {
 
 exports.updatePurchase = async (req, res, next) => {
   try {
-    const { supplier_name, payment_method, notes, status, total, items, discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
+    const { supplier_name, supplier_address, description, payment_method, notes, status, total, items, discount = 0, transport_fee = 0, labour_fee = 0 } = req.body;
 
     console.log('Updating purchase with payload:', JSON.stringify(req.body, null, 2));
 
@@ -252,8 +251,8 @@ exports.updatePurchase = async (req, res, next) => {
 
       // ===== STEP 5: Update purchase header with NEW values =====
       await db.run(
-        'UPDATE purchases SET supplier_name = ?, payment_method = ?, notes = ?, discount = ?, transport_fee = ?, labour_fee = ?, status = ?, total = ?, updated_at = datetime(\'now\') WHERE id = ?',
-        [supplier_name || null, payment_method, notes || '', discountVal, transportVal, labourVal, status || 'completed', finalTotal, req.params.id]
+        'UPDATE purchases SET supplier_name = ?, supplier_address = ?, description = ?, payment_method = ?, notes = ?, discount = ?, transport_fee = ?, labour_fee = ?, status = ?, total = ?, updated_at = datetime(\'now\') WHERE id = ?',
+        [supplier_name || null, supplier_address || '', description || '', payment_method, notes || '', discountVal, transportVal, labourVal, status || 'completed', finalTotal, req.params.id]
       );
 
       // ===== STEP 6: Update purchase items (delete old + insert new) =====

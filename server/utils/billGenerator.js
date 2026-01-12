@@ -126,7 +126,7 @@ function formatCurrency(amount, symbol = '') {
   return symbol ? `${symbol}${val.toFixed(2)}` : `${val.toFixed(2)}`;
 }
 
-function generateBill({ type, transaction, items, currencySymbol, adjustment = 0, transport_fee = 0, labour_fee = 0 }) {
+function generateBill({ type, transaction, items, currencySymbol, adjustment = 0, transport_fee = 0, labour_fee = 0, address = '', description = '' }) {
   const home = os.homedir();
   const billsDir = path.join(home, 'Documents', 'InventoryApp', 'Bills');
   ensureDir(billsDir);
@@ -167,16 +167,16 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     amount: 55
   };
 
-  const tableHeaderHeight = 23;
-  const tableRowHeight = 18;
-  const footerHeight = 50; // Space reserved for footer
+  const tableHeaderHeight = 20;
+  const tableRowHeight = 16;
+  const footerHeight = 30; // Space reserved for footer
 
   // Summary box dimensions
-  const summaryBoxW = 220;
-  const summaryBoxTopPadding = 12;
-  const summaryBoxBottomPadding = 12;
-  const summaryLineHeight = 16;
-  const summaryTotalLineHeight = 20;
+  const summaryBoxW = 200;
+  const summaryBoxTopPadding = 8;
+  const summaryBoxBottomPadding = 8;
+  const summaryLineHeight = 14;
+  const summaryTotalLineHeight = 16;
 
   // ===== FONT SETUP (Once at start) =====
   let symbol = currencySymbol || getCurrencySymbol();
@@ -205,10 +205,10 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   function drawHeader(yPos) {
     const headerX = marginLeft;
     const headerW = usableWidth;
-    const headerH = 115;
+    const headerH = 95;
 
     // Header border
-    doc.lineWidth(3).strokeColor(appleGreen);
+    doc.lineWidth(2.5).strokeColor(appleGreen);
     if (typeof doc.roundedRect === 'function') {
       doc.roundedRect(headerX, yPos, headerW, headerH, 8).stroke();
     } else {
@@ -222,16 +222,16 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
       doc.font('Helvetica');
     }
 
-    const headerPadX = 10;
-    const line1Y = yPos + 10;
-    const line2Y = yPos + 40;
-    const line3Y = yPos + 50;
-    const line4Y = yPos + 63;
-    const line5Y = yPos + 78;
+    const headerPadX = 8;
+    const line1Y = yPos + 8;
+    const line2Y = yPos + 30;
+    const line3Y = yPos + 40;
+    const line4Y = yPos + 52;
+    const line5Y = yPos + 64;
 
     // Line 1: Company name (Bengali bold)
     doc.font(fontInfo.loaded && fontInfo.boldLoaded ? 'unicode-bold' : (fontInfo.loaded ? 'unicode' : 'Helvetica-Bold'));
-    doc.fillColor(appleGreen).fontSize(18);
+    doc.fillColor(appleGreen).fontSize(16);
     doc.text('মেসার্স দিদার ট্রেডিং', headerX + headerPadX, line1Y, { width: headerW - headerPadX * 2, align: 'center' });
 
     // Switch to regular font for remaining lines
@@ -243,31 +243,31 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     doc.fillColor(darkGray);
 
     // Line 2: Product line (Bengali)
-    doc.fontSize(10);
+    doc.fontSize(8.5);
     doc.text('এলাচি,দারচিনি, জিরা, লবঙ্গ, কিসমিস,জাফরান,সোডা,বার্লি,বেনেতী পসারী', headerX + headerPadX, line2Y, { width: headerW - headerPadX * 2, align: 'center' });
 
     // Line 3: Tagline (Bengali)
-    doc.fontSize(11);
+    doc.fontSize(9);
     doc.text('পাইকারী ও খুচরা বিক্রেতা', headerX + headerPadX, line3Y, { width: headerW - headerPadX * 2, align: 'center' });
 
     // Line 4: Mobile (Bengali)
-    doc.fontSize(10);
+    doc.fontSize(8.5);
     doc.text('মোবাইল: ০১৭৮৩-৩৫৬৭৮৫, ০১৯২১-৯৯৩১৫৬', headerX + headerPadX, line4Y, { width: headerW - headerPadX * 2, align: 'center' });
 
     // Line 5: Address (Bengali)
-    doc.fontSize(10);
+    doc.fontSize(8.5);
     doc.text('ঠিকানা: ৭৮ মৌলভীবাজার, ট্রেড সেন্টার, ঢাকা-১২১১', headerX + headerPadX, line5Y, { width: headerW - headerPadX * 2, align: 'center' });
 
     // Reset font to Helvetica after header
     doc.font('Helvetica').fillColor(darkGray);
 
-    return yPos + headerH + 20;
+    return yPos + headerH + 12;
   }
 
   // ===== HELPER: Draw table header =====
   function drawTableHeader(yPos) {
     doc.rect(tableLeft, yPos, usableWidth, tableHeaderHeight).fill(lightGray);
-    doc.font('Helvetica-Bold').fontSize(10).fillColor(appleGreen);
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(appleGreen);
 
     doc.text('#', tableLeft + 6, yPos + 6, { width: colWidths.no - 6, align: 'left' });
     doc.text('Item', tableLeft + colWidths.no + 6, yPos + 6, { width: colWidths.item - 6, align: 'left' });
@@ -285,18 +285,41 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     doc.text(footerText, footerX, pageHeight - marginBottom + 10, { align: 'right' });
   }
 
+  // ===== HELPER: Draw description section =====
+  function drawDescription(yPos) {
+    if (!description || !String(description).trim()) {
+      return;
+    }
+    
+    const descriptionText = String(description).trim();
+    const descFontSize = 8;
+    
+    doc.font('Helvetica-Bold').fontSize(descFontSize).fillColor(darkGray);
+    doc.text('Description:', marginLeft, yPos, { continued: false });
+    
+    const labelHeight = doc.heightOfString('Description:', { width: usableWidth });
+    const descY = yPos + labelHeight + 2;
+    
+    doc.font('Helvetica-Oblique').fontSize(descFontSize).fillColor(darkGray).opacity(0.75);
+    doc.text(descriptionText, marginLeft, descY, { 
+      width: usableWidth, 
+      align: 'left', 
+      lineGap: 1,
+      continued: false
+    });
+    doc.opacity(1);
+  }
+
   // ===== HELPER: Calculate summary box height =====
   function calculateSummaryHeight() {
     let lineCount = 1; // Subtotal
     const tax = Number.isFinite(Number(transaction.tax)) ? Number(transaction.tax) : 0;
     const transportVal = Number.isFinite(Number(transport_fee)) ? Number(transport_fee) : 0;
     const labourVal = Number.isFinite(Number(labour_fee)) ? Number(labour_fee) : 0;
-    const adj = Number.isFinite(Number(adjustment)) ? Number(adjustment) : 0;
 
     if (type === 'sale' && tax > 0) lineCount++;
     if (transportVal > 0) lineCount++;
     if (labourVal > 0) lineCount++;
-    if (adj > 0) lineCount++;
 
     return summaryBoxTopPadding + (lineCount * summaryLineHeight) + summaryTotalLineHeight + summaryBoxBottomPadding;
   }
@@ -319,45 +342,54 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   let y = drawHeader(marginTop);
 
   // Invoice/Purchase details section
-  doc.font('Helvetica').fontSize(12).fillColor(darkGray);
+  doc.font('Helvetica').fontSize(10).fillColor(darkGray);
   const billType = type === 'sale' ? 'Invoice' : 'Purchase Order';
   doc.text(`${billType}: ${memoNumber}`, marginLeft, y);
-  y = doc.y + 5;
+  y = doc.y + 3;
   doc.text(`Date: ${formatDate(transaction.date || Date.now())}`, marginLeft, y);
-  y = doc.y + 13;
+  y = doc.y + 10;
 
   // Customer/Party details box
-  const customerBoxHeight = 65;
+  const customerBoxHeight = 55;
   const customerBoxX = marginLeft;
   const customerBoxY = y;
 
   doc.rect(customerBoxX, customerBoxY, usableWidth, customerBoxHeight).fill(veryLightGreen);
-  doc.lineWidth(3).strokeColor(appleGreen);
+  doc.lineWidth(2.5).strokeColor(appleGreen);
   doc.moveTo(customerBoxX, customerBoxY).lineTo(customerBoxX, customerBoxY + customerBoxHeight).stroke();
 
   let partyRaw = transaction.party && String(transaction.party).trim() ? String(transaction.party).trim() : 'N/A';
   const party = partyRaw.replace(/^\s*(নাম[:ঃ]\s*)/i, '').trim() || 'N/A';
+  const hasAddress = address && String(address).trim();
 
-  const customerPadX = 15;
-  let customerY = customerBoxY + 13;
+  const customerPadX = 12;
+  let customerY = customerBoxY + 10;
 
-  doc.font('Helvetica-Bold').fontSize(12).fillColor(appleGreen);
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(appleGreen);
   doc.text('Customer Details', customerBoxX + customerPadX, customerY);
 
-  customerY = doc.y + 7;
+  customerY = doc.y + 5;
 
-  doc.font('Helvetica').fontSize(12).fillColor(darkGray);
+  doc.font('Helvetica').fontSize(10).fillColor(darkGray);
   doc.text('Name: ', customerBoxX + customerPadX, customerY, { continued: true });
 
   if (fontInfo.loaded && containsBengaliText(party)) {
-    doc.font('unicode').fontSize(12).fillColor(darkGray);
+    doc.font('unicode').fontSize(10).fillColor(darkGray);
     doc.text(party, { continued: false });
   } else {
-    doc.font('Helvetica').fontSize(12).fillColor(darkGray);
+    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
     doc.text(party, { continued: false });
   }
 
-  y = customerBoxY + customerBoxHeight + 15;
+  // Display address below name if it exists
+  if (hasAddress) {
+    customerY = doc.y + 3;
+    doc.font('Helvetica').fontSize(8.5).fillColor('#666666');
+    const addressText = String(address).trim();
+    doc.text(addressText, customerBoxX + customerPadX, customerY, { width: usableWidth - customerPadX * 2, align: 'left', lineGap: 1 });
+  }
+
+  y = customerBoxY + customerBoxHeight + 10;
 
   // Draw table header
   const tableHeaderY = y;
@@ -389,17 +421,20 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
     const subVal = Number.isFinite(subRaw) ? subRaw : computedSub;
     const amount = Number.isFinite(subVal) ? formatCurrency(subVal, displaySymbol) : '';
 
-    // Check if space is available for this row PLUS summary section
-    const summaryHeight = calculateSummaryHeight();
-    const spaceNeeded = tableRowHeight + 10 + summaryHeight + 50; // Row + gap + summary + stamp
+    // Check if space is available for this row - only for last 2 items
     const currentY = doc.y;
     const availableSpace = pageHeight - marginBottom - footerHeight - currentY;
+    
+    // Only check space constraints for last 2 items when summary is about to be drawn
+    const isVeryEnd = (safeItems.length - itemIndex) <= 2;
+    const spaceNeeded = tableRowHeight + (isVeryEnd ? calculateSummaryHeight() + 150 : tableRowHeight);
 
-    if (availableSpace < spaceNeeded) {
+    if (isVeryEnd && availableSpace < spaceNeeded) {
       // Not enough space: create new page
       doc.addPage();
-      y = drawHeader(marginTop);
-      y = drawTableHeader(y + 20) + 2; // Redraw table header on new page
+      const newHeaderY = drawHeader(marginTop);
+      drawTableHeader(newHeaderY + 20);
+      y = newHeaderY + tableHeaderHeight + 42;
     } else {
       y = currentY;
     }
@@ -409,7 +444,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
       doc.rect(tableLeft, y - 2, usableWidth, tableRowHeight).fill('#fafafa');
     }
 
-    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
+    doc.font('Helvetica').fontSize(9).fillColor(darkGray);
     doc.text(String(itemIndex + 1), tableLeft + 6, y, { width: colWidths.no - 6, align: 'left' });
 
     if (fontInfo.loaded && containsBengaliText(name)) {
@@ -438,18 +473,20 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   doc.moveTo(tableLeft, y).lineTo(tableLeft + usableWidth, y).stroke();
   y += 20;
 
-  // ===== SUMMARY SECTION: Ensure it doesn't split =====
+  // ===== SUMMARY SECTION: Draw on current page unless not enough space =====
   const summaryBoxH = calculateSummaryHeight();
   const summaryBoxX = tableLeft + usableWidth - summaryBoxW;
 
   // Check if summary fits on current page
   const availableSpaceSummary = pageHeight - marginBottom - footerHeight - y;
-  if (availableSpaceSummary < summaryBoxH + 50) {
-    // Not enough space for summary on this page: move to new page
+  const totalSpaceNeeded = summaryBoxH + 100; // Summary + stamp + description
+  
+  if (availableSpaceSummary < totalSpaceNeeded && y > marginTop + 200) {
+    // Only add new page if we're already well into the current page
     doc.addPage();
     y = drawHeader(marginTop);
-    y = drawTableHeader(y + 20) + 2;
-    y += 20; // Gap
+    drawTableHeader(y + 20);
+    y = y + tableHeaderHeight + 42; // Position after header
   }
 
   // Calculate totals
@@ -457,10 +494,9 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   const subtotal = Number.isFinite(Number(transaction.subtotal)) ? Number(transaction.subtotal) : subtotalCalc;
   const tax = Number.isFinite(Number(transaction.tax)) ? Number(transaction.tax) : 0;
   const grossTotal = Number.isFinite(Number(transaction.total)) ? Number(transaction.total) : (subtotal + tax);
-  const adj = Number.isFinite(Number(adjustment)) ? Number(adjustment) : 0;
   const transportVal = Number.isFinite(Number(transport_fee)) ? Number(transport_fee) : 0;
   const labourVal = Number.isFinite(Number(labour_fee)) ? Number(labour_fee) : 0;
-  const netTotal = grossTotal + transportVal + labourVal - adj;
+  const netTotal = grossTotal + transportVal + labourVal;
 
   // Draw summary box
   doc.rect(summaryBoxX, y, summaryBoxW, summaryBoxH).fill(veryLightGreen);
@@ -472,57 +508,57 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   }
 
   let summaryY = y + summaryBoxTopPadding;
-  doc.font('Helvetica').fontSize(10).fillColor(darkGray);
+  doc.font('Helvetica').fontSize(9).fillColor(darkGray);
 
   // Subtotal
-  doc.text('Subtotal:', summaryBoxX + 12, summaryY, { continued: false });
+  doc.text('Subtotal:', summaryBoxX + 10, summaryY, { continued: false });
   if (symbolIsNonAscii && fontInfo.loaded) {
     doc.font('unicode');
-    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
     doc.font('Helvetica');
   } else {
-    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+    doc.text(formatCurrency(subtotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
   }
   summaryY += summaryLineHeight;
 
   // Tax
   if (type === 'sale' && tax > 0) {
-    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
-    doc.text('Tax:', summaryBoxX + 12, summaryY, { continued: false });
+    doc.font('Helvetica').fontSize(9).fillColor(darkGray);
+    doc.text('Tax:', summaryBoxX + 10, summaryY, { continued: false });
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
-      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
       doc.font('Helvetica');
     } else {
-      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+      doc.text(formatCurrency(tax, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
     }
     summaryY += summaryLineHeight;
   }
 
   // Transport Fee
   if (transportVal > 0) {
-    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
-    doc.text('Transport:', summaryBoxX + 12, summaryY, { continued: false });
+    doc.font('Helvetica').fontSize(9).fillColor(darkGray);
+    doc.text('Transport:', summaryBoxX + 10, summaryY, { continued: false });
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
-      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
       doc.font('Helvetica');
     } else {
-      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+      doc.text(formatCurrency(transportVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
     }
     summaryY += summaryLineHeight;
   }
 
   // Labour Fee
   if (labourVal > 0) {
-    doc.font('Helvetica').fontSize(10).fillColor(darkGray);
-    doc.text('Labour:', summaryBoxX + 12, summaryY, { continued: false });
+    doc.font('Helvetica').fontSize(9).fillColor(darkGray);
+    doc.text('Labour:', summaryBoxX + 10, summaryY, { continued: false });
     if (symbolIsNonAscii && fontInfo.loaded) {
       doc.font('unicode');
-      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
       doc.font('Helvetica');
     } else {
-      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+      doc.text(formatCurrency(labourVal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
     }
     summaryY += summaryLineHeight;
   }
@@ -540,10 +576,10 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   doc.text('Total:', summaryBoxX + 12, summaryY, { continued: false });
   if (symbolIsNonAscii && fontInfo.loaded) {
     doc.font('unicode');
-    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
     doc.font('Helvetica');
   } else {
-    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 120, summaryY, { width: 88, align: 'right' });
+    doc.text(formatCurrency(netTotal, displaySymbol), summaryBoxX + 110, summaryY, { width: 80, align: 'right' });
   }
 
   // Add "Paid" or "Unpaid" stamp based on payment method
@@ -552,10 +588,10 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   const stampText = isDue ? 'UNPAID' : 'PAID';
   const stampColor = isDue ? '#EF4444' : '#10B981';
 
-  const stampX = marginLeft + usableWidth - 140;
-  const stampY = y + summaryBoxH + 30;
-  const stampW = 120;
-  const stampH = 50;
+  const stampX = marginLeft + usableWidth - 120;
+  const stampY = y + summaryBoxH + 20;
+  const stampW = 100;
+  const stampH = 40;
 
   doc.save();
   doc.translate(stampX + stampW / 2, stampY + stampH / 2);
@@ -570,7 +606,7 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
   doc.lineWidth(1.5);
   doc.rect(-stampW / 2 + 4, -stampH / 2 + 4, stampW - 8, stampH - 8).stroke();
 
-  doc.font('Helvetica-Bold').fontSize(24).fillColor(stampColor);
+  doc.font('Helvetica-Bold').fontSize(20).fillColor(stampColor);
   doc.text(stampText, -stampW / 2, -stampH / 2 + 10, {
     width: stampW,
     align: 'center'
@@ -578,11 +614,15 @@ function generateBill({ type, transaction, items, currencySymbol, adjustment = 0
 
   doc.restore();
 
-  // ===== Add page numbers to all pages =====
-  const pageCount = doc.bufferedPageRange().count;
-  for (let i = 0; i < pageCount; i++) {
-    doc.switchToPage(i);
-    drawFooter(doc.y, i + 1, pageCount);
+  // ===== Draw description below stamp on first page =====
+  if (description && String(description).trim()) {
+    const descY = stampY + stampH + 15;
+    const availableSpaceForDesc = pageHeight - marginBottom - footerHeight - descY;
+    
+    // Only draw if there's enough space, otherwise skip
+    if (availableSpaceForDesc > 20) {
+      drawDescription(descY);
+    }
   }
 
   doc.end();

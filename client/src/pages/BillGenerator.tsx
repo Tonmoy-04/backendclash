@@ -15,6 +15,8 @@ const BillGenerator: React.FC = () => {
   // Temporary bill state
   const [party, setParty] = useState<string>('');
   const [payment, setPayment] = useState<string>('cash');
+  const [tempAddress, setTempAddress] = useState<string>('');
+  const [tempDescription, setTempDescription] = useState<string>('');
   const [tempTransportFee, setTempTransportFee] = useState<string>('');
   const [tempLabourFee, setTempLabourFee] = useState<string>('');
   const [tempItems, setTempItems] = useState<Array<{ product_name: string; quantity: number; price: number }>>([
@@ -88,6 +90,8 @@ const BillGenerator: React.FC = () => {
         items: prepared,
         transport_fee: Number(tempTransportFee) || 0,
         labour_fee: Number(tempLabourFee) || 0,
+        address: tempAddress || '',
+        description: tempDescription || '',
       });
       setTempMessage('Temporary bill generated successfully');
       setTempFilePath(res.data?.path || '');
@@ -289,6 +293,39 @@ const BillGenerator: React.FC = () => {
                 <option value="bank">Bank</option>
                 <option value="due">Due</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Address (Optional)
+              </label>
+              <input
+                type="text"
+                value={tempAddress}
+                onChange={(e) => setTempAddress(e.target.value)}
+                placeholder="Enter address..."
+                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+                Description (Optional)
+              </label>
+              <textarea
+                value={tempDescription}
+                onChange={(e) => setTempDescription(e.target.value)}
+                placeholder="Brief description for bill footer..."
+                rows={2}
+                className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
+              />
             </div>
           </div>
 

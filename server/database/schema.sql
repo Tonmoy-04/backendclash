@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS sales (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   customer_name TEXT,
   customer_phone TEXT,
+  customer_address TEXT,
+  description TEXT,
   user_id INTEGER,
   customer_id INTEGER,
   subtotal DECIMAL(10, 2) DEFAULT 0,
@@ -98,6 +100,8 @@ CREATE TABLE IF NOT EXISTS sale_items (
 CREATE TABLE IF NOT EXISTS purchases (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   supplier_name TEXT,
+  supplier_address TEXT,
+  description TEXT,
   supplier_id INTEGER,
   payment_method TEXT DEFAULT 'cash',
   notes TEXT,

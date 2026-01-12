@@ -51,6 +51,8 @@ const Transactions: React.FC = () => {
     transport_fee: number | '';
     labour_fee: number | '';
     discount: number | '';
+    address: string;
+    description: string;
   }>({
     customer: '',
     type: 'Sale',
@@ -65,6 +67,8 @@ const Transactions: React.FC = () => {
     transport_fee: '',
     labour_fee: '',
     discount: '',
+    address: '',
+    description: '',
   });
 
   const normalizePaymentMethod = (method: string) => {
@@ -207,6 +211,8 @@ const Transactions: React.FC = () => {
       transport_fee: '',
       labour_fee: '',
       discount: '',
+      address: '',
+      description: '',
     });
   };
 
@@ -252,6 +258,7 @@ const Transactions: React.FC = () => {
           discount: discount > 0 ? discount : null,
           transport_fee: transportFee > 0 ? transportFee : null,
           labour_fee: labourFee > 0 ? labourFee : null,
+          description: formData.description || '',
           items: sanitizedItems.map(item =>
             formData.type === 'Sale'
               ? { product_name: item.product_name, quantity: item.quantity, price: item.price }
@@ -262,8 +269,10 @@ const Transactions: React.FC = () => {
         // Add customer_name for sales or supplier_name for purchases
         if (formData.type === 'Sale') {
           updateBody.customer_name = formData.customer;
+          updateBody.customer_address = formData.address || '';
         } else {
           updateBody.supplier_name = formData.customer;
+          updateBody.supplier_address = formData.address || '';
         }
         
         await api.put(`${endpoint}/${editingTransaction.id}`, updateBody);
@@ -272,6 +281,7 @@ const Transactions: React.FC = () => {
           payment_method: paymentMethod,
           notes: formData.itemsNote || '',
           total: totalAmount,
+          description: formData.description || '',
         };
 
         if (transportFee > 0) {
@@ -312,6 +322,7 @@ const Transactions: React.FC = () => {
 
         if (formData.type === 'Sale') {
           payload.customer_name = formData.customer;
+          payload.customer_address = formData.address || '';
           payload.items = sanitizedItems.map(item => ({
             product_name: item.product_name,
             quantity: item.quantity,
@@ -319,6 +330,7 @@ const Transactions: React.FC = () => {
           }));
         } else {
           payload.supplier_name = formData.customer;
+          payload.supplier_address = formData.address || '';
           payload.items = sanitizedItems.map(item => ({
             product_name: item.product_name,
             quantity: item.quantity,
@@ -390,6 +402,8 @@ const Transactions: React.FC = () => {
         transport_fee: fullTransaction.transport_fee || '',
         labour_fee: fullTransaction.labour_fee || '',
         discount: fullTransaction.discount || '',
+        address: fullTransaction.customer_address || fullTransaction.supplier_address || '',
+        description: fullTransaction.description || '',
       });
       setShowAddModal(true);
     } catch (error) {
@@ -406,6 +420,8 @@ const Transactions: React.FC = () => {
         transport_fee: transaction.transport_fee || '',
         labour_fee: transaction.labour_fee || '',
         discount: transaction.discount || '',
+        address: '',
+        description: '',
       });
       setShowAddModal(true);
     }
@@ -769,6 +785,19 @@ const Transactions: React.FC = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {formData.type === 'Sale' ? 'Customer Address (Optional)' : 'Supplier Address (Optional)'}
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="Enter address..."
+                  className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all duration-150 shadow-sm"
+                />
+              </div>
+
               {/* VISUAL ONLY: Transaction Type Section - improved card styling */}
               <div className="p-5 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm">
                 <div className="flex flex-col gap-3 mb-4">
@@ -818,6 +847,19 @@ const Transactions: React.FC = () => {
                   <option value="card">{t('transactions.card')}</option>
                   <option value="bank_transfer">{t('transactions.bankTransfer')}</option>
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
+                  Description (Optional)
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all shadow-sm"
+                  placeholder="Brief description for the bill footer..."
+                  rows={2}
+                />
               </div>
 
               {/* VISUAL ONLY: Line Items Section - improved card hierarchy and spacing */}
@@ -954,13 +996,6 @@ const Transactions: React.FC = () => {
                     </div>
                   )}
                   
-                  {formData.discount !== '' && formData.discount !== 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">{t('transactions.discount')}</span>
-                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">-{formatBDT(Number(formData.discount), { decimals: 2 })}</span>
-                    </div>
-                  )}
-                  
                   <div className="flex items-center justify-between pt-3 px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800">
                     <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('transactions.total')}</span>
                     <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -968,7 +1003,7 @@ const Transactions: React.FC = () => {
                           const qty = typeof item.quantity === 'number' ? item.quantity : 0;
                           const price = typeof item.price === 'number' ? item.price : 0;
                           return sum + qty * price;
-                        }, 0) + (typeof formData.transport_fee === 'number' ? formData.transport_fee : 0) + (typeof formData.labour_fee === 'number' ? formData.labour_fee : 0) - (formData.discount ? Number(formData.discount) : 0)), { decimals: 2 })}
+                        }, 0) + (typeof formData.transport_fee === 'number' ? formData.transport_fee : 0) + (typeof formData.labour_fee === 'number' ? formData.labour_fee : 0)), { decimals: 2 })}
                     </span>
                   </div>
                 </div>
@@ -1027,32 +1062,6 @@ const Transactions: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, labour_fee: e.target.value === '' ? '' : parseNumericInput(e.target.value) })}
                       placeholder="0"
                       className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
-                      {t('Discount')} ({t('transactions.optional')})
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.discount}
-                      onChange={(e) => setFormData({ ...formData, discount: e.target.value === '' ? '' : parseNumericInput(e.target.value) })}
-                      placeholder="0"
-                      className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
-                      {t('transactions.notes')}
-                    </label>
-                    <textarea
-                      value={formData.itemsNote}
-                      onChange={(e) => setFormData({ ...formData, itemsNote: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800 focus:outline-none transition-all"
-                      placeholder={t('transactions.notesPlaceholder')}
-                      rows={3}
                     />
                   </div>
                 </div>
