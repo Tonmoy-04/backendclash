@@ -364,6 +364,16 @@ async function ensureSalesTables() {
       console.log('Migrated: added sales.labour_fee');
     }
 
+    if (!salesNames.has('customer_address')) {
+      await dbRun("ALTER TABLE sales ADD COLUMN customer_address TEXT DEFAULT NULL");
+      console.log('Migrated: added sales.customer_address');
+    }
+
+    if (!salesNames.has('description')) {
+      await dbRun("ALTER TABLE sales ADD COLUMN description TEXT DEFAULT NULL");
+      console.log('Migrated: added sales.description');
+    }
+
     console.log('Sales tables migrated successfully');
   } catch (err) {
     console.error('Error ensuring sales tables:', err);
@@ -631,6 +641,16 @@ async function ensurePurchasesTables() {
     if (!purchasesNames.has('labour_fee')) {
       await dbRun("ALTER TABLE purchases ADD COLUMN labour_fee DECIMAL(10, 2) DEFAULT 0");
       console.log('Migrated: added purchases.labour_fee');
+    }
+
+    if (!purchasesNames.has('supplier_address')) {
+      await dbRun("ALTER TABLE purchases ADD COLUMN supplier_address TEXT DEFAULT NULL");
+      console.log('Migrated: added purchases.supplier_address');
+    }
+
+    if (!purchasesNames.has('description')) {
+      await dbRun("ALTER TABLE purchases ADD COLUMN description TEXT DEFAULT NULL");
+      console.log('Migrated: added purchases.description');
     }
 
     // Check purchase_items table
