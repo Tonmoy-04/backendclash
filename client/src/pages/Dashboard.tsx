@@ -99,7 +99,7 @@ const Dashboard: React.FC = () => {
         api.get('/dashboard/low-stock-alerts'),
         api.get('/dashboard/customers-debt'),
         api.get('/dashboard/suppliers-debt'),
-        api.get('/dashboard/customers-debt-alerts?threshold=100000')
+        api.get('/dashboard/customers-debt-alerts?threshold=1000000')
       ]);
 
       // Stats (primary) must succeed to update cards; otherwise keep previous values
@@ -379,7 +379,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          <CustomerDebtAlertCard customers={customerDebtAlerts} threshold={100000} />
+          <CustomerDebtAlertCard customers={customerDebtAlerts} threshold={1000000} />
         </div>
 
         <div className="space-y-4">

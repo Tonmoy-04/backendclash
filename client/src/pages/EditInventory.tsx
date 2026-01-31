@@ -18,12 +18,21 @@ interface Product {
   quantity: number;
   min_stock: number;
   unit?: string;
+  selling_rate?: number;
+  purchase_rate?: number;
 }
 
-const EditInventory: React.FC = () => {
+interface EditInventoryProps {
+  productId?: number | string;
+  embedded?: boolean;
+  onClose?: () => void;
+}
+
+const EditInventory: React.FC<EditInventoryProps> = ({ productId, embedded = false, onClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id: routeId } = useParams<{ id: string }>();
+  const effectiveId = productId ?? routeId;
   const { showSuccess, showError, showWarning, showInfo, showConfirm } = useNotification();
   
   const [loading, setLoading] = useState(true);
@@ -47,11 +56,19 @@ const EditInventory: React.FC = () => {
     date: formatDate(new Date())
   });
 
+  const goBack = () => {
+    if (embedded && onClose) {
+      onClose();
+    } else {
+      navigate('/inventory');
+    }
+  };
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        if (id) {
-          const response = await api.get(`/products/${id}`);
+        if (effectiveId) {
+          const response = await api.get(`/products/${effectiveId}`);
           setProduct(response.data);
           setFormData({
             name: response.data.name || '',
@@ -72,7 +89,7 @@ const EditInventory: React.FC = () => {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [effectiveId]);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -115,8 +132,9 @@ const EditInventory: React.FC = () => {
       // Show dynamic summary notification
       const summary = buildInventorySummary(formData.name.trim(), 'Update', formatBDT);
       showSuccess({ title: t('common.updated') || 'Updated', message: summary });
-      
-      navigate('/inventory');
+
+      window.dispatchEvent(new Event('inventory-data-changed'));
+      goBack();
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update product';
       setError(message);
@@ -204,7 +222,7 @@ const EditInventory: React.FC = () => {
       window.dispatchEvent(new Event('inventory-data-changed'));
 
       setStockFormData({ quantity: '', totalPrice: '', date: formatDate(new Date()) });
-      navigate('/inventory');
+      goBack();
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update stock';
       setError(message);
@@ -214,7 +232,7 @@ const EditInventory: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950">
+      <div className={`${embedded ? 'p-6' : 'min-h-screen'} flex items-center justify-center ${embedded ? '' : 'bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950'}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 dark:border-emerald-400 mx-auto"></div>
           <p className="mt-4 text-lg text-emerald-700 dark:text-emerald-300 font-semibold">{t('common.loading')}</p>
@@ -225,11 +243,11 @@ const EditInventory: React.FC = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen p-8 bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950">
+      <div className={`${embedded ? 'p-4' : 'min-h-screen p-8 bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950'}`}>
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-xl text-red-600 dark:text-red-400">{t('inventory.productNotFound')}</p>
           <button
-            onClick={() => navigate('/inventory')}
+            onClick={goBack}
             className="mt-4 px-4 py-2 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50"
           >
             {t('inventory.backToInventory')}
@@ -240,7 +258,7 @@ const EditInventory: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950" onKeyDown={(e) => {
+    <div className={`${embedded ? 'p-0' : 'min-h-screen p-8 bg-gradient-to-br from-emerald-50 via-cyan-50 to-emerald-50 dark:from-emerald-950 dark:via-teal-950 dark:to-emerald-950'}`} onKeyDown={(e) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         const form = (e.currentTarget as HTMLDivElement).querySelector('form');
@@ -250,52 +268,61 @@ const EditInventory: React.FC = () => {
         }
       }
     }}>
-      <div className="max-w-4xl mx-auto">
+      <div className={`${embedded ? 'max-w-full mx-auto max-h-[80vh] overflow-y-auto p-4' : 'max-w-4xl mx-auto'}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => navigate('/inventory')}
+            onClick={goBack}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all duration-300 font-semibold"
           >
             <ArrowLeftIcon className="h-5 w-5" />
             {t('common.cancel')}
           </button>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 dark:from-emerald-400 dark:via-teal-400 dark:to-emerald-400 bg-clip-text text-transparent">
-            Update: {product.name}
+            {t('inventory.product')}: {product.name}
           </h1>
         </div>
 
         {/* Tab Navigation (Sell, Buy, then Details) */}
-        <div className="flex gap-2 mb-6 bg-white dark:bg-emerald-900 rounded-xl p-2 border border-emerald-200 dark:border-emerald-700 shadow-lg">
+        <div className="flex gap-2 mb-6 bg-emerald-50/80 dark:bg-emerald-900/70 rounded-2xl p-2 border border-emerald-200/70 dark:border-emerald-800 shadow-lg shadow-emerald-100/70 dark:shadow-emerald-900/50">
           <button
             onClick={() => setActiveTab('sale')}
-            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-200 border ${
               activeTab === 'sale'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-transparent shadow-xl shadow-emerald-400/40'
+                : 'bg-white/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-emerald-200/70 dark:border-emerald-800 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-md'
             }`}
           >
-            💰 {t('inventory.sellStock')}
+            <span className="inline-flex items-center gap-2 justify-center">
+              <span className="text-lg">💰</span>
+              <span>{t('inventory.sellStock')}</span>
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('buy')}
-            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-200 border ${
               activeTab === 'buy'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-transparent shadow-xl shadow-emerald-400/40'
+                : 'bg-white/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-emerald-200/70 dark:border-emerald-800 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-md'
             }`}
           >
-            🛒 {t('inventory.buyStock')}
+            <span className="inline-flex items-center gap-2 justify-center">
+              <span className="text-lg">🛒</span>
+              <span>{t('inventory.buyStock')}</span>
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('details')}
-            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-200 border ${
               activeTab === 'details'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-800'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-transparent shadow-xl shadow-emerald-400/40'
+                : 'bg-white/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-emerald-200/70 dark:border-emerald-800 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-md'
             }`}
           >
-            📝 {t('inventory.details')}
+            <span className="inline-flex items-center gap-2 justify-center">
+              <span className="text-lg">📝</span>
+              <span>{t('inventory.details')}</span>
+            </span>
           </button>
         </div>
 
@@ -367,33 +394,10 @@ const EditInventory: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.sellingPrice')}</label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleFormChange}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.costPrice')}</label>
-                    <input
-                      type="number"
-                      name="cost"
-                      value={formData.cost}
-                      onChange={handleFormChange}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
                 <div className="flex justify-end gap-3 pt-6 border-t border-emerald-200 dark:border-emerald-700">
                   <button
                     type="button"
-                    onClick={() => navigate('/inventory')}
+                    onClick={goBack}
                     className="px-6 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all duration-300 font-semibold"
                   >
                     {t('common.cancel')}
@@ -411,9 +415,32 @@ const EditInventory: React.FC = () => {
             {/* Buy Stock Tab */}
             {activeTab === 'buy' && (
               <form onSubmit={handleStockUpdate} className="space-y-6">
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg border border-emerald-200 dark:border-emerald-700">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.product')}:</strong> {product.name}</p>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.currentStock')}:</strong> {product.quantity} {product.unit || ''}</p>
+                <div className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50/50 dark:from-emerald-900/40 dark:to-teal-900/30 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 shadow-md">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">📦</span>
+                    <div>
+                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">{t('inventory.product')}</p>
+                      <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{product.name}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📊</span>
+                      <div>
+                        <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('inventory.currentStock')}</p>
+                        <p className="text-base font-bold text-emerald-900 dark:text-emerald-100">{product.quantity} {product.unit || ''}</p>
+                      </div>
+                    </div>
+                    {typeof product.purchase_rate === 'number' && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">💰</span>
+                        <div>
+                          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('inventory.costPrice')}</p>
+                          <p className="text-base font-bold text-emerald-900 dark:text-emerald-100">{formatBDT(product.purchase_rate, { decimals: 3 })}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -480,9 +507,32 @@ const EditInventory: React.FC = () => {
             {/* Sale Stock Tab */}
             {activeTab === 'sale' && (
               <form onSubmit={handleStockUpdate} className="space-y-6">
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg border border-emerald-200 dark:border-emerald-700">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.product')}:</strong> {product.name}</p>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300"><strong>{t('inventory.currentStock')}:</strong> {product.quantity} {product.unit || ''}</p>
+                <div className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50/50 dark:from-emerald-900/40 dark:to-teal-900/30 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 shadow-md">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">📦</span>
+                    <div>
+                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">{t('inventory.product')}</p>
+                      <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{product.name}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📊</span>
+                      <div>
+                        <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('inventory.currentStock')}</p>
+                        <p className="text-base font-bold text-emerald-900 dark:text-emerald-100">{product.quantity} {product.unit || ''}</p>
+                      </div>
+                    </div>
+                    {typeof product.selling_rate === 'number' && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">💵</span>
+                        <div>
+                          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('inventory.sellingPrice')}</p>
+                          <p className="text-base font-bold text-emerald-900 dark:text-emerald-100">{formatBDT(product.selling_rate, { decimals: 3 })}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>

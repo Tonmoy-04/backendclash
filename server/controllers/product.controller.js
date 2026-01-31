@@ -72,13 +72,17 @@ exports.getAllProducts = async (req, res, next) => {
     );
 
     // Add separate purchase and selling rates to each product
+    // Also calculate itemTotalPrice = quantity × purchase_rate
     const productsWithRates = await Promise.all(
       products.map(async (p) => {
         const rates = await calculateSeparateRates(p.id);
+        // Item Total Price: (current quantity) × (purchase rate per unit)
+        const itemTotalPrice = p.quantity * rates.purchase_rate;
         return {
           ...p,
           purchase_rate: rates.purchase_rate,
-          selling_rate: rates.selling_rate
+          selling_rate: rates.selling_rate,
+          itemTotalPrice
         };
       })
     );
@@ -98,13 +102,17 @@ exports.getLowStockProducts = async (req, res, next) => {
     );
 
     // Add separate purchase and selling rates to each product
+    // Also calculate itemTotalPrice = quantity × purchase_rate
     const productsWithRates = await Promise.all(
       products.map(async (p) => {
         const rates = await calculateSeparateRates(p.id);
+        // Item Total Price: (current quantity) × (purchase rate per unit)
+        const itemTotalPrice = p.quantity * rates.purchase_rate;
         return {
           ...p,
           purchase_rate: rates.purchase_rate,
-          selling_rate: rates.selling_rate
+          selling_rate: rates.selling_rate,
+          itemTotalPrice
         };
       })
     );
@@ -127,8 +135,11 @@ exports.getProductById = async (req, res, next) => {
     }
 
     // Add separate purchase and selling rates to product
+    // Also calculate itemTotalPrice = quantity × purchase_rate
     const rates = await calculateSeparateRates(product.id);
-    res.json({ ...product, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate });
+    // Item Total Price: (current quantity) × (purchase rate per unit)
+    const itemTotalPrice = product.quantity * rates.purchase_rate;
+    res.json({ ...product, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate, itemTotalPrice });
   } catch (error) {
     next(error);
   }
@@ -369,16 +380,20 @@ exports.addProductMovement = async (req, res, next) => {
     const priceNum = Number(price) || 0;
     
     if (type === 'PURCHASE') {
-      // When purchasing: add the total cost to the accumulated cost
+      // Update quantity for all movements
+      // Note: cost field is maintained for backward compatibility but Total Product Price 
+      // calculation uses purchase_rate from inventory_item_transactions instead
       await db.run(
-        'UPDATE products SET quantity = quantity + ?, cost = COALESCE(cost, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [qty, priceNum, productId]
+        'UPDATE products SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, productId]
       );
     } else if (type === 'SELL') {
-      // When selling: deduct the specified cost from accumulated cost
+      // Update quantity for all movements
+      // Note: cost field is maintained for backward compatibility but Total Product Price 
+      // calculation uses purchase_rate from inventory_item_transactions instead
       await db.run(
-        'UPDATE products SET quantity = quantity - ?, cost = COALESCE(cost, 0) - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [qty, priceNum, productId]
+        'UPDATE products SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, productId]
       );
     }
 
@@ -396,7 +411,8 @@ exports.addProductMovement = async (req, res, next) => {
 
     const updated = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
     const rates = await calculateSeparateRates(productId);
-    res.json({ message: 'Movement recorded', product: { ...updated, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate } });
+    const itemTotalPrice = updated.quantity * rates.purchase_rate;
+    res.json({ message: 'Movement recorded', product: { ...updated, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate, itemTotalPrice } });
   } catch (error) {
     console.error('Error adding product movement:', error);
     next(error);
@@ -442,14 +458,13 @@ exports.updateProductMovement = async (req, res, next) => {
     // STEP 1: Reverse OLD movement effects
     // Reverse quantity change
     const oldQuantityDelta = oldMovement.type === 'PURCHASE' ? -oldMovement.quantity : oldMovement.quantity;
-    // Reverse cost change
-    const oldPrice = Number(oldMovement.price) || 0;
-    const oldCostDelta = oldMovement.type === 'PURCHASE' ? -oldPrice : oldPrice;
     
     // STEP 2: Apply reversal to product
+    // Note: cost field is maintained for backward compatibility but Total Product Price 
+    // calculation uses purchase_rate from inventory_item_transactions instead
     await db.run(
-      'UPDATE products SET quantity = quantity + ?, cost = COALESCE(cost, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [oldQuantityDelta, oldCostDelta, productId]
+      'UPDATE products SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [oldQuantityDelta, productId]
     );
 
     // STEP 3: Update the movement record
@@ -463,22 +478,23 @@ exports.updateProductMovement = async (req, res, next) => {
     // STEP 4: Apply NEW movement effects
     const newPrice = Number(price) || 0;
     if (type === 'PURCHASE') {
-      // Add quantity and cost
+      // Add quantity only
       await db.run(
-        'UPDATE products SET quantity = quantity + ?, cost = COALESCE(cost, 0) + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [qty, newPrice, productId]
+        'UPDATE products SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, productId]
       );
     } else if (type === 'SELL') {
-      // Subtract quantity and cost
+      // Subtract quantity only
       await db.run(
-        'UPDATE products SET quantity = quantity - ?, cost = COALESCE(cost, 0) - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [qty, newPrice, productId]
+        'UPDATE products SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [qty, productId]
       );
     }
 
     const updated = await db.get('SELECT * FROM products WHERE id = ?', [productId]);
     const rates = await calculateSeparateRates(productId);
-    res.json({ message: 'Movement updated', product: { ...updated, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate } });
+    const itemTotalPrice = updated.quantity * rates.purchase_rate;
+    res.json({ message: 'Movement updated', product: { ...updated, purchase_rate: rates.purchase_rate, selling_rate: rates.selling_rate, itemTotalPrice } });
   } catch (error) {
     console.error('Error updating product movement:', error);
     next(error);

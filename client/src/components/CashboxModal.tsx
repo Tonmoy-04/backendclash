@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PlusIcon, MinusIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from '../context/TranslationContext';
 import api from '../services/api';
 import { parseNumericInput, toInputDateFormat, parseDisplayDateToAPI } from '../utils/numberConverter';
@@ -31,6 +31,7 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showResetModal, setShowResetModal] = useState(false);
 
   // For initialization
   const [openingBalance, setOpeningBalance] = useState('');
@@ -118,6 +119,29 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
     } catch (err: any) {
       const data = err?.response?.data;
       setError(data?.message || data?.error || data?.details || t('cashbox.transactionError'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      await api.post('/cashbox/reset', { confirmReset: true });
+      
+      showSuccess({ 
+        title: t('common.success') || 'Success', 
+        message: t('cashbox.resetSuccess') 
+      });
+
+      setShowResetModal(false);
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      const data = err?.response?.data;
+      setError(data?.message || data?.error || data?.details || 'Failed to reset cashbox');
     } finally {
       setLoading(false);
     }
@@ -285,11 +309,89 @@ const CashboxModal: React.FC<CashboxModalProps> = ({
                       ? t('cashbox.addDeposit')
                       : t('cashbox.addWithdrawal')}
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowResetModal(true)}
+                    disabled={loading}
+                    className="w-full py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 font-semibold rounded-xl shadow-sm transition-all border border-red-200 dark:border-red-700"
+                  >
+                    {t('cashbox.resetCashbox')}
+                  </button>
                 </form>
               </>
             )}
           </div>
         </div>
+
+        {/* Reset Confirmation Modal */}
+        {showResetModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-screen items-center justify-center p-4">
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+                onClick={() => !loading && setShowResetModal(false)}
+              ></div>
+
+              {/* Modal */}
+              <div className="relative bg-white dark:bg-emerald-900 rounded-2xl shadow-2xl w-full max-w-md transform transition-all border-2 border-red-200 dark:border-red-700">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 rounded-t-xl">
+                  <div className="flex items-center gap-3">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                    <h2 className="text-xl font-bold text-red-700 dark:text-red-300">
+                      {t('cashbox.resetCashbox')}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => !loading && setShowResetModal(false)}
+                    className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+                    disabled={loading}
+                  >
+                    <XMarkIcon className="h-6 w-6 text-red-700 dark:text-red-300" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-4">
+                  <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl">
+                    <p className="text-sm text-red-700 dark:text-red-300 font-semibold">
+                      {t('cashbox.resetWarning')}
+                    </p>
+                  </div>
+
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                    {t('cashbox.resetConfirm')}
+                  </p>
+
+                  {error && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl">
+                      <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={() => setShowResetModal(false)}
+                      disabled={loading}
+                      className="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold rounded-xl shadow-md transition-all disabled:opacity-50"
+                    >
+                      {t('common.cancel') || 'Cancel'}
+                    </button>
+                    <button
+                      onClick={handleReset}
+                      disabled={loading}
+                      className="flex-1 py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:from-red-400 disabled:to-orange-400 text-white font-semibold rounded-xl shadow-lg transition-all transform hover:scale-105"
+                    >
+                      {loading ? t('common.loading') : t('cashbox.resetCashbox')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

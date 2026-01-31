@@ -109,7 +109,11 @@ export const en = {
     insufficientBalance: 'Insufficient balance for this withdrawal',
     initError: 'Failed to initialize cashbox',
     transactionError: 'Failed to process transaction',
-    initMessage: 'This amount can only be set once and cannot be changed later.'
+    initMessage: 'This amount can only be set once and cannot be changed later.',
+    resetCashbox: 'Reset Cashbox',
+    resetWarning: 'Warning: This will delete all cashbox data and transactions. This action cannot be undone.',
+    resetConfirm: 'Are you sure you want to reset the cashbox?',
+    resetSuccess: 'Cashbox has been reset successfully'
   },
 
   // Inventory
@@ -123,6 +127,12 @@ export const en = {
     sku: 'SKU',
     category: 'Category',
     price: 'Price',
+    rate: 'Rate',
+    type: 'Type',
+    totalAmount: 'Total Amount',
+    buy: 'Purchase',
+    purchase: 'Purchase',
+    sell: 'Sell',
     stock: 'Stock',
     status: 'Status',
     outOfStock: 'Out of Stock',

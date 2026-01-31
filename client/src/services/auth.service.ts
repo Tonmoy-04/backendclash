@@ -62,6 +62,21 @@ class AuthService {
   getToken(): string | null {
     return localStorage.getItem('token');
   }
+
+  async verifyToken(): Promise<boolean> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return false;
+      }
+      
+      const response = await api.get('/auth/verify-token');
+      return response.status === 200 && response.data.isValid === true;
+    } catch (error) {
+      // Token is invalid or expired
+      return false;
+    }
+  }
 }
 
 const authService = new AuthService();

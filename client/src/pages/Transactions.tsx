@@ -239,12 +239,13 @@ const Transactions: React.FC = () => {
       sanitizedItems = [{ product_name: 'N/A', quantity: 1, price: 0 }];
     }
 
-    const subtotal = sanitizedItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
-    const transportFee = typeof formData.transport_fee === 'number' ? formData.transport_fee : 0;
-    const labourFee = typeof formData.labour_fee === 'number' ? formData.labour_fee : 0;
-    const discount = typeof formData.discount === 'number' ? formData.discount : 0;
+    const subtotal = sanitizedItems.reduce((sum, item) => 
+      Math.round((sum + Math.round(item.quantity * item.price * 100) / 100) * 100) / 100, 0);
+    const transportFee = typeof formData.transport_fee === 'number' ? Math.round(formData.transport_fee * 100) / 100 : 0;
+    const labourFee = typeof formData.labour_fee === 'number' ? Math.round(formData.labour_fee * 100) / 100 : 0;
+    const discount = typeof formData.discount === 'number' ? Math.round(formData.discount * 100) / 100 : 0;
     // Final Total = Subtotal + Transport Fee + Labour Fee - Discount
-    const totalAmount = subtotal + transportFee + labourFee - discount;
+    const totalAmount = Math.round((subtotal + transportFee + labourFee - discount) * 100) / 100;
 
     try {
       const endpoint = formData.type === 'Sale' ? '/sales' : '/purchases';
@@ -802,7 +803,7 @@ const Transactions: React.FC = () => {
               <div className="p-5 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm">
                 <div className="flex flex-col gap-3 mb-4">
                   <div>
-                    <div className="text-xs uppercase tracking-widest font-semibold text-slate-600 dark:text-slate-400">Optional</div>
+                    <div className="text-xs uppercase tracking-widest font-semibold text-slate-600 dark:text-slate-400">{t('transactions.optional')}</div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('transactions.transactionType')}</h3>
                   </div>
                 </div>
@@ -851,7 +852,7 @@ const Transactions: React.FC = () => {
 
               <div className="space-y-2">
                 <label className="block text-sm font-bold text-slate-800 dark:text-slate-100">
-                  Description (Optional)
+                  {t('transactions.description')} ({t('transactions.optional')})
                 </label>
                 <textarea
                   value={formData.description}

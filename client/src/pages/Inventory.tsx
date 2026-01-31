@@ -9,6 +9,7 @@ import DateInput from '../components/DateInput';
 import { buildStockMovementSummary } from '../utils/notificationSummary';
 import '../styles/Inventory.css';
 import { formatBDT } from '../utils/currency';
+import EditInventory from './EditInventory';
 
 interface Product {
   id: number;
@@ -20,6 +21,7 @@ interface Product {
   min_stock: number;
   purchase_rate?: number;
   selling_rate?: number;
+  itemTotalPrice?: number;
   updated_at?: string;
   created_at?: string;
 }
@@ -64,6 +66,8 @@ const Inventory: React.FC = () => {
   const [editMovementQty, setEditMovementQty] = useState('');
   const [editMovementPrice, setEditMovementPrice] = useState('');
   const [editMovementDate, setEditMovementDate] = useState('');
+  const [showInlineEditor, setShowInlineEditor] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
   useEffect(() => {
     // Check if we're coming from dashboard with low stock filter
@@ -75,6 +79,12 @@ const Inventory: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const handler = () => fetchProducts();
+    window.addEventListener('inventory-data-changed', handler);
+    return () => window.removeEventListener('inventory-data-changed', handler);
   }, []);
 
   const fetchProducts = async () => {
@@ -110,6 +120,17 @@ const Inventory: React.FC = () => {
       }
     });
   }, [filteredProducts, sortOption]);
+
+  const openInlineEditor = (productId: number) => {
+    setEditingProductId(productId);
+    setShowInlineEditor(true);
+  };
+
+  const closeInlineEditor = () => {
+    setShowInlineEditor(false);
+    setEditingProductId(null);
+    fetchProducts();
+  };
 
   const handleDelete = (product: Product) => {
     showConfirm({
@@ -466,7 +487,7 @@ const Inventory: React.FC = () => {
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.product')}</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.stock')}</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Rate</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.rate')}</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.status')}</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('common.actions')}</th>
               </tr>
@@ -475,7 +496,7 @@ const Inventory: React.FC = () => {
               {filteredAndSortedProducts.map((product, index) => {
                 const status = getStockStatus(product.quantity, product.min_stock);
                 return (
-                  <tr key={product.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-200 animate-fadeIn" style={{ animationDelay: `${0.5 + index * 0.05}s` }} onClick={() => navigate(`/inventory/edit/${product.id}`)}>
+                  <tr key={product.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 transition-all duration-200 animate-fadeIn" style={{ animationDelay: `${0.5 + index * 0.05}s` }} onClick={() => openInlineEditor(product.id)}>
                     <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
@@ -527,7 +548,7 @@ const Inventory: React.FC = () => {
                         <button 
                           className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all duration-200" 
                           title={t('inventory.editProduct')} 
-                          onClick={() => navigate(`/inventory/edit/${product.id}`)}
+                          onClick={() => openInlineEditor(product.id)}
                         >
                           <PencilIcon className="h-5 w-5" />
                         </button>
@@ -543,6 +564,21 @@ const Inventory: React.FC = () => {
           </table>          </div>        )}
       </div>
       </div>
+      {showInlineEditor && editingProductId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={closeInlineEditor}>
+          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-emerald-50/40 dark:from-emerald-900 dark:to-teal-900/40 rounded-2xl shadow-2xl border border-emerald-200/60 dark:border-emerald-700/40" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={closeInlineEditor}
+              className="absolute top-3 right-3 text-emerald-700 dark:text-emerald-200 hover:opacity-80 text-xl font-bold"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <EditInventory embedded productId={editingProductId} onClose={closeInlineEditor} />
+          </div>
+        </div>
+      )}
+
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowHistoryModal(false)}>
           <div className="bg-gradient-to-br from-white to-emerald-50/40 dark:from-emerald-900 dark:to-teal-900/40 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto border border-emerald-200/50 dark:border-emerald-700/30" onClick={(e) => e.stopPropagation()}>
@@ -579,11 +615,23 @@ const Inventory: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white/70 dark:bg-emerald-950/40">
                   <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 uppercase">{t('inventory.currentStock')}</div>
                   <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{movementProduct?.quantity ?? 0}</div>
                   <div className="text-xs text-emerald-700 dark:text-emerald-300">{t('inventory.onHand')}</div>
+                </div>
+                <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white/70 dark:bg-emerald-950/40">
+                  <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 uppercase">{t('inventory.totalAmount')}</div>
+                  <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                    {formatBDT(
+                      movementProduct?.itemTotalPrice !== undefined
+                        ? movementProduct.itemTotalPrice
+                        : (movementProduct?.quantity || 0) * (movementProduct?.purchase_rate || 0),
+                      { decimals: 2 }
+                    )}
+                  </div>
+                  <div className="text-xs text-emerald-700 dark:text-emerald-300">{t('inventory.stock')} {t('inventory.totalAmount')}</div>
                 </div>
               </div>
 
@@ -602,24 +650,27 @@ const Inventory: React.FC = () => {
                   <table className="min-w-full divide-y divide-emerald-100 dark:divide-emerald-800">
                     <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/40">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Type</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Quantity</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Price</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">Rate</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('common.date')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.type')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('transactions.quantity')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.price')}</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-emerald-900 dark:text-emerald-100 uppercase tracking-wider">{t('inventory.rate')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-emerald-50 dark:divide-emerald-800">
                       {movements.map((m) => {
                         const dateValue = m.transaction_date || m.created_at || new Date().toISOString();
                         const qtyDisplay = m.type === 'PURCHASE' ? `+${m.quantity}` : `-${m.quantity}`;
+                        const typeLabel = m.type === 'PURCHASE'
+                          ? (t('inventory.buy') || t('inventory.purchase') || 'Purchase')
+                          : (t('inventory.sell') || 'Sell');
                         return (
                           <tr key={m.id} className="cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors" onClick={() => handleEditMovement(m)}>
                             <td className="px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
                               {formatDateTime(dateValue)}
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                              {m.type}
+                              {typeLabel}
                             </td>
                             <td className={`px-4 py-3 text-sm font-semibold ${m.type === 'PURCHASE' ? 'text-green-700 dark:text-green-300' : 'text-red-600 dark:text-red-300'}`}>
                               {qtyDisplay}
@@ -690,8 +741,8 @@ const Inventory: React.FC = () => {
           <div className="bg-gradient-to-br from-white to-emerald-50/40 dark:from-emerald-900 dark:to-teal-900/40 rounded-2xl shadow-2xl max-w-md w-full border border-emerald-200/50 dark:border-emerald-700/30" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-emerald-100 dark:border-emerald-800 bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-600 dark:to-teal-600 rounded-t-2xl">
               <div>
-                <div className="text-xs font-semibold text-white/80 uppercase">Edit Movement</div>
-                <div className="text-xl font-bold text-white">{movementProduct?.name || 'Product'}</div>
+                <div className="text-xs font-semibold text-white/80 uppercase">{t('inventory.editMovement')}</div>
+                <div className="text-xl font-bold text-white">{movementProduct?.name || t('inventory.product')}</div>
               </div>
               <button
                 onClick={() => setShowEditMovementModal(false)}
@@ -704,7 +755,7 @@ const Inventory: React.FC = () => {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Type</label>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.type')}</label>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setEditMovementType('SELL')}
@@ -714,7 +765,7 @@ const Inventory: React.FC = () => {
                         : 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'
                     }`}
                   >
-                    Sell
+                    {t('inventory.sell')}
                   </button>
                   <button
                     onClick={() => setEditMovementType('PURCHASE')}
@@ -724,13 +775,13 @@ const Inventory: React.FC = () => {
                         : 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'
                     }`}
                   >
-                    Buy
+                    {t('inventory.buy')}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Quantity</label>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.quantity')}</label>
                 <input
                   type="number"
                   min="1"
@@ -741,7 +792,7 @@ const Inventory: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Total Amount <span className="text-red-600">*</span></label>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('inventory.totalAmount')} <span className="text-red-600">*</span></label>
                 <input
                   type="number"
                   min="0"
@@ -754,7 +805,7 @@ const Inventory: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Date</label>
+                <label className="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">{t('common.date')}</label>
                 <input
                   type="date"
                   value={editMovementDate}

@@ -37,8 +37,8 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Request logging (suppress noisy HEAD/OPTIONS health checks)
 app.use((req: any, res: any, next: any) => {

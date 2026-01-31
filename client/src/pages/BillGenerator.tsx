@@ -271,7 +271,7 @@ const BillGenerator: React.FC = () => {
                 type="text"
                 value={party}
                 onChange={(e) => setParty(e.target.value)}
-                placeholder="Customer/Supplier name"
+                placeholder={t('billGenerator.customerSupplierPlaceholder')}
                 className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
               />
             </div>
@@ -288,10 +288,10 @@ const BillGenerator: React.FC = () => {
                 onChange={(e) => setPayment(e.target.value)}
                 className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
               >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="bank">Bank</option>
-                <option value="due">Due</option>
+                <option value="cash">{t('billGenerator.cash')}</option>
+                <option value="card">{t('billGenerator.card')}</option>
+                <option value="bank">{t('billGenerator.bank')}</option>
+                <option value="due">{t('billGenerator.due')}</option>
               </select>
             </div>
 
@@ -301,13 +301,13 @@ const BillGenerator: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                Address (Optional)
+                {t('customers.address')} ({t('transactions.optional')})
               </label>
               <input
                 type="text"
                 value={tempAddress}
                 onChange={(e) => setTempAddress(e.target.value)}
-                placeholder="Enter address..."
+                placeholder={t('billGenerator.addressPlaceholder')}
                 className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
               />
             </div>
@@ -317,12 +317,12 @@ const BillGenerator: React.FC = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                 </svg>
-                Description (Optional)
+                {t('customers.description')} ({t('transactions.optional')})
               </label>
               <textarea
                 value={tempDescription}
                 onChange={(e) => setTempDescription(e.target.value)}
-                placeholder="Brief description for bill footer..."
+                placeholder={t('billGenerator.descriptionPlaceholder')}
                 rows={2}
                 className="w-full rounded-xl border-2 border-emerald-200 dark:border-emerald-700 bg-white dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
               />

@@ -48,14 +48,25 @@ exports.getDashboardStats = async (req, res, next) => {
        WHERE name NOT LIKE 'Transaction-%'`
     );
 
-    // Total Product Price: sum of accumulated costs for all products
-    // The cost field now tracks the total investment in inventory for each product
-    // When buying: cost increases by purchase amount
-    // When selling: cost decreases proportionally
-    const currentStockCost = await stockDb.get(
-      `SELECT COALESCE(SUM(cost), 0) as value 
-       FROM products 
-       WHERE name NOT LIKE 'Transaction-%'`
+    // Total Product Price: (number of products in stock) × (purchase rate per product)
+    // Formula: Σ(product.quantity × product.purchasePrice)
+    // This calculation:
+    // 1. Reflects the current quantity after all sales, edits, and deletions
+    // 2. Uses the product's purchasing rate (cost price), not selling price
+    // 3. Sums per-product calculations when products have different purchasing rates
+    // 4. Updates correctly when sales are added, edited, or deleted
+    const totalProductPrice = await stockDb.get(
+      `SELECT COALESCE(SUM(p.quantity * COALESCE(r.purchase_rate, 0)), 0) as value 
+       FROM products p
+       LEFT JOIN (
+         SELECT 
+           item_id,
+           AVG(CASE WHEN quantity > 0 THEN price / quantity ELSE 0 END) as purchase_rate
+         FROM inventory_item_transactions
+         WHERE type = 'PURCHASE' AND price IS NOT NULL AND price > 0 AND quantity > 0
+         GROUP BY item_id
+       ) r ON p.id = r.item_id
+       WHERE p.name NOT LIKE 'Transaction-%'`
     );
 
     res.json({
@@ -71,7 +82,7 @@ exports.getDashboardStats = async (req, res, next) => {
       },
       totalRevenue: totalRevenue.total,
       inventoryValue: inventoryValue.value,
-      totalProductPrice: currentStockCost.value
+      totalProductPrice: totalProductPrice.value
     });
   } catch (error) {
     next(error);
@@ -165,7 +176,7 @@ exports.getCustomersDebt = async (req, res, next) => {
 
 exports.getCustomersDebtAlerts = async (req, res, next) => {
   try {
-    const threshold = Number(req.query.threshold) || 100000;
+    const threshold = Number(req.query.threshold) || 1000000;
     const customers = await db.all(
       `SELECT id, name, phone, balance 
        FROM customers 

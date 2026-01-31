@@ -1,0 +1,34 @@
+{
+  "startTime": "2026-01-18T16:55:17.974Z",
+  "totalTests": 1107,
+  "passed": 1107,
+  "failed": 0,
+  "errors": [],
+  "warnings": [
+    "Some amounts may have precision issues"
+  ],
+  "stats": {
+    "insertedCustomers": 100,
+    "insertedSuppliers": 0,
+    "insertedProducts": 0,
+    "insertedTransactions": 1000,
+    "precisionTestsRun": 0,
+    "calculationTestsRun": 1000,
+    "transactionBalance": [
+      {
+        "type": "customer_receivable",
+        "total": 20119.370000000003
+      },
+      {
+        "type": "supplier_payable",
+        "total": -99198.54000000001
+      }
+    ],
+    "saleTotals": [],
+    "purchaseTotals": [],
+    "largestTransaction": 483451.79,
+    "smallestTransaction": -447.39,
+    "averageTransactionSize": 125220.1,
+    "totalTransactionAmount": 125220096.86
+  }
+}

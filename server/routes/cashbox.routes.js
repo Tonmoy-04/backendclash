@@ -21,4 +21,7 @@ router.get('/transactions', cashboxController.getTransactions);
 // Get transaction summary/statistics
 router.get('/summary', cashboxController.getTransactionSummary);
 
+// Reset cashbox (destructive - requires confirmation)
+router.post('/reset', cashboxController.resetCashbox);
+
 module.exports = router;

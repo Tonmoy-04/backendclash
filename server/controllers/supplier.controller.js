@@ -146,11 +146,13 @@ exports.updateSupplierBalance = async (req, res, next) => {
     const { amount, type, description } = req.body;
     const transactionDate = req.body.transaction_date || new Date().toISOString().split('T')[0];
 
-    // Validate and parse amount
+    // Validate and parse amount with precision safeguard
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       return res.status(400).json({ error: 'Valid positive amount is required' });
     }
+    // Round to 2 decimal places to prevent floating-point precision errors
+    const precisionAmount = Math.round(parsedAmount * 100) / 100;
 
     if (!type || !['payment', 'charge'].includes(type)) {
       return res.status(400).json({ error: 'Type must be either "payment" or "charge"' });
@@ -173,11 +175,11 @@ exports.updateSupplierBalance = async (req, res, next) => {
     let balanceBefore = 0;
     if (previousTransactions && Array.isArray(previousTransactions)) {
       for (const tx of previousTransactions) {
-        const txAmount = parseFloat(tx.amount) || 0;
+        const txAmount = Math.round(parseFloat(tx.amount) * 100) / 100 || 0;
         if (tx.type === 'charge') {
-          balanceBefore += txAmount;
+          balanceBefore = Math.round((balanceBefore + txAmount) * 100) / 100;
         } else {
-          balanceBefore -= txAmount;
+          balanceBefore = Math.round((balanceBefore - txAmount) * 100) / 100;
         }
       }
     }
@@ -185,17 +187,17 @@ exports.updateSupplierBalance = async (req, res, next) => {
     let balanceAfter;
     if (type === 'charge') {
       // You purchased something on credit - you owe supplier more
-      balanceAfter = balanceBefore + parsedAmount;
+      balanceAfter = Math.round((balanceBefore + precisionAmount) * 100) / 100;
     } else {
       // You made a payment - you owe supplier less
-      balanceAfter = balanceBefore - parsedAmount;
+      balanceAfter = Math.round((balanceBefore - precisionAmount) * 100) / 100;
     }
 
     // Save transaction history with calculated balances
     const result = await db.run(
       `INSERT INTO supplier_transactions (supplier_id, type, amount, balance_before, balance_after, description, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, type, parsedAmount, balanceBefore, balanceAfter, description || null, transactionDate]
+      [id, type, precisionAmount, balanceBefore, balanceAfter, description || null, transactionDate]
     );
 
     // Recalculate all transactions after this date to update their balances
@@ -210,11 +212,11 @@ exports.updateSupplierBalance = async (req, res, next) => {
     if (laterTransactions && Array.isArray(laterTransactions)) {
       for (const tx of laterTransactions) {
         let newBalance;
-        const txAmount = parseFloat(tx.amount) || 0;
+        const txAmount = Math.round(parseFloat(tx.amount) * 100) / 100 || 0;
         if (tx.type === 'charge') {
-          newBalance = runningBalance + txAmount;
+          newBalance = Math.round((runningBalance + txAmount) * 100) / 100;
         } else {
-          newBalance = runningBalance - txAmount;
+          newBalance = Math.round((runningBalance - txAmount) * 100) / 100;
         }
 
         await db.run(
@@ -337,6 +339,8 @@ exports.updateSupplierTransaction = async (req, res, next) => {
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       return res.status(400).json({ error: 'Valid positive amount is required' });
     }
+    // Round to 2 decimal places to prevent floating-point precision errors
+    const precisionAmount = Math.round(parsedAmount * 100) / 100;
 
     if (!type || !['payment', 'charge'].includes(type)) {
       return res.status(400).json({ error: 'Type must be either "payment" or "charge"' });
@@ -360,7 +364,7 @@ exports.updateSupplierTransaction = async (req, res, next) => {
     const updatedTx = {
       ...existingTx,
       type,
-      amount: parsedAmount,
+      amount: precisionAmount,
       description: description || null,
       created_at: transactionDate ? transactionDate : existingTx.created_at,
     };
@@ -386,9 +390,10 @@ exports.updateSupplierTransaction = async (req, res, next) => {
     let runningBalance = 0;
     for (const tx of allTransactions) {
       const balanceBefore = runningBalance;
+      const txAmount = Math.round(parseFloat(tx.amount) * 100) / 100 || 0;
       const balanceAfter = tx.type === 'charge'
-        ? balanceBefore + parseFloat(tx.amount)
-        : balanceBefore - parseFloat(tx.amount);
+        ? Math.round((balanceBefore + txAmount) * 100) / 100
+        : Math.round((balanceBefore - txAmount) * 100) / 100;
 
       if (tx.id === parseInt(transactionId, 10)) {
         await db.run(

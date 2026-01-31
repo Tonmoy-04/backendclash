@@ -14,7 +14,7 @@ interface CustomerDebtAlertCardProps {
   threshold?: number;
 }
 
-const CustomerDebtAlertCard: React.FC<CustomerDebtAlertCardProps> = ({ customers, threshold = 100000 }) => {
+const CustomerDebtAlertCard: React.FC<CustomerDebtAlertCardProps> = ({ customers, threshold = 1000000 }) => {
   return (
     <div className="bg-gradient-to-br from-white to-orange-50/40 dark:from-amber-900 dark:to-orange-900/30 rounded-2xl shadow-xl p-6 border border-orange-200/60 dark:border-orange-700/40 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-4">

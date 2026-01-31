@@ -1,6 +1,6 @@
 {
   "name": "inventory-desktop-app",
-  "version": "2.0.1",
+  "version": "2.2.1",
   "description": "Inventory Management Desktop Application with Electron, React, and Node.js",
   "main": "electron/main.js",
   "scripts": {

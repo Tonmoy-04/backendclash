@@ -1,0 +1,3736 @@
+{
+  "startTime": "2026-01-18T16:56:23.703Z",
+  "totalTests": 975,
+  "passed": 973,
+  "failed": 2,
+  "errors": [],
+  "warnings": [
+    "Customer count mismatch: expected 100, got 200",
+    "Supplier count mismatch: expected 50, got 100"
+  ],
+  "precisionTests": [
+    {
+      "type": "customer_balance",
+      "expected": 1596.31,
+      "actual": 1596.31,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 749.49,
+      "actual": 749.49,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 2379.87,
+      "actual": 2379.87,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 1888.27,
+      "actual": 1888.27,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 2349.01,
+      "actual": 2349.01,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 773.77,
+      "actual": 773.77,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 2478.44,
+      "actual": 2478.44,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 79.23,
+      "actual": 79.23,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 2043.76,
+      "actual": 2043.76,
+      "status": "PASS"
+    },
+    {
+      "type": "customer_balance",
+      "expected": 2225.41,
+      "actual": 2225.41,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 3731.55,
+      "actual": 3731.55,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 2923.69,
+      "actual": 2923.69,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 367.97,
+      "actual": 367.97,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 1225.57,
+      "actual": 1225.57,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 1101.28,
+      "actual": 1101.28,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 2562.69,
+      "actual": 2562.69,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 3980.66,
+      "actual": 3980.66,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 3003.5,
+      "actual": 3003.5,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 3917.1,
+      "actual": 3917.1,
+      "status": "PASS"
+    },
+    {
+      "type": "supplier_balance",
+      "expected": 298.09,
+      "actual": 298.09,
+      "status": "PASS"
+    }
+  ],
+  "balanceTests": [],
+  "calculationTests": [
+    {
+      "type": "sale",
+      "expected": 8889.34,
+      "actual": 8889.34,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8599.37,
+      "actual": 8599.37,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2907.87,
+      "actual": 2907.87,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2679.64,
+      "actual": 2679.64,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6700.96,
+      "actual": 6700.96,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5452.65,
+      "actual": 5452.65,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10926.41,
+      "actual": 10926.41,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8053.18,
+      "actual": 8053.18,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13499.91,
+      "actual": 13499.91,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6129.79,
+      "actual": 6129.79,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 17147.5,
+      "actual": 17147.5,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13044.69,
+      "actual": 13044.69,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11051.43,
+      "actual": 11051.43,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6515.36,
+      "actual": 6515.36,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10683.22,
+      "actual": 10683.22,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10275.89,
+      "actual": 10275.89,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 15716.29,
+      "actual": 15716.29,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2355.71,
+      "actual": 2355.71,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12174.97,
+      "actual": 12174.97,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3735.38,
+      "actual": 3735.38,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9314.35,
+      "actual": 9314.35,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12708.66,
+      "actual": 12708.66,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16188.96,
+      "actual": 16188.96,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9226.17,
+      "actual": 9226.17,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7730.97,
+      "actual": 7730.97,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6493.73,
+      "actual": 6493.73,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5423.6,
+      "actual": 5423.6,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": -51.58,
+      "actual": -51.58,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7188.97,
+      "actual": 7188.97,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8043.36,
+      "actual": 8043.36,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 15229.17,
+      "actual": 15229.17,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13409.69,
+      "actual": 13409.69,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12594.21,
+      "actual": 12594.21,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6467.89,
+      "actual": 6467.89,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10650.27,
+      "actual": 10650.27,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1474.61,
+      "actual": 1474.61,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4815.44,
+      "actual": 4815.44,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2015.18,
+      "actual": 2015.18,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4595.68,
+      "actual": 4595.68,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7842.71,
+      "actual": 7842.71,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12695.43,
+      "actual": 12695.43,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6978.8,
+      "actual": 6978.8,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8558.16,
+      "actual": 8558.16,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8348.91,
+      "actual": 8348.91,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4263.48,
+      "actual": 4263.48,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 18290.75,
+      "actual": 18290.75,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6665.9,
+      "actual": 6665.9,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11739.19,
+      "actual": 11739.19,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4458.11,
+      "actual": 4458.11,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 22332.16,
+      "actual": 22332.16,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12076.74,
+      "actual": 12076.74,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8210.14,
+      "actual": 8210.14,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12061.92,
+      "actual": 12061.92,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 15000.16,
+      "actual": 15000.16,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2399.98,
+      "actual": 2399.98,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1839.55,
+      "actual": 1839.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13222.38,
+      "actual": 13222.38,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8613.42,
+      "actual": 8613.42,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6291.73,
+      "actual": 6291.73,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2206.06,
+      "actual": 2206.06,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1892.02,
+      "actual": 1892.02,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 624.74,
+      "actual": 624.74,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3305.37,
+      "actual": 3305.37,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7953.56,
+      "actual": 7953.56,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3974.66,
+      "actual": 3974.66,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9020.39,
+      "actual": 9020.39,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1259.7,
+      "actual": 1259.7,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13608.65,
+      "actual": 13608.65,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10987.58,
+      "actual": 10987.58,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6512.78,
+      "actual": 6512.78,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3045.74,
+      "actual": 3045.74,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16430.91,
+      "actual": 16430.91,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1507.39,
+      "actual": 1507.39,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5033.56,
+      "actual": 5033.56,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2997.5,
+      "actual": 2997.5,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5932.65,
+      "actual": 5932.65,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12682.57,
+      "actual": 12682.57,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16521.83,
+      "actual": 16521.83,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6475.75,
+      "actual": 6475.75,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6326.01,
+      "actual": 6326.01,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8599.89,
+      "actual": 8599.89,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7947.55,
+      "actual": 7947.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 20770.02,
+      "actual": 20770.02,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 21617.29,
+      "actual": 21617.29,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10581.33,
+      "actual": 10581.33,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5209.64,
+      "actual": 5209.64,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1052.88,
+      "actual": 1052.88,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2148.24,
+      "actual": 2148.24,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3689.77,
+      "actual": 3689.77,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3562.01,
+      "actual": 3562.01,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6473.43,
+      "actual": 6473.43,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3521.79,
+      "actual": 3521.79,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4707.81,
+      "actual": 4707.81,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11382.63,
+      "actual": 11382.63,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8737.2,
+      "actual": 8737.2,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3640.88,
+      "actual": 3640.88,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5225.91,
+      "actual": 5225.91,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 14412.73,
+      "actual": 14412.73,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 17260.55,
+      "actual": 17260.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7072.7,
+      "actual": 7072.7,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4865.4,
+      "actual": 4865.4,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1610.94,
+      "actual": 1610.94,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12623.44,
+      "actual": 12623.44,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9057.22,
+      "actual": 9057.22,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2077.57,
+      "actual": 2077.57,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3167.94,
+      "actual": 3167.94,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5800.93,
+      "actual": 5800.93,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7486.21,
+      "actual": 7486.21,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13112.71,
+      "actual": 13112.71,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1489.13,
+      "actual": 1489.13,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5835.86,
+      "actual": 5835.86,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3167,
+      "actual": 3167,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 112.27,
+      "actual": 112.27,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 829.23,
+      "actual": 829.23,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5789.94,
+      "actual": 5789.94,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9377.44,
+      "actual": 9377.44,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12054.59,
+      "actual": 12054.59,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5875.94,
+      "actual": 5875.94,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 15441.05,
+      "actual": 15441.05,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3972.16,
+      "actual": 3972.16,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2127.55,
+      "actual": 2127.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3187.68,
+      "actual": 3187.68,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 960.43,
+      "actual": 960.43,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7182.05,
+      "actual": 7182.05,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9373.2,
+      "actual": 9373.2,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6402.26,
+      "actual": 6402.26,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10377.07,
+      "actual": 10377.07,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 15033.09,
+      "actual": 15033.09,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 24903.4,
+      "actual": 24903.4,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 23162.55,
+      "actual": 23162.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1387.18,
+      "actual": 1387.18,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12909.49,
+      "actual": 12909.49,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9754.78,
+      "actual": 9754.78,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10098.55,
+      "actual": 10098.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8297.9,
+      "actual": 8297.9,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 14663.98,
+      "actual": 14663.98,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5423.32,
+      "actual": 5423.32,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12647.58,
+      "actual": 12647.58,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7919.71,
+      "actual": 7919.71,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 14220.86,
+      "actual": 14220.86,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9820.83,
+      "actual": 9820.83,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5733.42,
+      "actual": 5733.42,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 18593.09,
+      "actual": 18593.09,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5624.69,
+      "actual": 5624.69,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11416.96,
+      "actual": 11416.96,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4881.36,
+      "actual": 4881.36,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6006.79,
+      "actual": 6006.79,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5578.85,
+      "actual": 5578.85,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4296.65,
+      "actual": 4296.65,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6942.09,
+      "actual": 6942.09,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7535.49,
+      "actual": 7535.49,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2454.24,
+      "actual": 2454.24,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": -67.17,
+      "actual": -67.17,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7909.73,
+      "actual": 7909.73,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4216.7,
+      "actual": 4216.7,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9235.57,
+      "actual": 9235.57,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4578.54,
+      "actual": 4578.54,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16020.2,
+      "actual": 16020.2,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3737.44,
+      "actual": 3737.44,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12739.8,
+      "actual": 12739.8,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6138.04,
+      "actual": 6138.04,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2076.77,
+      "actual": 2076.77,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9093.63,
+      "actual": 9093.63,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4255.54,
+      "actual": 4255.54,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1685.63,
+      "actual": 1685.63,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9467.56,
+      "actual": 9467.56,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 457.42,
+      "actual": 457.42,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3230.41,
+      "actual": 3230.41,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7138.18,
+      "actual": 7138.18,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7049.23,
+      "actual": 7049.23,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12950.11,
+      "actual": 12950.11,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8055.88,
+      "actual": 8055.88,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7122.99,
+      "actual": 7122.99,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1876.85,
+      "actual": 1876.85,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 710.17,
+      "actual": 710.17,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3533.7,
+      "actual": 3533.7,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8857.14,
+      "actual": 8857.14,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9659.83,
+      "actual": 9659.83,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7840.65,
+      "actual": 7840.65,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3591.39,
+      "actual": 3591.39,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 17401.94,
+      "actual": 17401.94,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6064.76,
+      "actual": 6064.76,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3115.41,
+      "actual": 3115.41,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3758.65,
+      "actual": 3758.65,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7573.66,
+      "actual": 7573.66,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6452.07,
+      "actual": 6452.07,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 994.55,
+      "actual": 994.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11169.5,
+      "actual": 11169.5,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6774.24,
+      "actual": 6774.24,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3505.01,
+      "actual": 3505.01,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4554.03,
+      "actual": 4554.03,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13502.56,
+      "actual": 13502.56,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10341.39,
+      "actual": 10341.39,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3994.2,
+      "actual": 3994.2,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11949.41,
+      "actual": 11949.41,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11361.43,
+      "actual": 11361.43,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 495.02,
+      "actual": 495.02,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8968.45,
+      "actual": 8968.45,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6586.22,
+      "actual": 6586.22,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 699.76,
+      "actual": 699.76,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 243.14,
+      "actual": 243.14,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6421,
+      "actual": 6421,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 756.69,
+      "actual": 756.69,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 964.88,
+      "actual": 964.88,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 18880.11,
+      "actual": 18880.11,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5957.67,
+      "actual": 5957.67,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 27366.69,
+      "actual": 27366.69,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8334.31,
+      "actual": 8334.31,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13716.82,
+      "actual": 13716.82,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7668.02,
+      "actual": 7668.02,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10948.4,
+      "actual": 10948.4,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9079.45,
+      "actual": 9079.45,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8039.45,
+      "actual": 8039.45,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2290.26,
+      "actual": 2290.26,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6695.48,
+      "actual": 6695.48,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3284.55,
+      "actual": 3284.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5817.3,
+      "actual": 5817.3,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 15163.99,
+      "actual": 15163.99,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3507.63,
+      "actual": 3507.63,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13129.23,
+      "actual": 13129.23,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 14877.79,
+      "actual": 14877.79,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 794.27,
+      "actual": 794.27,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1931.13,
+      "actual": 1931.13,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 17162.48,
+      "actual": 17162.48,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16143.72,
+      "actual": 16143.72,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": -288.55,
+      "actual": -288.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5706.35,
+      "actual": 5706.35,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5331.66,
+      "actual": 5331.66,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8609.5,
+      "actual": 8609.5,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16616.55,
+      "actual": 16616.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2344,
+      "actual": 2344,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5026.01,
+      "actual": 5026.01,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7849.53,
+      "actual": 7849.53,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1301.68,
+      "actual": 1301.68,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12872.55,
+      "actual": 12872.55,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 14635.62,
+      "actual": 14635.62,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2067.32,
+      "actual": 2067.32,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4733.62,
+      "actual": 4733.62,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6301.24,
+      "actual": 6301.24,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 999.17,
+      "actual": 999.17,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 14507.37,
+      "actual": 14507.37,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10679.12,
+      "actual": 10679.12,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9470.5,
+      "actual": 9470.5,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6363.26,
+      "actual": 6363.26,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5150.09,
+      "actual": 5150.09,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6226.01,
+      "actual": 6226.01,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10049.67,
+      "actual": 10049.67,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13197.04,
+      "actual": 13197.04,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7333.97,
+      "actual": 7333.97,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5563.96,
+      "actual": 5563.96,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4058.77,
+      "actual": 4058.77,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12543.51,
+      "actual": 12543.51,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4366.04,
+      "actual": 4366.04,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8777.47,
+      "actual": 8777.47,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 3978.78,
+      "actual": 3978.78,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9026.58,
+      "actual": 9026.58,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9826.94,
+      "actual": 9826.94,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1468.13,
+      "actual": 1468.13,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6341.72,
+      "actual": 6341.72,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1869.96,
+      "actual": 1869.96,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2004.4,
+      "actual": 2004.4,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2724.43,
+      "actual": 2724.43,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8104.57,
+      "actual": 8104.57,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6201.48,
+      "actual": 6201.48,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5734.99,
+      "actual": 5734.99,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 700.66,
+      "actual": 700.66,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16028.99,
+      "actual": 16028.99,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6883.5,
+      "actual": 6883.5,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4791.36,
+      "actual": 4791.36,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12027.04,
+      "actual": 12027.04,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6697.81,
+      "actual": 6697.81,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 13007.75,
+      "actual": 13007.75,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 21403.68,
+      "actual": 21403.68,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16489.53,
+      "actual": 16489.53,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10840.41,
+      "actual": 10840.41,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 669.29,
+      "actual": 669.29,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 11093.47,
+      "actual": 11093.47,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1200.76,
+      "actual": 1200.76,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2048.84,
+      "actual": 2048.84,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 19124.99,
+      "actual": 19124.99,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 9634.68,
+      "actual": 9634.68,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 7224.14,
+      "actual": 7224.14,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 19472.99,
+      "actual": 19472.99,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2108.22,
+      "actual": 2108.22,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 16883.89,
+      "actual": 16883.89,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 12617.04,
+      "actual": 12617.04,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5747.44,
+      "actual": 5747.44,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2483.38,
+      "actual": 2483.38,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4784.13,
+      "actual": 4784.13,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 10524.11,
+      "actual": 10524.11,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1653.31,
+      "actual": 1653.31,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 17044.08,
+      "actual": 17044.08,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8510,
+      "actual": 8510,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 5317.15,
+      "actual": 5317.15,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4247.85,
+      "actual": 4247.85,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 4288.27,
+      "actual": 4288.27,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 1616.48,
+      "actual": 1616.48,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 2320.5,
+      "actual": 2320.5,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 8193.02,
+      "actual": 8193.02,
+      "status": "PASS"
+    },
+    {
+      "type": "sale",
+      "expected": 6095.25,
+      "actual": 6095.25,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2415.06,
+      "actual": 2415.06,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4993.31,
+      "actual": 4993.31,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6318.02,
+      "actual": 6318.02,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11578.51,
+      "actual": 11578.51,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7232.84,
+      "actual": 7232.84,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 690.12,
+      "actual": 690.12,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 121.79,
+      "actual": 121.79,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6836.81,
+      "actual": 6836.81,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -65.85,
+      "actual": -65.85,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8046.82,
+      "actual": 8046.82,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5738.92,
+      "actual": 5738.92,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8797.4,
+      "actual": 8797.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13632.5,
+      "actual": 13632.5,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4878.93,
+      "actual": 4878.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5988.68,
+      "actual": 5988.68,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7510.97,
+      "actual": 7510.97,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10645.01,
+      "actual": 10645.01,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13054.71,
+      "actual": 13054.71,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4748.36,
+      "actual": 4748.36,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4466.57,
+      "actual": 4466.57,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3057.35,
+      "actual": 3057.35,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7904.27,
+      "actual": 7904.27,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14118.89,
+      "actual": 14118.89,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3140.25,
+      "actual": 3140.25,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7527.51,
+      "actual": 7527.51,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9728.52,
+      "actual": 9728.52,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7968.48,
+      "actual": 7968.48,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 328.51,
+      "actual": 328.51,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3070.56,
+      "actual": 3070.56,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9716.63,
+      "actual": 9716.63,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7051.66,
+      "actual": 7051.66,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5418.57,
+      "actual": 5418.57,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5046.69,
+      "actual": 5046.69,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3002.36,
+      "actual": 3002.36,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11463.93,
+      "actual": 11463.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8597.71,
+      "actual": 8597.71,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2628.18,
+      "actual": 2628.18,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 12660.63,
+      "actual": 12660.63,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3634.6,
+      "actual": 3634.6,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10968.24,
+      "actual": 10968.24,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2588.69,
+      "actual": 2588.69,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -400.07,
+      "actual": -400.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -483.01,
+      "actual": -483.01,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7987.59,
+      "actual": 7987.59,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13717.82,
+      "actual": 13717.82,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2184.06,
+      "actual": 2184.06,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5836.5,
+      "actual": 5836.5,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5710.02,
+      "actual": 5710.02,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10747.79,
+      "actual": 10747.79,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5140.06,
+      "actual": 5140.06,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 23811.01,
+      "actual": 23811.01,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5982.04,
+      "actual": 5982.04,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 21640.09,
+      "actual": 21640.09,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5309.5,
+      "actual": 5309.5,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7087.42,
+      "actual": 7087.42,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13822.71,
+      "actual": 13822.71,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10982.48,
+      "actual": 10982.48,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9849.75,
+      "actual": 9849.75,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1433.65,
+      "actual": 1433.65,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2507.85,
+      "actual": 2507.85,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 12416.76,
+      "actual": 12416.76,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14916.31,
+      "actual": 14916.31,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5382.47,
+      "actual": 5382.47,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6832.29,
+      "actual": 6832.29,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 12708.41,
+      "actual": 12708.41,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1769.08,
+      "actual": 1769.08,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1038.01,
+      "actual": 1038.01,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7526.52,
+      "actual": 7526.52,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7542.55,
+      "actual": 7542.55,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 676.15,
+      "actual": 676.15,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6134.61,
+      "actual": 6134.61,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5458.08,
+      "actual": 5458.08,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2266.1,
+      "actual": 2266.1,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7390.8,
+      "actual": 7390.8,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 17195.09,
+      "actual": 17195.09,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -942.21,
+      "actual": -942.21,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7388.51,
+      "actual": 7388.51,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1852.2,
+      "actual": 1852.2,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3487.42,
+      "actual": 3487.42,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2464.59,
+      "actual": 2464.59,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6992.18,
+      "actual": 6992.18,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4953.05,
+      "actual": 4953.05,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4736.76,
+      "actual": 4736.76,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11383.43,
+      "actual": 11383.43,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8464.64,
+      "actual": 8464.64,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7586.84,
+      "actual": 7586.84,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10721.4,
+      "actual": 10721.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1672.93,
+      "actual": 1672.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 18854.73,
+      "actual": 18854.73,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6902.29,
+      "actual": 6902.29,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7176.83,
+      "actual": 7176.83,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2710.41,
+      "actual": 2710.41,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11036.15,
+      "actual": 11036.15,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2053.76,
+      "actual": 2053.76,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13291.07,
+      "actual": 13291.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -189.7,
+      "actual": -189.7,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4761.62,
+      "actual": 4761.62,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14186.52,
+      "actual": 14186.52,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -506.58,
+      "actual": -506.58,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 16022.69,
+      "actual": 16022.69,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8282.07,
+      "actual": 8282.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 20521.12,
+      "actual": 20521.12,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1569.69,
+      "actual": 1569.69,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7179.22,
+      "actual": 7179.22,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5128.59,
+      "actual": 5128.59,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14260.35,
+      "actual": 14260.35,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8110.86,
+      "actual": 8110.86,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8066.97,
+      "actual": 8066.97,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2203.37,
+      "actual": 2203.37,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 109.46,
+      "actual": 109.46,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4833.52,
+      "actual": 4833.52,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3601.49,
+      "actual": 3601.49,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 15130.87,
+      "actual": 15130.87,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9021.63,
+      "actual": 9021.63,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9087.4,
+      "actual": 9087.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 15222.36,
+      "actual": 15222.36,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6353.97,
+      "actual": 6353.97,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4022.4,
+      "actual": 4022.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4611.39,
+      "actual": 4611.39,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5633.39,
+      "actual": 5633.39,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8181.82,
+      "actual": 8181.82,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9416.45,
+      "actual": 9416.45,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3836.06,
+      "actual": 3836.06,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8681.55,
+      "actual": 8681.55,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2964.49,
+      "actual": 2964.49,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 708.34,
+      "actual": 708.34,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5080.3,
+      "actual": 5080.3,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8467.42,
+      "actual": 8467.42,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7327.4,
+      "actual": 7327.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9362.88,
+      "actual": 9362.88,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8039.63,
+      "actual": 8039.63,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4977.81,
+      "actual": 4977.81,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7957.02,
+      "actual": 7957.02,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 884.8,
+      "actual": 884.8,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10693.65,
+      "actual": 10693.65,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8347.82,
+      "actual": 8347.82,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 37.31,
+      "actual": 37.31,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14215.81,
+      "actual": 14215.81,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4395.31,
+      "actual": 4395.31,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4057.44,
+      "actual": 4057.44,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8929.12,
+      "actual": 8929.12,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1900.58,
+      "actual": 1900.58,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5016.09,
+      "actual": 5016.09,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 20026.02,
+      "actual": 20026.02,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1360.28,
+      "actual": 1360.28,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9126.2,
+      "actual": 9126.2,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3366.01,
+      "actual": 3366.01,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5622.78,
+      "actual": 5622.78,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 841.97,
+      "actual": 841.97,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 547.16,
+      "actual": 547.16,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8103.24,
+      "actual": 8103.24,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7512.32,
+      "actual": 7512.32,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9176.93,
+      "actual": 9176.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4848.98,
+      "actual": 4848.98,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8803.7,
+      "actual": 8803.7,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4625,
+      "actual": 4625,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3355.79,
+      "actual": 3355.79,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4331.93,
+      "actual": 4331.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9494.74,
+      "actual": 9494.74,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2356,
+      "actual": 2356,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11299.76,
+      "actual": 11299.76,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3917.94,
+      "actual": 3917.94,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2968.33,
+      "actual": 2968.33,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7908.82,
+      "actual": 7908.82,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14038.95,
+      "actual": 14038.95,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 12677.01,
+      "actual": 12677.01,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4237.64,
+      "actual": 4237.64,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 189.07,
+      "actual": 189.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2566.06,
+      "actual": 2566.06,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7541.93,
+      "actual": 7541.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 202.4,
+      "actual": 202.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2811.77,
+      "actual": 2811.77,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13379.4,
+      "actual": 13379.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11979.02,
+      "actual": 11979.02,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3028.3,
+      "actual": 3028.3,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -1162.35,
+      "actual": -1162.35,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4661.52,
+      "actual": 4661.52,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2882.17,
+      "actual": 2882.17,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -808.48,
+      "actual": -808.48,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 396.11,
+      "actual": 396.11,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5877.8,
+      "actual": 5877.8,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10368.44,
+      "actual": 10368.44,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5189.86,
+      "actual": 5189.86,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10842.84,
+      "actual": 10842.84,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3150.51,
+      "actual": 3150.51,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1609.87,
+      "actual": 1609.87,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5649.67,
+      "actual": 5649.67,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9275.73,
+      "actual": 9275.73,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4775.06,
+      "actual": 4775.06,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5845.55,
+      "actual": 5845.55,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7127.05,
+      "actual": 7127.05,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1891.11,
+      "actual": 1891.11,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7454.14,
+      "actual": 7454.14,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 16957,
+      "actual": 16957,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1358.12,
+      "actual": 1358.12,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3866.64,
+      "actual": 3866.64,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9347.84,
+      "actual": 9347.84,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1590.73,
+      "actual": 1590.73,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10056.95,
+      "actual": 10056.95,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13426.11,
+      "actual": 13426.11,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2838.86,
+      "actual": 2838.86,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6645.45,
+      "actual": 6645.45,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2552.39,
+      "actual": 2552.39,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9354.48,
+      "actual": 9354.48,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5251.35,
+      "actual": 5251.35,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 12110.07,
+      "actual": 12110.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 949.85,
+      "actual": 949.85,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 43.64,
+      "actual": 43.64,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1109.89,
+      "actual": 1109.89,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7263.27,
+      "actual": 7263.27,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7194.02,
+      "actual": 7194.02,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5394.97,
+      "actual": 5394.97,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4592.03,
+      "actual": 4592.03,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6965.52,
+      "actual": 6965.52,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1131.37,
+      "actual": 1131.37,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3621.53,
+      "actual": 3621.53,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4662.4,
+      "actual": 4662.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5407.37,
+      "actual": 5407.37,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -34.35,
+      "actual": -34.35,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2192.09,
+      "actual": 2192.09,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 22390.36,
+      "actual": 22390.36,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8901.97,
+      "actual": 8901.97,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7459.57,
+      "actual": 7459.57,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4632.41,
+      "actual": 4632.41,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -361.6,
+      "actual": -361.6,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4520.1,
+      "actual": 4520.1,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14953.56,
+      "actual": 14953.56,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7784.37,
+      "actual": 7784.37,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8703.64,
+      "actual": 8703.64,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9094.72,
+      "actual": 9094.72,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10224.11,
+      "actual": 10224.11,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 85.15,
+      "actual": 85.15,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 16848.41,
+      "actual": 16848.41,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6441.98,
+      "actual": 6441.98,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9461.93,
+      "actual": 9461.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4517.9,
+      "actual": 4517.9,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10684.87,
+      "actual": 10684.87,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 968.95,
+      "actual": 968.95,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1663.37,
+      "actual": 1663.37,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6934.73,
+      "actual": 6934.73,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6988.31,
+      "actual": 6988.31,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 97.09,
+      "actual": 97.09,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13427.93,
+      "actual": 13427.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11082.78,
+      "actual": 11082.78,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6499.21,
+      "actual": 6499.21,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13930.66,
+      "actual": 13930.66,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1597.75,
+      "actual": 1597.75,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5081.89,
+      "actual": 5081.89,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3254.51,
+      "actual": 3254.51,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9840.88,
+      "actual": 9840.88,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2709.57,
+      "actual": 2709.57,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11494.79,
+      "actual": 11494.79,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 12004.84,
+      "actual": 12004.84,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 12694.95,
+      "actual": 12694.95,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7978.72,
+      "actual": 7978.72,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3931.71,
+      "actual": 3931.71,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 404.93,
+      "actual": 404.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 15955.4,
+      "actual": 15955.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14126.07,
+      "actual": 14126.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8877.2,
+      "actual": 8877.2,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6379.71,
+      "actual": 6379.71,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9554.07,
+      "actual": 9554.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4017.5,
+      "actual": 4017.5,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3036.91,
+      "actual": 3036.91,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10406.85,
+      "actual": 10406.85,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 8305.61,
+      "actual": 8305.61,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2913.52,
+      "actual": 2913.52,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 733.33,
+      "actual": 733.33,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -118.45,
+      "actual": -118.45,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7371.98,
+      "actual": 7371.98,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9128.57,
+      "actual": 9128.57,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11099.96,
+      "actual": 11099.96,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 3903.03,
+      "actual": 3903.03,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13298.29,
+      "actual": 13298.29,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 18417.8,
+      "actual": 18417.8,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 9592.83,
+      "actual": 9592.83,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5667.07,
+      "actual": 5667.07,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2261.08,
+      "actual": 2261.08,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2448.56,
+      "actual": 2448.56,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 4942.06,
+      "actual": 4942.06,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5804.93,
+      "actual": 5804.93,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7872.72,
+      "actual": 7872.72,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2420.48,
+      "actual": 2420.48,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 14749.43,
+      "actual": 14749.43,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7756.71,
+      "actual": 7756.71,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 5022.21,
+      "actual": 5022.21,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7014.77,
+      "actual": 7014.77,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 7352.72,
+      "actual": 7352.72,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 10352.8,
+      "actual": 10352.8,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1741.84,
+      "actual": 1741.84,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 13075.79,
+      "actual": 13075.79,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 15262.79,
+      "actual": 15262.79,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 11620.89,
+      "actual": 11620.89,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 876.37,
+      "actual": 876.37,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6556.56,
+      "actual": 6556.56,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 610.4,
+      "actual": 610.4,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 6899.94,
+      "actual": 6899.94,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": -222.36,
+      "actual": -222.36,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 1888.8,
+      "actual": 1888.8,
+      "status": "PASS"
+    },
+    {
+      "type": "purchase",
+      "expected": 2079.24,
+      "actual": 2079.24,
+      "status": "PASS"
+    }
+  ]
+}

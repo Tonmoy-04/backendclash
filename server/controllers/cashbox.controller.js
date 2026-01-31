@@ -297,4 +297,58 @@ exports.getTransactionSummary = async (req, res, next) => {
   }
 };
 
+/**
+ * Reset cashbox - clear all data and return to uninitialized state
+ * This requires confirmation as it's a destructive operation
+ */
+exports.resetCashbox = async (req, res, next) => {
+  try {
+    const { confirmReset } = req.body;
+
+    // Require explicit confirmation
+    if (!confirmReset) {
+      return res.status(400).json({ 
+        message: 'Reset requires explicit confirmation. Set confirmReset to true.' 
+      });
+    }
+
+    // Start transaction
+    await db.run('BEGIN TRANSACTION');
+
+    try {
+      // Delete all cashbox transactions
+      await db.run('DELETE FROM cashbox_transactions');
+
+      // Reset cashbox to uninitialized state
+      await db.run(`
+        UPDATE cashbox 
+        SET is_initialized = 0, 
+            opening_balance = 0, 
+            current_balance = 0,
+            updated_at = CURRENT_TIMESTAMP
+      `);
+
+      await db.run('COMMIT');
+
+      res.json({
+        message: 'Cashbox has been reset successfully',
+        cashbox: {
+          is_initialized: 0,
+          opening_balance: 0,
+          current_balance: 0
+        }
+      });
+    } catch (error) {
+      try {
+        await db.run('ROLLBACK');
+      } catch (rollbackErr) {
+        logger.error(`Failed to rollback reset transaction: ${rollbackErr.message}`);
+      }
+      throw error;
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = exports;

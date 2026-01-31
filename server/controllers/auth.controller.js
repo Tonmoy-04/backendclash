@@ -69,7 +69,7 @@ exports.login = async (req, res, next) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     res.json({
@@ -88,6 +88,27 @@ exports.login = async (req, res, next) => {
 
 exports.logout = (req, res) => {
   res.json({ message: 'Logged out successfully' });
+};
+
+exports.verifyToken = async (req, res, next) => {
+  try {
+    // If we reach here, the token is valid (verifyToken middleware already checked it)
+    const user = await db.get(
+      'SELECT id, username, email, role FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found', isValid: false });
+    }
+
+    res.json({ 
+      isValid: true,
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 exports.getCurrentUser = async (req, res, next) => {

@@ -108,12 +108,13 @@ exports.createSale = async (req, res, next) => {
       console.log('Processing item:', JSON.stringify(item, null, 2));
       const productId = item.product_id || null;
       const productName = item.product_name && item.product_name.trim() ? item.product_name.trim() : null;
-      const quantity = item.quantity || 1;
+      const quantity = Number(item.quantity) || 1;
       const unitPrice = (item.price !== undefined && item.price !== null)
         ? Number(item.price)
         : 0;
 
-      const itemSubtotal = quantity * unitPrice;
+      // Calculate item subtotal with precision rounding
+      const itemSubtotal = Math.round(quantity * unitPrice * 100) / 100;
 
       processedItems.push({
         product_name: productName,
@@ -123,7 +124,7 @@ exports.createSale = async (req, res, next) => {
         subtotal: itemSubtotal
       });
 
-      subtotal += itemSubtotal;
+      subtotal = Math.round((subtotal + itemSubtotal) * 100) / 100;
     }
 
     // Use provided date or default to now
@@ -131,10 +132,10 @@ exports.createSale = async (req, res, next) => {
     // Respect client-entered totals (we derive unit price client-side)
     // No automatic tax so that total matches input
     const tax = 0;
-    const discountVal = Number(discount) || 0;
-    const transportVal = Number(transport_fee) || 0;
-    const labourVal = Number(labour_fee) || 0;
-    const total = req.body.total || (subtotal - discountVal);
+    const discountVal = Math.round((Number(discount) || 0) * 100) / 100;
+    const transportVal = Math.round((Number(transport_fee) || 0) * 100) / 100;
+    const labourVal = Math.round((Number(labour_fee) || 0) * 100) / 100;
+    const total = Math.round((req.body.total || (subtotal - discountVal) + transportVal + labourVal) * 100) / 100;
 
     // Create sale with minimal required data
     const userId = req.user?.id || 1;
@@ -258,18 +259,19 @@ exports.updateSale = async (req, res, next) => {
     let calculatedTotal = 0;
     if (items && Array.isArray(items) && items.length > 0) {
       for (const item of items) {
-        const quantity = item.quantity || 1;
+        const quantity = Number(item.quantity) || 1;
         const price = (item.price !== undefined && item.price !== null) ? Number(item.price) : 0;
-        calculatedTotal += quantity * price;
+        const itemSubtotal = Math.round(quantity * price * 100) / 100;
+        calculatedTotal = Math.round((calculatedTotal + itemSubtotal) * 100) / 100;
       }
     } else if (total !== undefined && total !== null) {
-      calculatedTotal = Number(total) || 0;
+      calculatedTotal = Math.round(Number(total) * 100) / 100 || 0;
     }
 
-    const finalTotal = req.body.total || calculatedTotal;
-    const discountVal = Number(discount) || 0;
-    const transportVal = Number(transport_fee) || 0;
-    const labourVal = Number(labour_fee) || 0;
+    const finalTotal = req.body.total ? Math.round(Number(req.body.total) * 100) / 100 : calculatedTotal;
+    const discountVal = Math.round((Number(discount) || 0) * 100) / 100;
+    const transportVal = Math.round((Number(transport_fee) || 0) * 100) / 100;
+    const labourVal = Math.round((Number(labour_fee) || 0) * 100) / 100;
     const tax = 0;
 
     // ===== STEP 3: Begin transaction to ensure atomicity =====

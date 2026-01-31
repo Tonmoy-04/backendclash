@@ -22,21 +22,55 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    const token = authService.getToken();
-    // Only treat the session as authenticated if BOTH user and token exist.
-    // This prevents a stale `user` value (without token) from causing 401 spam in packaged builds.
-    if (currentUser && token) {
-      setUser(currentUser);
-    } else {
-      // Clean up any partial/stale auth state.
-      if (currentUser && !token) {
-        authService.logout();
+  // Verify token validity on app load and when app regains focus
+  const verifyAndRestoreSession = async () => {
+    try {
+      const currentUser = authService.getCurrentUser();
+      const token = authService.getToken();
+      
+      // If we have both user and token, verify the token is still valid
+      if (currentUser && token) {
+        const isTokenValid = await authService.verifyToken();
+        
+        if (isTokenValid) {
+          setUser(currentUser);
+        } else {
+          // Token is expired or invalid - clear everything
+          authService.logout();
+          setUser(null);
+        }
+      } else {
+        // No user or token - clean up any partial auth state
+        if (currentUser && !token) {
+          authService.logout();
+        }
+        setUser(null);
       }
+    } catch (error) {
+      // On error, clear auth state to be safe
+      authService.logout();
       setUser(null);
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    // Verify session on app load
+    verifyAndRestoreSession().finally(() => {
+      setLoading(false);
+    });
+  }, []);
+
+  // Also verify when the app regains focus (user returns after being idle)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Re-verify token when app comes to focus
+      verifyAndRestoreSession();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
