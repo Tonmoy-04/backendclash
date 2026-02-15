@@ -659,7 +659,9 @@ const Inventory: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-emerald-50 dark:divide-emerald-800">
                       {movements.map((m) => {
-                        const dateValue = m.transaction_date || m.created_at || new Date().toISOString();
+                        const dateValue = m.transaction_date && m.transaction_date.trim() 
+                          ? m.transaction_date 
+                          : (m.created_at && m.created_at.trim() ? m.created_at : new Date().toISOString());
                         const qtyDisplay = m.type === 'PURCHASE' ? `+${m.quantity}` : `-${m.quantity}`;
                         const typeLabel = m.type === 'PURCHASE'
                           ? (t('inventory.buy') || t('inventory.purchase') || 'Purchase')
@@ -667,7 +669,7 @@ const Inventory: React.FC = () => {
                         return (
                           <tr key={m.id} className="cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors" onClick={() => handleEditMovement(m)}>
                             <td className="px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
-                              {formatDateTime(dateValue)}
+                              {formatDateTime(dateValue) || '—'}
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-emerald-900 dark:text-emerald-100">
                               {typeLabel}

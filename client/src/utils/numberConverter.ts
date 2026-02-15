@@ -122,12 +122,22 @@ export const formatDate = (date: Date | string): string => {
  * @param date - Date object or string (ISO 8601 format)
  * @returns Formatted datetime string in local time with 12-hour format
  */
-export const formatDateTime = (date: Date | string): string => {
+export const formatDateTime = (date: Date | string | null | undefined): string => {
+  // Handle null, undefined, or empty strings
+  if (!date) {
+    return '';
+  }
+  
   let dateObj: Date;
   
   if (typeof date === 'string') {
+    // Trim whitespace and handle empty strings
+    const trimmedDate = date.trim();
+    if (!trimmedDate) {
+      return '';
+    }
     // Parse ISO 8601 date string and ensure local time conversion
-    dateObj = new Date(date);
+    dateObj = new Date(trimmedDate);
   } else {
     dateObj = date;
   }
