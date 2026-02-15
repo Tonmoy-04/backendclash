@@ -3,6 +3,7 @@ const stockDb = require('../database/stockDb');
 const { generateBill } = require('../utils/billGenerator');
 const { ensureItemTransactionsTable, insertItemTransaction } = require('../utils/itemTransactions');
 const { touchProduct, touchCustomer } = require('../utils/activity');
+const { parseDDMMYYYY } = require('../utils/dateConverter');
 
 async function getSalesColumnSet() {
   try {
@@ -55,6 +56,23 @@ exports.getAllSales = async (req, res, next) => {
         console.warn(`Failed to parse items for sale ${sale.id}:`, err.message);
         sale.items = [];
       }
+      
+      // Sanitize sale_date to ensure it's in ISO format
+      if (sale.sale_date) {
+        try {
+          const dateObj = new Date(sale.sale_date);
+          if (isNaN(dateObj.getTime())) {
+            console.warn(`[getAllSales] Invalid sale_date for sale ${sale.id}:`, sale.sale_date);
+            sale.sale_date = new Date().toISOString(); // Fallback to now
+          } else {
+            // Ensure it's in ISO format
+            sale.sale_date = dateObj.toISOString();
+          }
+        } catch (err) {
+          console.warn(`[getAllSales] Error parsing sale_date for sale ${sale.id}:`, err.message);
+          sale.sale_date = new Date().toISOString();
+        }
+      }
     });
 
     res.json(sales);
@@ -79,6 +97,23 @@ exports.getSaleById = async (req, res, next) => {
     );
 
     sale.items = items;
+    
+    // Sanitize sale_date to ensure it's in ISO format
+    if (sale.sale_date) {
+      try {
+        const dateObj = new Date(sale.sale_date);
+        if (isNaN(dateObj.getTime())) {
+          console.warn(`[getSaleById] Invalid sale_date for sale ${sale.id}:`, sale.sale_date);
+          sale.sale_date = new Date().toISOString();
+        } else {
+          sale.sale_date = dateObj.toISOString();
+        }
+      } catch (err) {
+        console.warn(`[getSaleById] Error parsing sale_date:`, err.message);
+        sale.sale_date = new Date().toISOString();
+      }
+    }
+    
     res.json(sale);
   } catch (error) {
     next(error);
@@ -127,8 +162,30 @@ exports.createSale = async (req, res, next) => {
       subtotal = Math.round((subtotal + itemSubtotal) * 100) / 100;
     }
 
-    // Use provided date or default to now
-    const saleDate = req.body.sale_date || new Date().toISOString();
+    // Parse and validate sale date - NO FALLBACKS
+    console.log('[Sales Controller] Incoming sale_date:', req.body.sale_date);
+    console.log('[Sales Controller] sale_date type:', typeof req.body.sale_date);
+    
+    if (!req.body.sale_date) {
+      return res.status(400).json({ 
+        error: 'sale_date is required', 
+        details: 'Please provide a valid date in dd/mm/yyyy format' 
+      });
+    }
+    
+    const saleDate = parseDDMMYYYY(req.body.sale_date);
+    console.log('[Sales Controller] Parsed date:', saleDate);
+    console.log('[Sales Controller] Is valid date?', saleDate instanceof Date && !isNaN(saleDate.getTime()));
+    
+    if (!saleDate || isNaN(saleDate.getTime())) {
+      return res.status(400).json({ 
+        error: 'Invalid sale_date format', 
+        details: 'Expected dd/mm/yyyy format. Received: ' + req.body.sale_date,
+        received: req.body.sale_date
+      });
+    }
+    
+    console.log('[Sales Controller] Final ISO date to store:', saleDate.toISOString());
     // Respect client-entered totals (we derive unit price client-side)
     // No automatic tax so that total matches input
     const tax = 0;
@@ -154,7 +211,7 @@ exports.createSale = async (req, res, next) => {
       values.push(total);
     }
     fields.push('sale_date', 'user_id');
-    values.push(saleDate, userId);
+    values.push(saleDate.toISOString(), userId);
 
     const placeholders = fields.map(() => '?').join(', ');
     const saleResult = await db.run(

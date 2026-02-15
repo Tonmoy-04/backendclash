@@ -63,7 +63,13 @@ const Transactions: React.FC = () => {
     ],
     paymentMethod: 'due',
     supplierId: '',
-    transaction_date: new Date().toISOString().split('T')[0],
+    transaction_date: (() => {
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const year = today.getFullYear();
+      return `${day}/${month}/${year}`;
+    })(),
     transport_fee: '',
     labour_fee: '',
     discount: '',
@@ -169,7 +175,12 @@ const Transactions: React.FC = () => {
       const parts = dateStr.split('/');
       if (parts.length === 3) {
         const [day, month, year] = parts;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const dayNum = parseInt(day, 10);
+        const monthNum = parseInt(month, 10);
+        const yearNum = parseInt(year, 10);
+        if (!isNaN(dayNum) && !isNaN(monthNum) && !isNaN(yearNum)) {
+          return `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        }
       }
       return dateStr;
     };
@@ -207,7 +218,13 @@ const Transactions: React.FC = () => {
       ],
       paymentMethod: 'due',
       supplierId: '',
-      transaction_date: new Date().toISOString().split('T')[0],
+      transaction_date: (() => {
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        return `${day}/${month}/${year}`;
+      })(),
       transport_fee: '',
       labour_fee: '',
       discount: '',
@@ -298,27 +315,10 @@ const Transactions: React.FC = () => {
         }
 
         if (formData.transaction_date) {
-          // Convert dd/mm/yyyy to proper ISO datetime with current time
-          const dateStr = formData.transaction_date;
-          const parts = dateStr.split('/');
-          let isoDate = dateStr; // fallback to original
-          
-          if (parts.length === 3) {
-            const [day, month, year] = parts;
-            const now = new Date();
-            const dateObj = new Date(
-              parseInt(year),
-              parseInt(month) - 1,
-              parseInt(day),
-              now.getHours(),
-              now.getMinutes(),
-              now.getSeconds()
-            );
-            isoDate = dateObj.toISOString();
-          }
-          
-          payload.sale_date = isoDate;
-          payload.purchase_date = isoDate;
+          console.log('[Frontend] Sending transaction_date:', formData.transaction_date);
+          // DateInput already provides dd/mm/yyyy format, send as-is
+          payload.sale_date = formData.transaction_date;
+          payload.purchase_date = formData.transaction_date;
         }
 
         if (formData.type === 'Sale') {
@@ -392,6 +392,30 @@ const Transactions: React.FC = () => {
         }));
       }
       
+      // Convert ISO date from backend to dd/mm/yyyy format
+      let displayDate = (() => {
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        return `${day}/${month}/${year}`;
+      })();
+      
+      const isoDate = fullTransaction.sale_date || fullTransaction.purchase_date;
+      if (isoDate) {
+        try {
+          const dateObj = new Date(isoDate);
+          if (!isNaN(dateObj.getTime())) {
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            displayDate = `${day}/${month}/${year}`;
+          }
+        } catch (e) {
+          console.error('Error converting date:', e);
+        }
+      }
+      
       setFormData({
         customer: transaction.customer_name || transaction.supplier_name || '',
         type: transaction.type === 'sale' ? 'Sale' : 'Purchase',
@@ -399,7 +423,7 @@ const Transactions: React.FC = () => {
         lineItems: lineItems,
         paymentMethod: normalizePaymentMethod(transaction.payment_method || 'due'),
         supplierId: '',
-        transaction_date: fullTransaction.sale_date || fullTransaction.purchase_date || new Date().toISOString().split('T')[0],
+        transaction_date: displayDate,
         transport_fee: fullTransaction.transport_fee || '',
         labour_fee: fullTransaction.labour_fee || '',
         discount: fullTransaction.discount || '',
@@ -417,7 +441,13 @@ const Transactions: React.FC = () => {
         lineItems: [{ product_name: '', quantity: 1, price: 0 }],
         paymentMethod: normalizePaymentMethod(transaction.payment_method || 'due'),
         supplierId: '',
-        transaction_date: new Date().toISOString().split('T')[0],
+        transaction_date: (() => {
+          const today = new Date();
+          const day = String(today.getDate()).padStart(2, '0');
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const year = today.getFullYear();
+          return `${day}/${month}/${year}`;
+        })(),
         transport_fee: transaction.transport_fee || '',
         labour_fee: transaction.labour_fee || '',
         discount: transaction.discount || '',
@@ -655,11 +685,36 @@ const Transactions: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 dark:text-emerald-300">
                     {(() => {
-                      const date = new Date(transaction.type === 'sale' ? (transaction as any).sale_date || transaction.created_at : (transaction as any).purchase_date || transaction.created_at);
-                      const day = String(date.getDate()).padStart(2, '0');
-                      const month = String(date.getMonth() + 1).padStart(2, '0');
-                      const year = date.getFullYear();
-                      return `${day}-${month}-${year}`;
+                      try {
+                        const dateString = transaction.type === 'sale' ? (transaction as any).sale_date || transaction.created_at : (transaction as any).purchase_date || transaction.created_at;
+                        
+                        if (!dateString) {
+                          console.error('[Date Render] No date string for transaction:', transaction.id);
+                          return '-';
+                        }
+                        
+                        console.log('[Date Render] Transaction', transaction.id, 'date string:', dateString);
+                        
+                        // Parse the date string
+                        const date = new Date(dateString);
+                        
+                        // Strict validation - if parsing failed, show error
+                        if (!(date instanceof Date) || isNaN(date.getTime())) {
+                          console.error('[Date Render] Invalid date for transaction:', transaction.id, 'Raw value:', dateString);
+                          return `[Invalid: ${dateString}]`;
+                        }
+                        
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const year = date.getFullYear();
+                        const formatted = `${day}-${month}-${year}`;
+                        
+                        console.log('[Date Render] Successfully formatted:', formatted);
+                        return formatted;
+                      } catch (e) {
+                        console.error('[Date Render] Exception rendering date:', e);
+                        return '-';
+                      }
                     })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">

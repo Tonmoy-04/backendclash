@@ -46,7 +46,7 @@ const Customers: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentType, setPaymentType] = useState<'payment' | 'charge'>('charge');
   const [paymentDescription, setPaymentDescription] = useState('');
-  const [paymentDate, setPaymentDate] = useState(toInputDateFormat(new Date()));
+  const [paymentDate, setPaymentDate] = useState(formatDate(new Date()));
   const [editingTransactionId, setEditingTransactionId] = useState<number | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -238,7 +238,7 @@ const Customers: React.FC = () => {
       setSelectedCustomer(null);
       setPaymentAmount('');
       setPaymentDescription('');
-      setPaymentDate(new Date().toISOString().split('T')[0]);
+      setPaymentDate(formatDate(new Date()));
       setEditingTransactionId(null);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to update balance');
@@ -256,9 +256,9 @@ const Customers: React.FC = () => {
 
     try {
       const dateValue = new Date(transaction.created_at);
-      setPaymentDate(toInputDateFormat(dateValue));
+      setPaymentDate(formatDate(dateValue));
     } catch {
-      setPaymentDate(toInputDateFormat(new Date()));
+      setPaymentDate(formatDate(new Date()));
     }
 
     // Close the details view and open the edit form
@@ -341,7 +341,12 @@ const Customers: React.FC = () => {
       const parts = dateStr.split('/');
       if (parts.length === 3) {
         const [day, month, year] = parts;
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const dayNum = parseInt(day, 10);
+        const monthNum = parseInt(month, 10);
+        const yearNum = parseInt(year, 10);
+        if (!isNaN(dayNum) && !isNaN(monthNum) && !isNaN(yearNum)) {
+          return `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        }
       }
       return dateStr;
     };
@@ -933,7 +938,7 @@ const Customers: React.FC = () => {
             setSelectedCustomer(null);
             setPaymentAmount('');
             setPaymentDescription('');
-            setPaymentDate(toInputDateFormat(new Date()));
+            setPaymentDate(formatDate(new Date()));
             setEditingTransactionId(null);
           }}>
             <div className="bg-white dark:bg-emerald-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeInUp" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => {
@@ -1036,7 +1041,7 @@ const Customers: React.FC = () => {
                     setEditingTransactionId(null);
                     setPaymentAmount('');
                     setPaymentDescription('');
-                    setPaymentDate(toInputDateFormat(new Date()));
+                    setPaymentDate(formatDate(new Date()));
                   }}
                   className="flex-1 px-4 py-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 transition-all font-semibold"
                 >

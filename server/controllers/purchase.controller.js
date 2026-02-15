@@ -3,6 +3,7 @@ const stockDb = require('../database/stockDb');
 const { generateBill } = require('../utils/billGenerator');
 const { ensureItemTransactionsTable, insertItemTransaction } = require('../utils/itemTransactions');
 const { touchSupplier, touchProduct } = require('../utils/activity');
+const { parseDDMMYYYY } = require('../utils/dateConverter');
 
 exports.getAllPurchases = async (req, res, next) => {
   try {
@@ -29,6 +30,25 @@ exports.getAllPurchases = async (req, res, next) => {
     query += ' ORDER BY p.purchase_date DESC, p.created_at DESC';
 
     const purchases = await db.all(query, params);
+    
+    // Sanitize purchase_date to ensure it's in ISO format
+    purchases.forEach(purchase => {
+      if (purchase.purchase_date) {
+        try {
+          const dateObj = new Date(purchase.purchase_date);
+          if (isNaN(dateObj.getTime())) {
+            console.warn(`[getAllPurchases] Invalid purchase_date for purchase ${purchase.id}:`, purchase.purchase_date);
+            purchase.purchase_date = new Date().toISOString();
+          } else {
+            purchase.purchase_date = dateObj.toISOString();
+          }
+        } catch (err) {
+          console.warn(`[getAllPurchases] Error parsing purchase_date:`, err.message);
+          purchase.purchase_date = new Date().toISOString();
+        }
+      }
+    });
+    
     res.json(purchases);
   } catch (error) {
     next(error);
@@ -59,6 +79,23 @@ exports.getPurchaseById = async (req, res, next) => {
     );
 
     purchase.items = items;
+    
+    // Sanitize purchase_date to ensure it's in ISO format
+    if (purchase.purchase_date) {
+      try {
+        const dateObj = new Date(purchase.purchase_date);
+        if (isNaN(dateObj.getTime())) {
+          console.warn(`[getPurchaseById] Invalid purchase_date for purchase ${purchase.id}:`, purchase.purchase_date);
+          purchase.purchase_date = new Date().toISOString();
+        } else {
+          purchase.purchase_date = dateObj.toISOString();
+        }
+      } catch (err) {
+        console.warn(`[getPurchaseById] Error parsing purchase_date:`, err.message);
+        purchase.purchase_date = new Date().toISOString();
+      }
+    }
+    
     res.json(purchase);
   } catch (error) {
     next(error);
@@ -104,8 +141,30 @@ exports.createPurchase = async (req, res, next) => {
       total = Math.round((total + itemSubtotal) * 100) / 100;
     }
 
-    // Use provided date or default to now
-    const purchaseDate = req.body.purchase_date || new Date().toISOString();
+    // Parse and validate purchase date - NO FALLBACKS
+    console.log('[Purchase Controller] Incoming purchase_date:', req.body.purchase_date);
+    console.log('[Purchase Controller] purchase_date type:', typeof req.body.purchase_date);
+    
+    if (!req.body.purchase_date) {
+      return res.status(400).json({ 
+        error: 'purchase_date is required', 
+        details: 'Please provide a valid date in dd/mm/yyyy format' 
+      });
+    }
+    
+    const purchaseDate = parseDDMMYYYY(req.body.purchase_date);
+    console.log('[Purchase Controller] Parsed date:', purchaseDate);
+    console.log('[Purchase Controller] Is valid date?', purchaseDate instanceof Date && !isNaN(purchaseDate.getTime()));
+    
+    if (!purchaseDate || isNaN(purchaseDate.getTime())) {
+      return res.status(400).json({ 
+        error: 'Invalid purchase_date format', 
+        details: 'Expected dd/mm/yyyy format. Received: ' + req.body.purchase_date,
+        received: req.body.purchase_date
+      });
+    }
+    
+    console.log('[Purchase Controller] Final ISO date to store:', purchaseDate.toISOString());
     const discountVal = Math.round((Number(discount) || 0) * 100) / 100;
     const transportVal = Math.round((Number(transport_fee) || 0) * 100) / 100;
     const labourVal = Math.round((Number(labour_fee) || 0) * 100) / 100;
@@ -116,7 +175,7 @@ exports.createPurchase = async (req, res, next) => {
     const purchaseResult = await db.run(
       `INSERT INTO purchases (supplier_id, supplier_name, supplier_address, description, payment_method, notes, discount, transport_fee, labour_fee, total, purchase_date, user_id) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [supplier_id || null, supplier_name || null, supplier_address || '', description || '', payment_method, notes, discountVal, transportVal, labourVal, finalTotal, purchaseDate, userId]
+      [supplier_id || null, supplier_name || null, supplier_address || '', description || '', payment_method, notes, discountVal, transportVal, labourVal, finalTotal, purchaseDate.toISOString(), userId]
     );
 
     const purchaseId = purchaseResult.lastID;

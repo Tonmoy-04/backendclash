@@ -42,13 +42,31 @@ const DateInput: React.FC<DateInputProps> = ({
       const parts = value.split('/');
       if (parts.length === 3) {
         const [day, month, year] = parts;
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        if (!isNaN(date.getTime())) {
-          setCalendarDate(date);
+        const dayNum = parseInt(day, 10);
+        const monthNum = parseInt(month, 10);
+        const yearNum = parseInt(year, 10);
+        if (!isNaN(dayNum) && !isNaN(monthNum) && !isNaN(yearNum)) {
+          const date = new Date(yearNum, monthNum - 1, dayNum);
+          if (!isNaN(date.getTime())) {
+            setCalendarDate(date);
+          }
         }
       }
     }
   }, [value]);
+
+  // Handle input change - enforce English numerals and dd/mm/yyyy format
+  const handleInputChange = (input: string) => {
+    // Remove any non-numeric and non-slash characters
+    let cleaned = input.replace(/[^\d\/]/g, '');
+    
+    // Enforce maximum length of 10 characters (dd/mm/yyyy)
+    if (cleaned.length > 10) {
+      cleaned = cleaned.slice(0, 10);
+    }
+    
+    onChange(cleaned);
+  };
 
   const handleDateSelect = (day: number) => {
     const newDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day);
@@ -114,8 +132,9 @@ const DateInput: React.FC<DateInputProps> = ({
           name={name}
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => handleInputChange(e.target.value)}
           onClick={() => setShowCalendar(true)}
+          inputMode="numeric"
           className={`${className} flex-1 rounded-r-none`}
         />
         <button

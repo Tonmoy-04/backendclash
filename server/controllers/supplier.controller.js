@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const { parseDDMMYYYY } = require('../utils/dateConverter');
 
 exports.getAllSuppliers = async (req, res, next) => {
   try {
@@ -144,7 +145,32 @@ exports.updateSupplierBalance = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { amount, type, description } = req.body;
-    const transactionDate = req.body.transaction_date || new Date().toISOString().split('T')[0];
+    const rawTransactionDate = req.body.transaction_date;
+
+    console.log('[Supplier Balance] Incoming transaction_date:', rawTransactionDate);
+    console.log('[Supplier Balance] transaction_date type:', typeof rawTransactionDate);
+
+    if (!rawTransactionDate) {
+      return res.status(400).json({
+        error: 'transaction_date is required',
+        details: 'Please provide a valid date in dd/mm/yyyy format'
+      });
+    }
+
+    const parsedTransactionDate = parseDDMMYYYY(rawTransactionDate);
+    console.log('[Supplier Balance] Parsed date:', parsedTransactionDate);
+    console.log('[Supplier Balance] Is valid date?', parsedTransactionDate instanceof Date && !isNaN(parsedTransactionDate.getTime()));
+
+    if (!parsedTransactionDate || isNaN(parsedTransactionDate.getTime())) {
+      return res.status(400).json({
+        error: 'Invalid transaction_date format',
+        details: 'Expected dd/mm/yyyy format. Received: ' + rawTransactionDate,
+        received: rawTransactionDate
+      });
+    }
+
+    const transactionDateISO = parsedTransactionDate.toISOString();
+    const transactionDateKey = transactionDateISO.split('T')[0];
 
     // Validate and parse amount with precision safeguard
     const parsedAmount = parseFloat(amount);
@@ -169,7 +195,7 @@ exports.updateSupplierBalance = async (req, res, next) => {
       `SELECT type, amount FROM supplier_transactions 
        WHERE supplier_id = ? AND DATE(created_at) <= ?
        ORDER BY created_at ASC`,
-      [id, transactionDate]
+      [id, transactionDateKey]
     ) || [];
 
     let balanceBefore = 0;
@@ -197,7 +223,7 @@ exports.updateSupplierBalance = async (req, res, next) => {
     const result = await db.run(
       `INSERT INTO supplier_transactions (supplier_id, type, amount, balance_before, balance_after, description, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, type, precisionAmount, balanceBefore, balanceAfter, description || null, transactionDate]
+      [id, type, precisionAmount, balanceBefore, balanceAfter, description || null, transactionDateISO]
     );
 
     // Recalculate all transactions after this date to update their balances
@@ -205,7 +231,7 @@ exports.updateSupplierBalance = async (req, res, next) => {
       `SELECT id, type, amount FROM supplier_transactions 
        WHERE supplier_id = ? AND DATE(created_at) > ?
        ORDER BY created_at ASC`,
-      [id, transactionDate]
+      [id, transactionDateKey]
     ) || [];
 
     let runningBalance = balanceAfter;
@@ -277,6 +303,17 @@ exports.getSupplierTransactions = async (req, res, next) => {
 
     const transactions = await db.all(query, params);
 
+    transactions.forEach(tx => {
+      if (tx.created_at) {
+        const parsed = parseDDMMYYYY(tx.created_at);
+        if (parsed && !isNaN(parsed.getTime())) {
+          tx.created_at = parsed.toISOString();
+        } else {
+          console.warn(`[getSupplierTransactions] Invalid created_at for tx ${tx.id}:`, tx.created_at);
+        }
+      }
+    });
+
     res.json({
       supplier: {
         id: supplier.id,
@@ -332,7 +369,7 @@ exports.updateSupplierTransaction = async (req, res, next) => {
   try {
     const { id, transactionId } = req.params;
     const { amount, type, description } = req.body;
-    const transactionDate = req.body.transaction_date || null;
+    const rawTransactionDate = req.body.transaction_date || null;
 
     // Validate inputs
     const parsedAmount = parseFloat(amount);
@@ -361,12 +398,39 @@ exports.updateSupplierTransaction = async (req, res, next) => {
       return res.status(404).json({ error: 'Transaction not found' });
     }
 
+    if (existingTx.created_at) {
+      const parsedExistingDate = parseDDMMYYYY(existingTx.created_at);
+      if (parsedExistingDate && !isNaN(parsedExistingDate.getTime())) {
+        existingTx.created_at = parsedExistingDate.toISOString();
+      } else {
+        console.warn(`[Supplier Update] Invalid existing created_at for tx ${existingTx.id}:`, existingTx.created_at);
+      }
+    }
+
+    let updatedTransactionDate = existingTx.created_at;
+    if (rawTransactionDate) {
+      console.log('[Supplier Update] Incoming transaction_date:', rawTransactionDate);
+      const parsedUpdateDate = parseDDMMYYYY(rawTransactionDate);
+      console.log('[Supplier Update] Parsed date:', parsedUpdateDate);
+      console.log('[Supplier Update] Is valid date?', parsedUpdateDate instanceof Date && !isNaN(parsedUpdateDate.getTime()));
+
+      if (!parsedUpdateDate || isNaN(parsedUpdateDate.getTime())) {
+        return res.status(400).json({
+          error: 'Invalid transaction_date format',
+          details: 'Expected dd/mm/yyyy format. Received: ' + rawTransactionDate,
+          received: rawTransactionDate
+        });
+      }
+
+      updatedTransactionDate = parsedUpdateDate.toISOString();
+    }
+
     const updatedTx = {
       ...existingTx,
       type,
       amount: precisionAmount,
       description: description || null,
-      created_at: transactionDate ? transactionDate : existingTx.created_at,
+      created_at: updatedTransactionDate,
     };
 
     // Gather all other transactions

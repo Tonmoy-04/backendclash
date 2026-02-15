@@ -71,7 +71,7 @@ export const formatNumericOutput = (
 
 /**
  * Parse date string in dd/mm/yyyy format and return yyyy-mm-dd format for API
- * @param dateString - Date string in dd/mm/yyyy format
+ * @param dateString - Date string in dd/mm/yyyy format (English numerals only)
  * @returns Date string in yyyy-mm-dd format for API, or empty string if invalid
  */
 export const parseDisplayDateToAPI = (dateString: string): string => {
@@ -84,7 +84,7 @@ export const parseDisplayDateToAPI = (dateString: string): string => {
   const yearNum = parseInt(year, 10);
   
   // Validate
-  if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < 1900 || yearNum > 2100) {
+  if (isNaN(dayNum) || isNaN(monthNum) || isNaN(yearNum) || dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < 1900 || yearNum > 2100) {
     return '';
   }
   
